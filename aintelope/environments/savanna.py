@@ -59,11 +59,9 @@ class RenderState:
             )
 
         for agent, agent_pos in agents_state.items():
-            print('agent_pos', agent_pos)
             assert len(agent_pos) == 2, agent_pos
             # TODO: render agent name as text
             p = project(agent_pos)
-            print(p)
             pygame.draw.circle(
                 canvas,
                 self.settings.agent_color,
