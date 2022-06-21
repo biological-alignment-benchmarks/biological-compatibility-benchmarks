@@ -31,8 +31,6 @@ class RenderSettings:
         self.__dict__.update(settings)
 
 
-
-
 class RenderState:
     def __init__(self, canvas, settings):
         self.canvas = canvas
