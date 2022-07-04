@@ -243,7 +243,6 @@ class RawEnv(AECEnv):
 
         # collect reward if it is the last agent to act
         if self._agent_selector.is_last():
-            # rewards for all agents are placed in the .rewards dictionary
             for iagent, agent in enumerate(self.agents):
                 agent_pos = self.state[agent]
 
