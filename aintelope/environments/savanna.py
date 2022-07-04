@@ -403,6 +403,7 @@ class IterativeWeightOptimizationAgent:
 
 
 def main(env: RawEnv):
+    mode = "human"
     policy = IterativeWeightOptimizationAgent()
     policy = OneStepPerfectPredictionAgent()
     env.reset()
@@ -416,7 +417,7 @@ def main(env: RawEnv):
         else:
             action = None
         env.step(action)
-        env.render("human")
+        env.render(mode)
     wait = input("Close?")
 
 
