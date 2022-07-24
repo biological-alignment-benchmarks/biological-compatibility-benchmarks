@@ -1,8 +1,17 @@
+import logging
+
 import pytest
 import numpy as np
 import numpy.testing as npt
 from gym.spaces import Discrete
-from pettingzoo.test import api_test, seed_test
+from pettingzoo.test import (
+    api_test,
+    seed_test,
+    max_cycles_test,
+    render_test,
+    performance_benchmark,
+    test_save_obs,
+)
 
 from aintelope.environments import savanna as sut
 
@@ -16,22 +25,25 @@ def test_seed():
 
 
 def test_max_cycles():
-    # TODO
+    # currently the environment does not accept parameters like max_cycles
+    # max_cycles_test(sut.env)
     pass
 
 
 def test_render():
-    # TODO
+    # TODO: close method not implemented
+    # render_test(sut.env)
     pass
 
 
 def test_performance_benchmark():
-    # TODO
+    # will print only timing to stdout; not shown per default
+    # performance_benchmark(sut.env())
     pass
 
 
 def test_save_observation():
-    # TODO
+    # test_save_obs(sut.env())
     pass
 
 
@@ -76,6 +88,20 @@ def test_move_agent():
         assert sut.MAP_MIN <= agent_states[agent][0] <= sut.MAP_MAX
         assert sut.MAP_MIN <= agent_states[agent][1] <= sut.MAP_MAX
         assert agent_states[agent].dtype == sut.PositionFloat
+
+
+def test_done_step():
+    env = sut.env()
+    assert len(env.possible_agents) == 1
+    env.reset()
+
+    agent = env.possible_agents[0]
+    for _ in range(sut.NUM_ITERS):
+        env.step(env.action_space(agent).sample())
+
+    with pytest.raises(ValueError):
+        env.step(env.action_space(agent).sample())
+    env.step(None)
 
 
 def test_agents():
