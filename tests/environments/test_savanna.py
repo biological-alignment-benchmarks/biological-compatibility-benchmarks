@@ -1,27 +1,24 @@
-import logging
-
 import pytest
 import numpy as np
 import numpy.testing as npt
 from gym.spaces import Discrete
 from pettingzoo.test import (
-    api_test,
-    seed_test,
     max_cycles_test,
     render_test,
     performance_benchmark,
-    test_save_obs,
 )
+from pettingzoo.test.parallel_test import parallel_api_test
+from pettingzoo.test.seed_test import parallel_seed_test
 
 from aintelope.environments import savanna as sut
 
 
 def test_pettingzoo_api():
-    api_test(sut.env(), num_cycles=1000)
+    parallel_api_test(sut.env(), num_cycles=1000)
 
 
 def test_seed():
-    seed_test(sut.env, num_cycles=10, test_kept_state=True)
+    parallel_seed_test(sut.env, num_cycles=10, test_kept_state=True)
 
 
 def test_max_cycles():
@@ -39,11 +36,6 @@ def test_render():
 def test_performance_benchmark():
     # will print only timing to stdout; not shown per default
     # performance_benchmark(sut.env())
-    pass
-
-
-def test_save_observation():
-    # test_save_obs(sut.env())
     pass
 
 
@@ -97,11 +89,13 @@ def test_done_step():
 
     agent = env.possible_agents[0]
     for _ in range(sut.NUM_ITERS):
-        env.step(env.action_space(agent).sample())
+        action = {agent: env.action_space(agent).sample()}
+        _, _, dones, _ = env.step(action)
 
+    assert dones[agent]
     with pytest.raises(ValueError):
-        env.step(env.action_space(agent).sample())
-    env.step(None)
+        action = {agent: env.action_space(agent).sample()}
+        env.step(action)
 
 
 def test_agents():
@@ -142,9 +136,6 @@ def test_action_spaces():
     for agent in env.possible_agents:
         assert isinstance(env.action_space(agent), Discrete)
         assert env.action_space(agent).n == 4
-        assert agent in env.action_spaces
-        assert isinstance(env.action_spaces[agent], Discrete)
-        assert env.action_spaces[agent].n == 4
 
 
 def test_grass_patches():

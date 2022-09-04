@@ -5,8 +5,8 @@ import numpy as np
 import pygame
 from gym.spaces import Box, Discrete
 from gym.utils import seeding
-from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector, wrappers
+from pettingzoo import AECEnv, ParallelEnv
+from pettingzoo.utils import agent_selector, wrappers, parallel_to_aec
 
 # typing aliases
 PositionFloat = np.float32
@@ -123,7 +123,7 @@ def move_agent(agent_pos: np.ndarray, action: Action) -> np.ndarray:
     return agent_pos
 
 
-class RawEnv(AECEnv):
+class RawEnv(ParallelEnv):
 
     metadata = {
         "name": "savanna_v1",
@@ -215,10 +215,10 @@ class RawEnv(AECEnv):
             self.seed(seed)
 
         self.agents = self.possible_agents[:]
-        self.rewards = {agent: 0 for agent in self.agents}
-        self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.dones = {agent: False for agent in self.agents}
-        self.infos = {agent: {} for agent in self.agents}
+        # self.rewards = {agent: 0 for agent in self.agents}
+        # self._cumulative_rewards = {agent: 0 for agent in self.agents}
+        # self.dones = {agent: False for agent in self.agents}
+        # self.infos = {agent: {} for agent in self.agents}
         self.grass_patches = self.np_random.integers(
             MAP_MIN, MAP_MAX, size=(AMOUNT_GRASS_PATCHES, 2)
         ).astype(PositionFloat)
@@ -230,66 +230,75 @@ class RawEnv(AECEnv):
         }
         self.num_moves = 0
 
-        # cycle through the agents
-        self._agent_selector = agent_selector(self.agents)
-        self.agent_selection = self._agent_selector.next()
+        # cycle through the agents; needed for wrapper
+        # self._agent_selector = agent_selector(self.agents)
+        # self.agent_selection = self._agent_selector.next()
 
-    def step(self, action: Action):
-        """Take in an action for the current agent (specified by
-        agent_selection) and needs to update:
+        observations = {agent: self.observe(agent) for agent in self.agents}
+        return observations
+
+    def step(self, actions: typ.Dict[str, Action]):
+        """step(action) takes in an action for each agent and should return the
+        - observations
         - rewards
-        - _cumulative_rewards
         - dones
-        - infos
-        - agent_selection (to the next agent)
-        And any internal state used by observe() or render()
-        """
-        if self.dones[self.agent_selection]:
-            """
-            handles stepping an agent which is already done
-            accepts a None action for the one agent, and moves the
-            agent_selection to the next done agent, or if there are no more
-            done agents, to the next live agent
-            """
-            # FIXME: why is it REQUIRED to call step() on a done agent?!
-            return self._was_done_step(action)
+        - info
+        dicts where each dict looks like {agent_1: item_1, agent_2: item_2}
+        """  # If a user passes in actions with no agents, then just return empty observations, etc.
+        if not actions:
+            self.agents = []
+            return {}, {}, {}, {}
 
-        agent = self.agent_selection
-        """
-        the agent which stepped last had its _cumulative_rewards accounted for
-        (because it was returned by last()), so the _cumulative_rewards for
-        this agent should start again at 0
-        """
-        self._cumulative_rewards[agent] = 0
+        if self.agents == []:
+            raise ValueError("No agents found; NUM_ITERS reached?")
 
-        self.agent_states[agent] = move_agent(self.agent_states[agent], action)
+        for agent in self.agents:
+            self.agent_states[agent] = move_agent(
+                self.agent_states[agent], actions[agent]
+            )
+        rewards = {
+            agent: reward_agent(self.agent_states[agent], self.grass_patches)
+            for agent in self.agents
+        }
 
-        # collect reward if it is the last agent to act
-        if self._agent_selector.is_last():
-            for iagent, agent in enumerate(self.agents):
-                self.rewards[agent] = reward_agent(
-                    self.agent_states[agent], self.grass_patches
-                )
+        self.num_moves += 1
+        env_done = self.num_moves >= NUM_ITERS
+        dones = {agent: env_done for agent in self.agents}
 
-            self.num_moves += 1
-            # The dones dictionary must be updated for all players.
-            self.dones = {
-                agent: self.num_moves >= NUM_ITERS for agent in self.agents
-            }
+        observations = {agent: self.observe(agent) for agent in self.agents}
 
-        else:
-            # no rewards are allocated until both players give an action
-            self._clear_rewards()
+        # typically there won't be any information in the infos, but there must
+        # still be an entry for each agent
+        infos = {agent: {} for agent in self.agents}
 
-        # selects the next agent.
-        self.agent_selection = self._agent_selector.next()
-        # Adds .rewards to ._cumulative_rewards
-        self._accumulate_rewards()
+        if env_done:
+            self.agents = []
+
+        return observations, rewards, dones, infos
+
+
+def raw_env():
+    """
+    To support the AEC API, the raw_env() function just uses the from_parallel
+    function to convert from a ParallelEnv to an AEC env
+    """
+    env = RawEnv()
+    env = parallel_to_aec(env)
+    return env
 
 
 def env():
     """Add PettingZoo wrappers to environment class."""
     env = RawEnv()
-    env = wrappers.AssertOutOfBoundsWrapper(env)
-    env = wrappers.OrderEnforcingWrapper(env)
+    # BaseWrapper class need agent_selection attribute
+    # env = wrappers.AssertOutOfBoundsWrapper(env)
+    # env = wrappers.OrderEnforcingWrapper(env)
     return env
+
+
+if __name__ == "__main__":
+    e = env()
+    ret = e.reset()
+    print(ret)
+    ret = e.step({"agent_0": 1})
+    print(ret)
