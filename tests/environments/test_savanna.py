@@ -98,6 +98,21 @@ def test_done_step():
         env.step(action)
 
 
+def test_step_result():
+    env = sut.env()
+    assert len(env.possible_agents) == 1
+    env.reset()
+
+    agent = env.possible_agents[0]
+    action = {agent: env.action_space(agent).sample()}
+    observations, rewards, dones, ifno = env.step(action)
+
+    assert not dones[agent]
+    assert isinstance (observations, dict)
+    assert isinstance (observations[agent], np.ndarray)
+    assert isinstance (rewards, dict)
+    assert isinstance (rewards[agent], np.float64)
+
 def test_agents():
     env = sut.env()
 
