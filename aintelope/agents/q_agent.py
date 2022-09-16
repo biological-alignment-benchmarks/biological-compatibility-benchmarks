@@ -45,6 +45,7 @@ class Agent:
             # GYM_INTERACTION
             action = self.env.action_space.sample()
         else:
+            # TODO: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at  ../torch/csrc/utils/tensor_new.cpp:201.)
             state = torch.tensor([self.state])
 
             if device not in ["cpu"]:
@@ -79,7 +80,7 @@ class Agent:
 
         # do step in the environment
         # GYM_INTERACTION
-        new_state, reward, done, _, hmm = self.env.step(action)
+        new_state, reward, done = self.env.step(action)
 
         exp = Experience(self.state, action, reward, done, new_state)
 

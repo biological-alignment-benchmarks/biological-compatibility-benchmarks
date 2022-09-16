@@ -13,7 +13,7 @@ from aintelope.agents.memory import ReplayBuffer, RLDataset
 from aintelope.agents.q_agent import Agent
 from aintelope.models.dqn import DQN
 
-from aintelope.environments.savanna import env as savanna_v1
+from aintelope.environments.savanna_gym import SavannaEnv
 
 AVAIL_GPUS = min(1, torch.cuda.device_count())
 
@@ -56,7 +56,7 @@ class DQNLightning(LightningModule):
         super().__init__()
         self.save_hyperparameters()
         if self.hparams.env == 'savanna_v1':
-            self.env = savanna_v1(env_params=env_params)
+            self.env = SavannaEnv(env_params=env_params)
             obs_size = self.env.observation_space.shape[0]
         else:
             # GYM_INTERACTION

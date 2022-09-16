@@ -102,7 +102,7 @@ def reward_agent(
 ) -> np.float64:
     if len(grass_patches.shape) == 1:
         grass_patches = np.expand_dims(grass_patches, 0)
-        
+
     # TODO: just put this in a test, no need to assert it every time
     # assert (
     #     grass_patches.shape[1] == 2
@@ -116,25 +116,8 @@ def reward_agent(
 
     return 1 / (1 + vec_distance(grass_patch_closest, agent_pos))
 
-def replace_grass(
-    agent_pos: np.ndarray, grass_patches: np.ndarray
-) -> np.float64:
-    if len(grass_patches.shape) == 1:
-        grass_patches = np.expand_dims(grass_patches, 0)
-        
-    replacement_grass = self.np_random.integers(
-            self.metadata['MAP_MIN'], self.metadata['MAP_MAX'], size=(2))
-    grass_patches[
-        np.argmin(
-            np.linalg.norm(np.subtract(grass_patches, agent_pos), axis=1)
-        )
-    ] = replacement_grass
-
-    return grass_patches
-
 
 def move_agent(agent_pos: np.ndarray, action: Action, map_min=0, map_max=100) -> np.ndarray:
-    assert agent_pos.dtype == PositionFloat, agent_pos.dtype
     move = ACTION_MAP[action]
     agent_pos = agent_pos + move
     agent_pos = np.clip(agent_pos, map_min, map_max)
@@ -154,13 +137,11 @@ class SavannaEnv(gym.Env):
         "render_window_size": 512,
     }
 
-    def __init__(self, size, init_state, state_bound, env_params={}):
+    def __init__(self, env_params={}):
         self.metadata.update(env_params)
         print(f'initializing savanna env with params: {self.metadata}')
         assert self.metadata['AMOUNT_AGENTS'] == 1, print(
             'agents must == 1 for gym env')
-        self.init_state = init_state
-        self.size = size
         self.action_space = Discrete(4)
         self.observation_space = spaces.Box(
             low=self.metadata['MAP_MIN'],
@@ -168,7 +149,7 @@ class SavannaEnv(gym.Env):
             shape=(
                 2 * (self.metadata['AMOUNT_AGENTS'] + self.metadata['AMOUNT_GRASS_PATCHES']),)
         )
-        self.agent_state = np.ndarray([])# just the agents position for now
+        self.agent_state = np.ndarray([])  # just the agents position for now
         self._seed()
         render_settings = RenderSettings(self.metadata)
         self.render_state = RenderState(render_settings)
@@ -179,7 +160,7 @@ class SavannaEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _step(self, action):
+    def step(self, action):
         # costs = np.sum(u**2) + np.sum(self.state**2)
         # self.state = np.clip(
         #     self.state + u, self.observation_space.low, self.observation_space.high)
@@ -190,16 +171,17 @@ class SavannaEnv(gym.Env):
         )
         reward = reward_agent(self.agent_state, self.grass_patches)
         if reward == 1.0:
-            self.grass_patches = replace_grass(self.agent_state, self.grass_patches)
+            self.grass_patches = self.replace_grass(
+                self.agent_state, self.grass_patches)
         self.num_moves += 1
-        # env_done = self.num_moves >= self.metadata['NUM_ITERS']
+        done = self.num_moves >= self.metadata['NUM_ITERS']
 
         observation = self._get_obs()
-        return observation, reward, False, {}
+        return observation, reward, done
 
-
-    def _reset(self):
-        self.agent_state = self.np_random.integers(self.metadata['MAP_MIN'], self.metadata['MAP_MAX'], 2)
+    def reset(self):
+        self.agent_state = self.np_random.integers(
+            self.metadata['MAP_MIN'], self.metadata['MAP_MAX'], 2)
         self.grass_patches = self.np_random.integers(
             self.metadata['MAP_MIN'], self.metadata['MAP_MAX'], size=(
                 self.metadata['AMOUNT_GRASS_PATCHES'], 2))
@@ -207,13 +189,25 @@ class SavannaEnv(gym.Env):
         self.num_moves = 0
         return self._get_obs()
 
-
     def _get_obs(self):
         return np.concatenate(
             [self.agent_state, self.grass_patches.reshape(-1)])
 
-#######################################
+    def replace_grass(self,
+                      agent_pos: np.ndarray, grass_patches: np.ndarray
+                      ) -> np.float64:
+        if len(grass_patches.shape) == 1:
+            grass_patches = np.expand_dims(grass_patches, 0)
 
+        replacement_grass = self.np_random.integers(
+            self.metadata['MAP_MIN'], self.metadata['MAP_MAX'], size=(2))
+        grass_patches[
+            np.argmin(
+                np.linalg.norm(np.subtract(grass_patches, agent_pos), axis=1)
+            )
+        ] = replacement_grass
+
+        return grass_patches
 
     def render(self, mode="human"):
         """Render the environment."""
@@ -242,7 +236,6 @@ class SavannaEnv(gym.Env):
                 np.array(pygame.surfarray.pixels3d(self.render_state.canvas)),
                 axes=(1, 0, 2),
             )
-
 
 
 if __name__ == "__main__":
