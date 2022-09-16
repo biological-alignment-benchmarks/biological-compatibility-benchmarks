@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 
 from aintelope.agents.memory import ReplayBuffer, RLDataset
 from aintelope.agents.q_agent import Agent
+from aintelope.agents.shard_agent import ShardAgent
 from aintelope.models.dqn import DQN
 
 from aintelope.environments.savanna_gym import SavannaEnv
@@ -76,7 +77,7 @@ class DQNLightning(LightningModule):
         self.target_net = DQN(obs_size, n_actions)
 
         self.buffer = ReplayBuffer(self.hparams.replay_size)
-        self.agent = Agent(self.env, self.buffer)
+        self.agent = ShardAgent(self.env, self.buffer)
         self.total_reward = 0
         self.episode_reward = 0
         self.populate(self.hparams.warm_start_steps)
@@ -261,7 +262,8 @@ if __name__ == "__main__":
             'MAP_MAX': 100,
             'render_map_max': 100,
             'AMOUNT_AGENTS': 1,  # for now only one agent
-            'AMOUNT_GRASS_PATCHES': 2
+            'AMOUNT_GRASS_PATCHES': 2,
+            'AMOUNT_WATER_HOLES': 2
         }
 
     }

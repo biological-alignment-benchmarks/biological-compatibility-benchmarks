@@ -6,7 +6,6 @@ import torch
 from torch import nn
 
 from aintelope.agents.memory import Experience, ReplayBuffer
-from aintelope.utils.data_utils import clean_state_array
 
 
 class Agent:

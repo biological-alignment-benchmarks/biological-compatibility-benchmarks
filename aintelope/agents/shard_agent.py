@@ -6,11 +6,11 @@ import torch
 from torch import nn
 
 from aintelope.agents.memory import Experience, ReplayBuffer
-from aintelope.agents.shards import available_shards_dict
+from aintelope.agents.shards.savanna_shards import available_shards_dict
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 
 
-class Agent:
+class ShardAgent:
     """Base Agent class handeling the interaction with the environment."""
 
     def __init__(self, env: gym.Env, replay_buffer: ReplayBuffer, target_shards=[]) -> None:

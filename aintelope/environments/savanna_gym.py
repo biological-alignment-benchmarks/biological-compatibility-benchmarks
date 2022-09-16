@@ -168,13 +168,19 @@ class SavannaEnv(gym.Env):
         self.grass_patches = self.np_random.integers(
             self.metadata['MAP_MIN'], self.metadata['MAP_MAX'], size=(
                 self.metadata['AMOUNT_GRASS_PATCHES'], 2))
+        self.water_holes = self.np_random.integers(
+            self.metadata['MAP_MIN'], self.metadata['MAP_MAX'], size=(
+                self.metadata['AMOUNT_WATER_HOLES'], 2))
         self.last_action = None
         self.num_moves = 0
         return self._get_obs()
 
     def _get_obs(self):
-        observations = [0] + self.agent_state.tolist() + [[1, x[0], x[1]] for x in self.grass_patches] + [[2, x[0], x[1]] for x in self.water_holes]
-        
+        observations = [0] + self.agent_state.tolist() 
+        for x in self.grass_patches:
+            observations += [1, x[0], x[1]]
+        for x in self.water_holes:
+            observations += [2, x[0], x[1]]
         return np.array(observations, dtype=np.float64)
 
     def replace_grass(self,
