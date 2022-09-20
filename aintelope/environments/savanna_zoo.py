@@ -10,115 +10,15 @@ from pettingzoo.test import api_test
 from pettingzoo.utils import agent_selector, wrappers, parallel_to_aec
 from aintelope.environments.env_utils.render_ascii import AsciiRenderState
 
-# typing aliases
-PositionFloat = np.float32
-Action = int
-
-# environment constants
-ACTION_MAP = np.array([[0, 1], [1, 0], [0, -1], [-1, 0]], dtype=PositionFloat)
-
-
-class RenderSettings:
-    def __init__(self, metadata):
-        prefix = "render_"
-        settings = {
-            (k.lstrip(prefix), v)
-            for k, v in metadata.items()
-            if k.startswith(prefix)
-        }
-        self.__dict__.update(settings)
-
-
-class RenderState:
-    def __init__(self, settings):
-        canvas = pygame.Surface((settings.window_size, settings.window_size))
-        self.canvas = canvas
-        self.settings = settings
-
-    def render(self, agents_state, grass):
-        window_size = self.settings.window_size
-        canvas = self.canvas
-
-        canvas.fill((255, 255, 255))
-        scale = window_size / self.settings.map_max
-
-        screen_m = np.identity(2, dtype=PositionFloat) * scale
-
-        def project(p):
-            return np.matmul(p, screen_m).astype(np.int32)
-
-        for gr in grass.reshape((2, -1)):
-            p = project(gr)
-            pygame.draw.circle(
-                canvas,
-                self.settings.grass_color,
-                p,
-                scale * self.settings.grass_radius,
-            )
-
-        for agent, agent_pos in agents_state.items():
-            assert len(agent_pos) == 2, agent_pos
-            # TODO: render agent name as text
-            p = project(agent_pos)
-            pygame.draw.circle(
-                canvas,
-                self.settings.agent_color,
-                p,
-                scale * self.settings.agent_radius,
-            )
-
-
-class HumanRenderState:
-    def __init__(self, settings):
-
-        self.fps = settings.fps
-
-        window_size = settings.window_size
-
-        pygame.init()
-        pygame.display.init()
-        self.window = pygame.display.set_mode((window_size, window_size))
-        self.clock = pygame.time.Clock()
-
-    def render(self, render_state):
-        # The following line copies our drawings from `canvas` to the visible window
-        self.window.blit(render_state.canvas, render_state.canvas.get_rect())
-        pygame.event.pump()
-        pygame.display.update()
-
-        # We need to ensure that human-rendering occurs at the predefined framerate.
-        # The following line will automatically add a delay to keep the framerate stable.
-        self.clock.tick(self.fps)
-
-
-def vec_distance(vec_a: np.ndarray, vec_b: np.ndarray) -> np.float64:
-    return np.linalg.norm(np.subtract(vec_a, vec_b))
-
-
-def reward_agent(
-    agent_pos: np.ndarray, grass_patches: np.ndarray
-) -> np.float64:
-    if len(grass_patches.shape) == 1:
-        grass_patches = np.expand_dims(grass_patches, 0)
-    # assert (
-    #     grass_patches.shape[1] == 2
-    # ), f"{grass_patches.shape} -- x/y index with axis=1"
-
-    grass_patch_closest = grass_patches[
-        np.argmin(
-            np.linalg.norm(np.subtract(grass_patches, agent_pos), axis=1)
-        )
-    ]
-
-    return 1 / (1 + vec_distance(grass_patch_closest, agent_pos))
-
-
-def move_agent(agent_pos: np.ndarray, action: Action, map_min=0, map_max=100) -> np.ndarray:
-    assert agent_pos.dtype == PositionFloat, agent_pos.dtype
-    move = ACTION_MAP[action]
-    agent_pos = agent_pos + move
-    agent_pos = np.clip(agent_pos, map_min, map_max)
-    return agent_pos
+from savanna import (
+    RenderSettings, 
+    RenderState,
+    HumanRenderState, 
+    move_agent, 
+    reward_agent, 
+    PositionFloat,
+    Action
+    )
 
 
 class RawEnv(ParallelEnv):
