@@ -38,7 +38,8 @@ class DQNLightning(LightningModule):
         eps_end: float = 0.01,
         episode_length: int = 500,
         warm_start_steps: int = 1000,
-        env_params: dict = {}
+        env_params: dict = {},
+        agent_params: dict = {}
     ) -> None:
         """
         Args:
@@ -77,7 +78,7 @@ class DQNLightning(LightningModule):
         self.target_net = DQN(obs_size, n_actions)
 
         self.buffer = ReplayBuffer(self.hparams.replay_size)
-        self.agent = ShardAgent(self.env, self.buffer)
+        self.agent = ShardAgent(self.env, self.buffer, **agent_params)
         self.total_reward = 0
         self.episode_reward = 0
         self.populate(self.hparams.warm_start_steps)
@@ -191,6 +192,31 @@ class DQNLightning(LightningModule):
         self.log("done", done)
 
         return OrderedDict({"loss": loss, "log": log, "progress_bar": status})
+    
+    def record_step(self, nb_batch, record_path):
+        if nb_batch == 0:
+            init_string = 'state,action,reward,done,shard_events,new_state\n'
+            with open(record_path, 'w') as f:
+                f.write(init_string)
+        device = 'cpu'
+        epsilon = max(
+            self.hparams.eps_end,
+            self.hparams.eps_start
+            - self.global_step * 1 / self.hparams.eps_last_frame,
+        )
+
+        # step through environment with agent
+        reward, done = self.agent.play_step(self.net, epsilon, device, save_path=record_path)
+        self.episode_reward += reward
+
+
+        if done:
+            self.total_reward = self.episode_reward
+            self.episode_reward = 0
+          
+        return done
+            
+        
 
     def configure_optimizers(self) -> typ.List[Optimizer]:
         """Initialize Adam optimizer."""
@@ -217,7 +243,7 @@ class DQNLightning(LightningModule):
         return batch[0].device.index if self.on_gpu else "cpu"
 
 
-def run_experiment(hparams={}, trainer_params={}):
+def run_experiment(hparams={}, trainer_params={}, train=True):
     model = DQNLightning(**hparams)
     # save any arbitrary metrics like `val_loss`, etc. in name
     # saves a file like: my/path/epoch=2-val_loss=0.02-other_metric=0.03.ckpt
@@ -231,7 +257,7 @@ def run_experiment(hparams={}, trainer_params={}):
          save_on_train_epoch_end=True
      )
     if trainer_params.get('resume_from_checkpoint'):
-        checkpoint = 'checkpoints/last.ckpt'
+        checkpoint = '../checkpoints/last.ckpt'
     else:
         checkpoint = None
     print('checkpoint', checkpoint)
@@ -241,7 +267,14 @@ def run_experiment(hparams={}, trainer_params={}):
         val_check_interval=100,  
         enable_progress_bar=True,
         callbacks=[checkpoint_callback])
-    trainer.fit(model, ckpt_path=checkpoint)
+    if train is True:
+        trainer.fit(model, ckpt_path=checkpoint)
+    
+    count = 0
+    record_done = model.record_step(nb_batch=count, record_path=trainer_params.get('record_path'))
+    while not record_done: 
+        count += 1
+        record_done = model.record_step(nb_batch=count, record_path=trainer_params.get('record_path'))
 
 
 
@@ -253,30 +286,34 @@ if __name__ == "__main__":
         'env': "savanna-v2",
         'gamma': 0.99,
         'sync_rate': 10,
-        'replay_size': 1000,
-        'warm_start_size': 1000,
+        'replay_size': 99,
+        'warm_start_size': 100,
         'eps_last_frame': 1000,
         'eps_start': 1.0,
         'eps_end': 0.01,
-        'episode_length': 500,
-        'warm_start_steps': 1000,
+        'episode_length': 1010,
+        'warm_start_steps': 100,
         'env_params': {
-            'NUM_ITERS': 500,  # duration of the game
+            'NUM_ITERS': 1000,  # duration of the game
             'MAP_MIN': 0,
-            'MAP_MAX': 100,
-            'render_map_max': 100,
+            'MAP_MAX': 5,
+            'render_map_max': 5,
             'AMOUNT_AGENTS': 1,  # for now only one agent
             'AMOUNT_GRASS_PATCHES': 2,
             'AMOUNT_WATER_HOLES': 2
+        },
+        'agent_params': {
+            'target_shards':['hunger', 'thirst', 'curiosity']
         }
 
     }
     trainer_params = {
-        'resume_from_checkpoint': True,
+        'resume_from_checkpoint': False,
         'num_workers': 14,
-        'max_epochs': 2000
+        'max_epochs': 200,
+        'record_path': '../checkpoints/memory_records/test2.csv'
     }
-    run_experiment(hparams, trainer_params)
+    run_experiment(hparams, trainer_params, train=True)
 
     # Notes
     # resume from a specific checkpoint
@@ -291,3 +328,5 @@ if __name__ == "__main__":
     # retrieve the best checkpoint after training
 
     # checkpoint_callback.best_model_path
+    
+    

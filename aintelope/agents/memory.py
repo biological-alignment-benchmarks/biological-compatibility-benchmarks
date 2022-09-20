@@ -33,7 +33,10 @@ class ReplayBuffer:
         self.buffer.append(experience)
 
     def sample(self, batch_size: int) -> typ.Tuple:
-        indices = np.random.choice(len(self.buffer), batch_size, replace=False)
+        if batch_size > len(self.buffer):
+            indices = np.random.choice(len(self.buffer), batch_size, replace=True)
+        else:
+            indices = np.random.choice(len(self.buffer), batch_size, replace=False)
         states, actions, rewards, dones, next_states = zip(
             *(self.buffer[idx] for idx in indices)
         )
@@ -48,6 +51,8 @@ class ReplayBuffer:
         
     def fetch_recent_states(self, n):
         indices = list(range(max(0, len(self.buffer) - n), len(self.buffer)))
+        if len(indices) == 0:
+            return []
         states, actions, rewards, dones, next_states = zip(
             *(self.buffer[idx] for idx in indices)
         )

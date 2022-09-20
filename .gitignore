@@ -1,3 +1,7 @@
+# Nathan-specific mods
+*.toml
+*.lock
+
 # Model Checkpoints
 checkpoints/
 *.ckpt

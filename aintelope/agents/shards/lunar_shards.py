@@ -2,8 +2,17 @@ import typing as typ
 
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 
+'''
+Nathan: I'm not too sure about this. If we create instincts for a 'lander' as if it were
+a creature in and of itself, rather than a vehicle being piloted by a creature,
+that limits our interchanagability. I think in the future we'd want a more general interpretation
+where these 'shards' are explicitly learned rather than hardcoded, and the underlying shards 
+that we hardcode would be sufficiently generic that they'd work for the savanna roles (lion, antelope) as well as this.
+But if we want the learned-shards to be explicit (which would be nice) we'd need some different
+learning system for that. Not sure how to accomplish this, more thought and discussion needed.
+'''
 
-class Hunger:
+class Safety:
 
     def __init__(self, shard_params={}) -> None:
         self.shard_params = shard_params
@@ -36,7 +45,40 @@ class Hunger:
         return hunger_reward
 
 
-class Thirst:
+class Fuel:
+
+    def __init__(self, shard_params={}) -> None:
+        self.shard_params = shard_params
+        self.thirst_rate
+        self.max_thirst_reward
+        self.last_drank
+
+    def reset(self):
+        self.thirst_rate = self.shard_params.get('thirst_rate', 10)
+        self.max_thirst_reward = self.shard_params.get(
+            'max_thirst_reward', 4.0)
+        self.last_drank = self.shard_params.get('last_drank', 0)
+
+    def calc_reward(self, agent, state):
+        '''function of time since last ate and thirst rate and opportunity to eat'''
+        current_step = agent.env.num_moves
+        agent_pos = [state[1], state[2]]
+        min_grass_distance = distance_to_closest_item(
+            agent_pos, agent.env.water_holes)
+
+        if min_grass_distance < 1.0:
+            self.last_drank = current_step
+
+        time_since_drank = current_step - self.last_drank
+        current_thirst = time_since_drank / self.thirst_rate
+        opportunity_to_drink = 1 / (1 + min_grass_distance)
+        thirst_reward = (current_thirst *
+                         opportunity_to_drink + (1 - current_thirst))
+        thirst_reward = min(thirst_reward, self.max_thirst_reward)
+        return thirst_reward
+
+
+class Mission:
 
     def __init__(self, shard_params={}) -> None:
         self.shard_params = shard_params

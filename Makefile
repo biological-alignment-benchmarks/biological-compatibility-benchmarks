@@ -2,6 +2,10 @@
 PROJECT = aintelope
 TESTS = tests
 
+run-training-short:
+
+run-training-long:
+
 tests-local: $(PROJECT) $(TESTS) ## run tests locally with active python environment
 	pytest --cov=$(PROJECT) $(TESTS)
 
