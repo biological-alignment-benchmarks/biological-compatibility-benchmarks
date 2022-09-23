@@ -14,13 +14,6 @@ from aintelope.agents.simple_agents import (
 from aintelope.agents.memory import ReplayBuffer
 from aintelope.models.dqn import DQN
 from aintelope.aintelope.environments.savanna_zoo import SavannaZooEnv
-from aintelope.aintelope.environments.savanna_gym import SavannaGymEnv
-
-# from aintelope.aintelope.environments.savanna_zoo import (
-#     env,
-#     move_agent,
-#     reward_agent,
-# )
 
 
 # is there a better way to do this?
