@@ -51,7 +51,7 @@ def run_episode(hparams: dict = {}):
         # GYM_INTERACTION
         if hparams.get("env_entry_point") is not None:
             gym.envs.register(
-                id=env_params["name"],
+                id=hparams["env"],
                 entry_point=hparams[
                     "env_entry_point"
                 ],  # e.g. 'aintelope.environments.savanna_gym:SavannaGymEnv'

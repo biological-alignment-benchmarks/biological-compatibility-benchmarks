@@ -79,7 +79,7 @@ class Agent:
 
         # do step in the environment
         # GYM_INTERACTION
-        new_state, reward, done = self.env.step(action)
+        new_state, reward, done, info = self.env.step(action)
 
         exp = Experience(self.state, action, reward, done, new_state)
 

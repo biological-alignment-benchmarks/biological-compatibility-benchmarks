@@ -76,7 +76,8 @@ class SavannaGymEnv(gym.Env):
         done = self.num_moves >= self.metadata['num_iters']
 
         observation = self._get_obs()
-        return observation, reward, done
+        info = {"placeholder":"Placeholder because Nathan is confused here."}
+        return observation, reward, done, info
 
     def reset(self):
         self.agent_state = self.np_random.integers(
@@ -89,7 +90,8 @@ class SavannaGymEnv(gym.Env):
                 self.metadata['amount_water_holes'], 2))
         self.last_action = None
         self.num_moves = 0
-        return self._get_obs()
+        info = {"placeholder":"hmmm"}
+        return (self._get_obs(), info)
 
     def _get_obs(self):
         observations = [0] + self.agent_state.tolist() 

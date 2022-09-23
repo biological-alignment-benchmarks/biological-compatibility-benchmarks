@@ -99,7 +99,7 @@ class ShardAgent:
         
         # do step in the environment
         # the environment reports the result of that decision
-        new_state, env_reward, done = self.env.step(action)
+        new_state, env_reward, done, info = self.env.step(action)
         
         # we need a layer of body interpretation of the physical state of the environment
         # to track things like impact which can cause persistent injuries 
