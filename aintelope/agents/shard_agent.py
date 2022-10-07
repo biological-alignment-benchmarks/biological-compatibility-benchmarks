@@ -13,26 +13,34 @@ from aintelope.agents.shards.savanna_shards import available_shards_dict
 class ShardAgent:
     """Base Agent class handeling the interaction with the environment."""
 
-    def __init__(self, env: gym.Env, replay_buffer: ReplayBuffer, target_shards: list = []) -> None:
+    def __init__(self, env: gym.Env, model, replay_buffer: ReplayBuffer, target_shards: list = []) -> None:
         """
         Args:
             env: training environment
             replay_buffer: replay buffer storing experiences
         """
         self.env = env
+        self.model = model
         self.replay_buffer = replay_buffer
         self.target_shards = target_shards
         self.shards = {}
+        self.done = False
         self.reset()
 
     def init_shards(self):
+        print('debug target_shards', self.target_shards)
+        for shard_name in self.target_shards:
+            if shard_name not in available_shards_dict:
+                print(f'Warning: could not find {shard_name} in available_shards_dict')
+                continue
+            
         self.shards = {shard : available_shards_dict.get(shard)() for shard in self.target_shards if shard in available_shards_dict}
-        print('target_shards', self.target_shards)
         for shard in self.shards.values():
             shard.reset()
 
     def reset(self) -> None:
         """Resents the environment and updates the state."""
+        self.done = False
         # GYM_INTERACTION
         self.state = self.env.reset()
         if isinstance(self.state, tuple):

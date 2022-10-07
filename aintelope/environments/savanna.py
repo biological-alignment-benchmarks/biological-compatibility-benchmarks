@@ -101,6 +101,15 @@ def move_agent(agent_pos: np.ndarray, action: Action, map_min=0, map_max=100) ->
     return agent_pos
 
 
+def get_agent_pos_from_state(agent_state):
+    """be sure to update this if you change
+    the organization of the state to put the
+    agent's position somewhere else.
+    TODO: make unit test for this
+    """
+    return [agent_state[1], agent_state[2]]
+    
+
 class SavannaEnv():
 
     metadata = {

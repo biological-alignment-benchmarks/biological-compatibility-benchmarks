@@ -22,7 +22,7 @@ from aintelope.environments.savanna import (
     )
 
 
-class SavannaZooEnv(ParallelEnv):
+class SavannaZooParallelEnv(ParallelEnv):
 
     metadata = {
         "name": "savanna_v1",
@@ -163,27 +163,37 @@ class SavannaZooEnv(ParallelEnv):
         - rewards
         - dones
         - info
-        dicts where each dict looks like {agent_1: item_1, agent_2: item_2}
-        """  # If a user passes in actions with no agents, then just return empty observations, etc.
+        dicts where each dict looks like {agent_1: action_of_agent_1, agent_2: action_of_agent_2}
+        or generally {<agent_name>: <agent_action or None if agent is done>}
+        """  
+        print('debug actions', actions)
+        # If a user passes in actions with no agents, then just return empty observations, etc.
         if not actions:
             self.agents = []
             return {}, {}, {}, {}
 
         if self.agents == []:
             raise ValueError("No agents found; num_iters reached?")
-
+        
         rewards = {}
         for agent in self.agents:
+            action = actions.get(agent)    
+            if isinstance(action, dict):
+                action = action.get(agent)
+            if action is None:
+                continue
+            
+            print('debug action', action)
             self.agent_states[agent] = move_agent(
-                self.agent_states[agent], actions[agent],
+                self.agent_states[agent], action,
                 map_min=self.metadata['map_min'], map_max=self.metadata['map_max']
             )
             min_grass_distance = distance_to_closest_item(self.agent_states[agent], self.grass_patches)
             rewards[agent] = reward_agent(min_grass_distance)
 
         self.num_moves += 1
-        env_done = self.num_moves >= self.metadata['num_iters']
-        self.dones = {agent: env_done for agent in self.agents}
+        env_done = (self.num_moves >= self.metadata['num_iters']) or all([actions.get(agent) is None for agent in self.agents])
+        self.dones = {agent: env_done or (actions.get(agent) is None) for agent in self.agents}
 
         observations = {agent: self.observe(agent) for agent in self.agents}
 
@@ -193,5 +203,8 @@ class SavannaZooEnv(ParallelEnv):
 
         if env_done:
             self.agents = []
-
+        print('debug return', observations, rewards, self.dones, infos)
         return observations, rewards, self.dones, infos
+
+class SavannaZooSequentialEnv(SavannaZooParallelEnv, AECEnv):
+    pass

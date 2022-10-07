@@ -22,27 +22,6 @@ def test_render():
     pass
 
 
-def test_step_result():
-    env = sut.env()
-    num_agents = len(env.possible_agents)
-    assert num_agents, f"expected 1 agent, got: {num_agents}"
-    env.reset()
-
-    agent = env.possible_agents[0]
-    action = {agent: env.action_space(agent).sample()}
-    observations, rewards, dones, info = env.step(action)
-
-    assert not dones[agent]
-    assert isinstance(observations, dict), "observations is not a dict"
-    assert isinstance(
-        observations[agent], np.ndarray
-    ), "observations of agent is not an array"
-    assert isinstance(rewards, dict), "rewards is not a dict"
-    assert isinstance(
-        rewards[agent], np.float64
-    ), "reward of agent is not a float64"
-
-
 def test_grass_patches():
     env = sut.SavannaEnv()
 

@@ -1,6 +1,7 @@
 import typing as typ
 
 from aintelope.environments.env_utils.distance import distance_to_closest_item
+from aintelope.environments.savanna import get_agent_pos_from_state
 
 
 class Hunger:
@@ -20,7 +21,7 @@ class Hunger:
     def calc_reward(self, agent, state):
         '''function of time since last ate and hunger rate and opportunity to eat'''
         current_step = agent.env.num_moves
-        agent_pos = [state[1], state[2]]
+        agent_pos = get_agent_pos_from_state(agent.state)
         min_grass_distance = distance_to_closest_item(
             agent_pos, agent.env.grass_patches)
         event_signal = 0

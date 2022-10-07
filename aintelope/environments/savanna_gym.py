@@ -67,6 +67,8 @@ class SavannaGymEnv(gym.Env):
             self.agent_state, action,
             map_min=self.metadata['map_min'], map_max=self.metadata['map_max']
         )
+        
+        
         min_grass_distance = distance_to_closest_item(self.agent_state, self.grass_patches)
         reward = reward_agent(min_grass_distance)
         if min_grass_distance < 1.0:

@@ -29,10 +29,9 @@ def test_shardagent_in_savanna_gym():
             "render_map_max": 20,
             "amount_agents": 1,  # for now only one agent
             "amount_grass_patches": 2,
-            "amount_water_holes": 0
+            "amount_water_holes": 1
         },
-        "agent_params": {}
     }
     hparams.update(test_params)
-    run_episode(hparams=hparams)
+    run_episode(hparams=hparams, device='cpu')
     cleanup_gym_envs()

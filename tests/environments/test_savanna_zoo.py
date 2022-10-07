@@ -15,11 +15,11 @@ from pettingzoo.utils import parallel_to_aec
 
 from aintelope.environments import savanna_zoo as sut
 from aintelope.environments.savanna import ACTION_MAP
-from aintelope.environments.savanna_zoo import SavannaZooEnv
+from aintelope.environments.savanna_zoo import SavannaZooParallelEnv, SavannaZooSequentialEnv
 from aintelope.environments.env_utils.distance import vec_distance, distance_to_closest_item
 
 def test_pettingzoo_api_parallel():
-    parallel_api_test(sut.SavannaZooEnv(), num_cycles=1000)
+    parallel_api_test(sut.SavannaZooParallelEnv(), num_cycles=1000)
     
     
     
@@ -34,18 +34,18 @@ def test_pettingzoo_api_sequential():
         'amount_grass_patches': 2,
         'amount_water_holes': 2,
     }
-    parallel_env = SavannaZooEnv(env_params=env_params)
+    parallel_env = SavannaZooParallelEnv(env_params=env_params)
     # TODO: Nathan was able to get the sequential-turn env to work, using this conversion, but not the parallel env. why??
     sequential_env = parallel_to_aec(parallel_env)
     api_test(sequential_env, num_cycles=10, verbose_progress=True)
 
 
 def test_seed():
-    parallel_seed_test(sut.SavannaZooEnv, num_cycles=10, test_kept_state=True)
+    parallel_seed_test(sut.SavannaZooParallelEnv, num_cycles=10, test_kept_state=True)
 
 
 def test_agent_states():
-    env = sut.SavannaZooEnv()
+    env = sut.SavannaZooParallelEnv()
 
     with pytest.raises(AttributeError):
         env.agent_states
@@ -65,7 +65,7 @@ def test_agent_states():
 
 
 def test_reward_agent():
-    env = sut.SavannaZooEnv()
+    env = sut.SavannaZooParallelEnv()
     env.reset()
     # single grass patch
     agent_pos = np.random.randint(env.metadata['map_min'], env.metadata['map_max'], 2)
@@ -89,7 +89,7 @@ def test_reward_agent():
 
 
 def test_move_agent():
-    env = sut.SavannaZooEnv()
+    env = sut.SavannaZooParallelEnv()
     env.reset()
 
     agent = env.possible_agents[0]
@@ -110,8 +110,28 @@ def test_move_agent():
         assert agent_states[agent].dtype == sut.PositionFloat
 
 
+def test_step_result():
+    env = sut.SavannaZooParallelEnv()
+    num_agents = len(env.possible_agents)
+    assert num_agents, f"expected 1 agent, got: {num_agents}"
+    env.reset()
+
+    agent = env.possible_agents[0]
+    action = {agent: env.action_space(agent).sample()}
+    observations, rewards, dones, info = env.step(action)
+
+    assert not dones[agent]
+    assert isinstance(observations, dict), "observations is not a dict"
+    assert isinstance(
+        observations[agent], np.ndarray
+    ), "observations of agent is not an array"
+    assert isinstance(rewards, dict), "rewards is not a dict"
+    assert isinstance(
+        rewards[agent], np.float64
+    ), "reward of agent is not a float64"
+
 def test_done_step():
-    env = sut.SavannaZooEnv()
+    env = sut.SavannaZooParallelEnv()
     assert len(env.possible_agents) == 1
     env.reset()
 
@@ -127,7 +147,7 @@ def test_done_step():
 
 
 def test_agents():
-    env = sut.SavannaZooEnv()
+    env = sut.SavannaZooParallelEnv()
 
     assert len(env.possible_agents) == env.metadata['amount_agents']
     assert isinstance(env.possible_agents, list)
@@ -139,7 +159,7 @@ def test_agents():
 
 
 def test_action_spaces():
-    env = sut.SavannaZooEnv()
+    env = sut.SavannaZooParallelEnv()
 
     for agent in env.possible_agents:
         assert isinstance(env.action_space(agent), Discrete)
@@ -148,17 +168,17 @@ def test_action_spaces():
 
 def test_max_cycles():
     # currently the environment does not accept parameters like max_cycles
-    # max_cycles_test(sut.SavannaZooEnv)
+    # max_cycles_test(sut.SavannaZooParallelEnv)
     pass
 
 
 def test_render():
     # TODO: close method not implemented
-    # render_test(sut.SavannaZooEnv)
+    # render_test(sut.SavannaZooParallelEnv)
     pass
 
 
 def test_performance_benchmark():
     # will print only timing to stdout; not shown per default
-    # performance_benchmark(sut.SavannaZooEnv())
+    # performance_benchmark(sut.SavannaZooParallelEnv())
     pass

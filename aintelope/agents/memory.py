@@ -57,6 +57,21 @@ class ReplayBuffer:
             *(self.buffer[idx] for idx in indices)
         )
         return states
+    
+    def fetch_recent_memories(self, n):
+        indices = list(range(max(0, len(self.buffer) - n), len(self.buffer)))
+        if len(indices) == 0:
+            return []
+        memories = zip(
+            *(self.buffer[idx] for idx in indices)
+        )
+        return memories
+        
+    def get_action_from_memory(self, memory):
+        return memory[1]
+    
+    def get_reward_from_memory(self, memory):
+        return memory[2]
 
 
 class RLDataset(IterableDataset):

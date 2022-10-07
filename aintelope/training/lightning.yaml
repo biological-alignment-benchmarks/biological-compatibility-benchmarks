@@ -31,4 +31,5 @@ trainer_params:
   num_workers: 14
   max_epochs: 200
   record_path: '../checkpoints/memory_records/test2.csv'
+  device: 'cuda'
     
