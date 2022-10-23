@@ -5,7 +5,7 @@ description = "Simulate agents with reinforcement learning over selected cue-res
 authors = ["Hauke Rehfeld <git@haukerehfeld.de>",
            "Gunnar Zarncke <gunnar@zarncke.de>",
            "Andre Kochanke <a.kochanke@posteo.net>",
-           "Nathan Helm-Burger"]
+           "Nathan Helm-Burger <nathan.helm.burger@gmail.com>"]
 
 [tool.poetry.dependencies]
 Box2D = "2.3.2"
