@@ -152,13 +152,17 @@ class DQNLightning(LightningModule):
             self.target_net.load_state_dict(self.net.state_dict())
 
         log = {
-            "total_reward": torch.tensor(self.total_reward, dtype=torch.float32).to(device),
+            "total_reward": torch.tensor(
+                self.total_reward, dtype=torch.float32
+            ).to(device),
             "reward": torch.tensor(reward, dtype=torch.float32).to(device),
             "train_loss": loss,
         }
         status = {
             "steps": torch.tensor(self.global_step).to(device),
-            "total_reward": torch.tensor(self.total_reward, dtype=torch.float32).to(device),
+            "total_reward": torch.tensor(
+                self.total_reward, dtype=torch.float32
+            ).to(device),
         }
 
         # /home/nathan/.pyenv/versions/3.10.3/envs/aintelope/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:229: UserWarning: You called `self.log('episode_reward', ...)` in your `training_step` but the value needs to be floating point. Converting it to torch.float32
@@ -171,13 +175,13 @@ class DQNLightning(LightningModule):
         self.log("done", done)
 
         return OrderedDict({"loss": loss, "log": log, "progress_bar": status})
-    
-    def record_step(self, nb_batch, record_path):
+
+    def record_step(self, nb_batch, record_path) -> bool:
         if nb_batch == 0:
-            init_string = 'state,action,reward,done,shard_events,new_state\n'
-            with open(record_path, 'w') as f:
+            init_string = "state,action,reward,done,shard_events,new_state\n"
+            with open(record_path, "w") as f:
                 f.write(init_string)
-        device = 'cpu'
+        device = "cpu"
         epsilon = max(
             self.hparams.eps_end,
             self.hparams.eps_start
@@ -185,17 +189,16 @@ class DQNLightning(LightningModule):
         )
 
         # step through environment with agent
-        reward, done = self.agent.play_step(self.net, epsilon, device, save_path=record_path)
+        reward, done = self.agent.play_step(
+            self.net, epsilon, device, save_path=record_path
+        )
         self.episode_reward += reward
-
 
         if done:
             self.total_reward = self.episode_reward
             self.episode_reward = 0
-          
+
         return done
-            
-        
 
     def configure_optimizers(self) -> typ.List[Optimizer]:
         """Initialize Adam optimizer."""
