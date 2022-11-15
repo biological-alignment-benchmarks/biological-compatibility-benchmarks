@@ -1,0 +1,9 @@
+Box2D==2.3.2
+Box2D-kengz==2.3.3
+gemini-engine==1.0.9
+gym==0.26.0
+hydra-core==1.2.0
+PettingZoo==1.18.1
+pygame==2.1.2
+pytorch-lightning==1.6.4
+swig==4.0.2
