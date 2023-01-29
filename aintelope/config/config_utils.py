@@ -4,8 +4,8 @@ from omegaconf import OmegaConf
 
 
 def get_project_path(path: str) -> Path:
-    project_root = Path(__file__).parents[2] / path
-    return project_root
+    project_root = Path(__file__).parents[2]
+    return project_root / path
 
 
 def register_resolvers() -> None:
