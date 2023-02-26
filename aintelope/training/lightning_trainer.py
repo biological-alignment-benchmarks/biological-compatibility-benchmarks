@@ -166,9 +166,9 @@ class DQNLightning(LightningModule):
         self.log("total_reward", log["total_reward"])
         self.log("reward", log["reward"])
         self.log("train_loss", log["train_loss"])
-        self.log("steps", status["steps"])
+        self.log("steps", status["steps"].type(torch.float32))
         self.log("epsilon", epsilon)
-        self.log("done", done)
+        self.log("done", torch.tensor(done).type(torch.float32))
 
         return OrderedDict({"loss": loss, "log": log, "progress_bar": status})
 
