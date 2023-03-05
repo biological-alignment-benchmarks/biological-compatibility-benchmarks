@@ -37,6 +37,10 @@ tests-local: ## Run tests locally
 typecheck-local: ## Local typechecking
 	mypy $(PROJECT)
 
+.PHONY: format
+format: ## apply automatic code formatter to repository
+	black ${PROJECT} ${TESTS}
+
 .PHONY: isort
 isort: ## Sort python imports
 	isort .
