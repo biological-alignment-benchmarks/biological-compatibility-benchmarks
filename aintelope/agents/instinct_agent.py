@@ -44,7 +44,7 @@ class InstinctAgent:
         logger.debug("debug target_instincts", self.target_instincts)
         for instinct_name in self.target_instincts:
             if instinct_name not in available_instincts_dict:
-                logger.debug(
+                logger.warning(
                     f"Warning: could not find {instinct_name} in available_instincts_dict"
                 )
                 continue
