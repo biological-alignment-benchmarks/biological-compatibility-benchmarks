@@ -14,7 +14,11 @@ class InstinctAgent:
     """Base Agent class handeling the interaction with the environment."""
 
     def __init__(
-        self, env: gym.Env, model, replay_buffer: ReplayBuffer, target_instincts: list = []
+        self,
+        env: gym.Env,
+        model,
+        replay_buffer: ReplayBuffer,
+        target_instincts: list = [],
     ) -> None:
         """
         Args:
@@ -33,7 +37,9 @@ class InstinctAgent:
         print("debug target_instincts", self.target_instincts)
         for instinct_name in self.target_instincts:
             if instinct_name not in available_instincts_dict:
-                print(f"Warning: could not find {instinct_name} in available_instincts_dict")
+                print(
+                    f"Warning: could not find {instinct_name} in available_instincts_dict"
+                )
                 continue
 
         self.instincts = {
@@ -135,7 +141,9 @@ class InstinctAgent:
             reward = 0
             instinct_events = []
             for instinct_name, instinct_object in self.instincts.items():
-                instinct_reward, instinct_event = instinct_object.calc_reward(self, new_state)
+                instinct_reward, instinct_event = instinct_object.calc_reward(
+                    self, new_state
+                )
                 reward += instinct_reward
                 if instinct_event != 0:
                     instinct_events.append((instinct_name, instinct_event))
@@ -146,7 +154,14 @@ class InstinctAgent:
             with open(save_path, "a+") as f:
                 csv_writer = csv.writer(f)
                 csv_writer.writerow(
-                    [self.state.tolist(), action, reward, done, instinct_events, new_state]
+                    [
+                        self.state.tolist(),
+                        action,
+                        reward,
+                        done,
+                        instinct_events,
+                        new_state,
+                    ]
                 )
 
         self.replay_buffer.append(exp)

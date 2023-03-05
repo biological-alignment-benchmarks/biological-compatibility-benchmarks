@@ -68,9 +68,13 @@ class Fuel:
     def reset(self):
         self.starting_fuel = self.instinct_params.get("starting_fuel", 10)
         self.current_fuel = self.starting_fuel
-        self.initial_goal_distance = self.instinct_params.get("initial_goal_distance", 100)
+        self.initial_goal_distance = self.instinct_params.get(
+            "initial_goal_distance", 100
+        )
         self.max_fuel_reward = self.instinct_params.get("max_fuel_reward", 4.0)
-        self.fuel_location_in_state = self.instinct_params.get("fuel_location_in_state", 0)
+        self.fuel_location_in_state = self.instinct_params.get(
+            "fuel_location_in_state", 0
+        )
 
     def calc_reward(self, agent, state):
         """function of starting fuel, current_fuel, goal_distance"""
@@ -94,7 +98,9 @@ class Mission:
         self.initial_goal_distance = None
 
     def reset(self):
-        self.initial_goal_distance = self.instinct_params.get("initial_goal_distance", 100)
+        self.initial_goal_distance = self.instinct_params.get(
+            "initial_goal_distance", 100
+        )
 
     def calc_reward(self, agent, state):
         """function of remaining distance to goal as percent of initial distance, plus big bonus for actually safely at goal"""
@@ -117,7 +123,9 @@ class Curiosity:
 
     def reset(self):
         self.curiosity_rate = self.instinct_params.get("curiosity_rate", 2)
-        self.max_curiosity_reward = self.instinct_params.get("max_curiosity_reward", 0.1)
+        self.max_curiosity_reward = self.instinct_params.get(
+            "max_curiosity_reward", 0.1
+        )
         self.curiosity_window = self.instinct_params.get("curiosity_window", 20)
         self.last_discovery = self.instinct_params.get("last_discovery", 0)
 

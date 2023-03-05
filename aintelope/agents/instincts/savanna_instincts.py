@@ -77,7 +77,9 @@ class Curiosity:
 
     def reset(self):
         self.curiosity_rate = self.instinct_params.get("curiosity_rate", 2)
-        self.max_curiosity_reward = self.instinct_params.get("max_curiosity_reward", 0.1)
+        self.max_curiosity_reward = self.instinct_params.get(
+            "max_curiosity_reward", 0.1
+        )
         self.curiosity_window = self.instinct_params.get("curiosity_window", 20)
         self.last_discovery = self.instinct_params.get("last_discovery", 0)
 
