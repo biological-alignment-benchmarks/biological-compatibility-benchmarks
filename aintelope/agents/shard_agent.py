@@ -1,10 +1,13 @@
 import typing as typ
+import csv
 
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 import gym
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn
-import csv
 
 from aintelope.agents.memory import Experience, ReplayBuffer
 from aintelope.agents.shards.savanna_shards import available_shards_dict
@@ -24,13 +27,13 @@ class ShardAgent:
         self.env = env
         self.model = model
         self.replay_buffer = replay_buffer
+        self.history = []
         self.target_shards = target_shards
         self.shards = {}
         self.done = False
         self.reset()
 
     def init_shards(self):
-        print("debug target_shards", self.target_shards)
         for shard_name in self.target_shards:
             if shard_name not in available_shards_dict:
                 print(f"Warning: could not find {shard_name} in available_shards_dict")
@@ -142,6 +145,10 @@ class ShardAgent:
 
         # the action taken, the environment's response, and the body's reward are all recorded together in memory
         exp = Experience(self.state, action, reward, done, new_state)
+        self.history.append(
+            (self.state.tolist(), action, reward, done, shard_events, new_state)
+        )
+
         if save_path is not None:
             with open(save_path, "a+") as f:
                 csv_writer = csv.writer(f)
@@ -156,3 +163,55 @@ class ShardAgent:
         if done:
             self.reset()
         return reward, done
+
+    def get_history(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            columns=["state", "action", "reward", "done", "shard_events", "new_state"],
+            data=self.history,
+        )
+
+    def plot_history(self) -> Figure:
+        history_df = self.get_history()
+
+        x = []
+        y = []
+        event_x = []
+        event_y = []
+        event_type = []
+        food_x = []
+        food_y = []
+        water_x = []
+        water_y = []
+        for _, row in history_df.iterrows():
+            state = row["state"]
+            x.append(state[1])
+            y.append(state[2])
+
+            food_x.append(state[4])
+            food_y.append(state[5])
+            food_x.append(state[7])
+            food_y.append(state[8])
+
+            water_x.append(state[10])
+            water_y.append(state[11])
+            water_x.append(state[13])
+            water_y.append(state[14])
+
+            if row["shard_events"] != "[]":
+                event_x.append(x[-1])
+                event_y.append(y[-1])
+                event_type.append(row["shard_events"])
+
+        agent_df = pd.DataFrame(data={"x": x, "y": y})
+        food_df = pd.DataFrame(data={"x": food_x, "y": food_y})
+        water_df = pd.DataFrame(data={"x": water_x, "y": water_y})
+        event_df = pd.DataFrame(
+            data={"x": event_x, "y": event_y, "event_type": event_type}
+        )
+
+        fig, ax = plt.subplots()
+        ax.plot(agent_df["x"], agent_df["y"], ".r-")
+        ax.plot(food_df["x"], food_df["y"], ".g", markersize=15)
+        ax.plot(water_df["x"], water_df["y"], ".b", markersize=15)
+        plt.tight_layout()
+        return fig

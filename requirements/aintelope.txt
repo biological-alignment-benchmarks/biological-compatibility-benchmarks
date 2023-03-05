@@ -1,6 +1,8 @@
 gemini-engine==1.0.9
 gym==0.26.0
 hydra-core==1.2.0
+matplotlib==3.7.0
+pandas==1.5.3
 PettingZoo==1.18.1
 pygame==2.1.2
 pytorch-lightning==1.6.4

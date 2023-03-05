@@ -10,7 +10,7 @@ import torch
 from torch import Tensor, nn
 from torch.optim import Adam, Optimizer
 from torch.utils.data import DataLoader
-from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning import LightningModule, Trainer, loggers as pl_loggers
 from pytorch_lightning.utilities.enums import DistributedType
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -161,7 +161,6 @@ class DQNLightning(LightningModule):
             ),
         }
 
-        # /home/nathan/.pyenv/versions/3.10.3/envs/aintelope/lib/python3.10/site-packages/pytorch_lightning/trainer/connectors/logger_connector/result.py:229: UserWarning: You called `self.log('episode_reward', ...)` in your `training_step` but the value needs to be floating point. Converting it to torch.float32
         self.log("episode_reward", self.episode_reward)
         self.log("total_reward", log["total_reward"])
         self.log("reward", log["reward"])
@@ -171,6 +170,14 @@ class DQNLightning(LightningModule):
         self.log("done", done)
 
         return OrderedDict({"loss": loss, "log": log, "progress_bar": status})
+
+    def on_train_epoch_end(self) -> None:
+        if (self.current_epoch + 1) % self.hparams.log_figures_every_n_epochs == 0:
+            self.logger.experiment.add_figure(
+                "train_images/agent_history",
+                self.agent.plot_history(),
+                self.current_epoch,
+            )
 
     def record_step(self, nb_batch: int, record_path: Path) -> bool:
         record_path.parent.mkdir(parents=True, exist_ok=True)
@@ -222,7 +229,7 @@ class DQNLightning(LightningModule):
 
 
 def run_experiment(cfg: DictConfig) -> None:
-    model = DQNLightning(cfg.hparams)
+    lightning_module = DQNLightning(cfg.hparams)
 
     # save any arbitrary metrics like `val_loss`, etc. in name
     # saves a file like: my/path/epoch=2-val_loss=0.02-other_metric=0.03.ckpt
@@ -240,6 +247,7 @@ def run_experiment(cfg: DictConfig) -> None:
     else:
         checkpoint = None
     logger.info(f"checkpoint: {checkpoint}")
+    tb_logger = pl_loggers.TensorBoardLogger(save_dir="outputs")
 
     trainer = Trainer(
         gpus=AVAIL_GPUS,
@@ -247,16 +255,19 @@ def run_experiment(cfg: DictConfig) -> None:
         val_check_interval=100,
         enable_progress_bar=True,
         callbacks=[checkpoint_callback],
+        logger=tb_logger,
     )
 
-    trainer.fit(model, ckpt_path=checkpoint)
+    trainer.fit(lightning_module, ckpt_path=checkpoint)
 
     record_path = cfg.trainer_params.record_path / f"{cfg.timestamp}_records.csv"
     count = 0
-    record_done = model.record_step(nb_batch=count, record_path=record_path)
+    record_done = lightning_module.record_step(nb_batch=count, record_path=record_path)
     while not record_done:
         count += 1
-        record_done = model.record_step(nb_batch=count, record_path=record_path)
+        record_done = lightning_module.record_step(
+            nb_batch=count, record_path=record_path
+        )
 
     # Notes
     # resume from a specific checkpoint

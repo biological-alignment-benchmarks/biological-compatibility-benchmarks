@@ -4,7 +4,7 @@ timestamp: ${now:%Y%m%d%H%M}
 trainer_params:
   resume_from_checkpoint: False
   num_workers: 4
-  max_epochs: 5
+  max_epochs: 10
   checkpoint: ${abs_path:outputs/checkpoints}
   record_path: ${abs_path:outputs/memory_records}
   device: cuda
@@ -26,6 +26,7 @@ hparams:
   eps_end: 0.01
   episode_length: 1010
   warm_start_steps: 100
+  log_figures_every_n_epochs: 5
   env_params:
     num_iters: 1000 # duration of the game
     map_min: 0
