@@ -246,14 +246,14 @@ class ShardAgent:
                     )
                 else:
                     ax.plot(line_segment[[0, 2]], line_segment[[1, 3]], color=cmap(col))
-                    print(step_freq, step_freq.max(), col)
 
-            ax.plot(food_df["x"], food_df["y"], "xg", markersize=8)
-            ax.plot(water_df["x"], water_df["y"], "xb", markersize=8)
+            ax.plot(food_df["x"], food_df["y"], "xg", markersize=8, label="Food")
+            ax.plot(water_df["x"], water_df["y"], "xb", markersize=8, label="Water")
             cbar = fig.colorbar(im)
             cbar.set_label("Relative Frequency Agent")
         else:
             raise NotImplementedError(f"{style} is not a valid plot style!")
 
+        ax.legend()
         plt.tight_layout()
         return fig
