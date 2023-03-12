@@ -175,9 +175,10 @@ class ShardAgent:
             data=self.history,
         )
 
-    def plot_history(self, style: str = "thickness") -> Figure:
-        history_df = self.get_history()
-
+    @staticmethod
+    def process_history(
+        history_df: pd.DataFrame,
+    ) -> typ.Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         x = []
         y = []
         event_x = []
@@ -187,6 +188,7 @@ class ShardAgent:
         food_y = []
         water_x = []
         water_y = []
+
         for _, row in history_df.iterrows():
             state = row["state"]
             x.append(state[1])
@@ -213,45 +215,43 @@ class ShardAgent:
         event_df = pd.DataFrame(
             data={"x": event_x, "y": event_y, "event_type": event_type}
         )
+        return agent_df, food_df, water_df, event_df
 
-        fig, ax = plt.subplots()
+    def plot_history(self, style: str = "thickness", color: str = "viridis") -> Figure:
+        history_df = self.get_history()
+        agent_df, food_df, water_df, event_df = self.process_history(history_df)
+
+        fig, ax = plt.subplots(figsize=(8, 8))
 
         if style == "thickness":
             ax.plot(agent_df["x"], agent_df["y"], ".r-")
             ax.plot(food_df["x"], food_df["y"], ".g", markersize=15)
             ax.plot(water_df["x"], water_df["y"], ".b", markersize=15)
         elif style == "colormap":
-            agent_arr = np.array(agent_df)
-            agent_arr_steps = np.concatenate([agent_arr[:-1], agent_arr[1:]], axis=1)
-            unique_distances = set(
-                np.unique(
-                    np.linalg.norm(
-                        agent_arr_steps[:, :2] - agent_arr_steps[:, 2:], axis=1
-                    )
-                )
-            )
-            # assert unique_distances == {
-            #     0,
-            #     1,
-            # }, f"There should be only step differences of max 1: {unique_distances}"
-            unique_steps, step_freq = np.unique(
-                agent_arr_steps, axis=0, return_counts=True
-            )
+            cmap = matplotlib.colormaps[color]
 
-            cmap = matplotlib.colormaps["magma"]
-            unique_steps_x1x2y1y2 = unique_steps[:, [0, 2, 1, 3]]
-            for line_segment, col in zip(
-                unique_steps_x1x2y1y2, step_freq / step_freq.max()
-            ):
-                if (
-                    line_segment[0] == line_segment[1]
-                    and line_segment[2] == line_segment[3]
-                ):
-                    im = ax.scatter(line_segment[0], line_segment[1], color=cmap(col))
+            agent_arr = agent_df.to_numpy()  # coordinates x y
+            # coordinates are ordered in x1 y1 x2 y2
+            step_pairs = np.concatenate([agent_arr[:-1], agent_arr[1:]], axis=1)
+            unique_steps, step_freq = np.unique(step_pairs, axis=0, return_counts=True)
+
+            for line_segment, col in zip(unique_steps, step_freq / step_freq.max()):
+                if (line_segment[:2] == line_segment[2:]).all():  # agent did not move
+                    im = ax.scatter(
+                        line_segment[0],
+                        line_segment[1],
+                        s=70,
+                        marker="o",
+                        color=cmap(col),
+                    )
                 else:
-                    ax.plot(line_segment[:2], line_segment[2:], color=cmap(col))
+                    ax.plot(line_segment[[0, 2]], line_segment[[1, 3]], color=cmap(col))
+                    print(step_freq, step_freq.max(), col)
+
+            ax.plot(food_df["x"], food_df["y"], "xg", markersize=8)
+            ax.plot(water_df["x"], water_df["y"], "xb", markersize=8)
             cbar = fig.colorbar(im)
-            cbar.set_label("Relative Frequency")
+            cbar.set_label("Relative Frequency Agent")
         else:
             raise NotImplementedError(f"{style} is not a valid plot style!")
 
