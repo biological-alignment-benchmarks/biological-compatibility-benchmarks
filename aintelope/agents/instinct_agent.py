@@ -211,23 +211,32 @@ class InstinctAgent:
 
         for _, row in history_df.iterrows():
             state = row["state"]
-            x.append(state[1])
-            y.append(state[2])
+            # fmt: off
+            i = 1
+            x.append(state[i]); i += 1
+            y.append(state[i]); i += 1
+            i += 1
 
-            food_x.append(state[4])
-            food_y.append(state[5])
-            food_x.append(state[7])
-            food_y.append(state[8])
+            food_x.append(state[i]); i += 1
+            food_y.append(state[i]); i += 1
+            i += 1
+            food_x.append(state[i]); i += 1
+            food_y.append(state[i]); i += 1
+            i += 1
 
-            water_x.append(state[10])
-            water_y.append(state[11])
-            water_x.append(state[13])
-            water_y.append(state[14])
+            water_x.append(state[i]); i += 1
+            water_y.append(state[i]); i += 1
+            i += 1
+            water_x.append(state[i]); i += 1
+            water_y.append(state[i]); i += 1
+            i += 1
+            # fmt: on
 
             if row["instinct_events"] != "[]":
                 event_x.append(x[-1])
                 event_y.append(y[-1])
                 event_type.append(row["instinct_events"])
+            assert i == len(state)
 
         agent_df = pd.DataFrame(data={"x": x, "y": y})
         food_df = pd.DataFrame(data={"x": food_x, "y": food_y})
