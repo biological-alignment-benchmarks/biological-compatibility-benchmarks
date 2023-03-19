@@ -229,7 +229,6 @@ class InstinctAgent:
             i += 1
             water_x.append(state[i]); i += 1
             water_y.append(state[i]); i += 1
-            i += 1
             # fmt: on
 
             if row["instinct_events"] != "[]":
@@ -254,8 +253,6 @@ class InstinctAgent:
 
         if style == "thickness":
             ax.plot(agent_df["x"], agent_df["y"], ".r-")
-            ax.plot(food_df["x"], food_df["y"], ".g", markersize=15)
-            ax.plot(water_df["x"], water_df["y"], ".b", markersize=15)
         elif style == "colormap":
             cmap = matplotlib.colormaps[color]
 
@@ -276,13 +273,13 @@ class InstinctAgent:
                 else:
                     ax.plot(line_segment[[0, 2]], line_segment[[1, 3]], color=cmap(col))
 
-            ax.plot(food_df["x"], food_df["y"], "xg", markersize=8, label="Food")
-            ax.plot(water_df["x"], water_df["y"], "xb", markersize=8, label="Water")
             cbar = fig.colorbar(im)
             cbar.set_label("Relative Frequency Agent")
         else:
             raise NotImplementedError(f"{style} is not a valid plot style!")
 
+        ax.plot(food_df["x"], food_df["y"], "xg", markersize=8, label="Food")
+        ax.plot(water_df["x"], water_df["y"], "xb", markersize=8, label="Water")
         ax.legend()
         plt.tight_layout()
         return fig
