@@ -1,5 +1,0 @@
-# @package _global_
-training:
-  name: lightning
-  agent: q_agent
-  
