@@ -1,3 +1,7 @@
+"""
+Collection of simple (rule based) agents, e.g. a completely random agent
+"""
+
 import logging
 import random
 
