@@ -15,6 +15,7 @@ from pytorch_lightning.utilities.enums import DistributedType
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 from aintelope.agents.memory import ReplayBuffer, RLDataset
+from aintelope.agents import get_agent_class
 from aintelope.agents.instinct_agent import InstinctAgent
 from aintelope.models.dqn import DQN
 from aintelope.environments.savanna_gym import SavannaGymEnv
@@ -34,10 +35,10 @@ class DQNLightning(LightningModule):
             hparams (DictConfig): hyperparameter dictionary
         """
         super().__init__()
-        self.save_hyperparameters(hparams)
+        self.save_hyperparameters(hparams)  # make hparams available as self.hparams
 
-        if self.hparams.env == "savanna-gym-v2":
-            self.env = SavannaGymEnv(env_params=self.hparams.env_params)
+        if hparams.env == "savanna-gym-v2":
+            self.env = SavannaGymEnv(env_params=hparams.env_params)
             obs_size = self.env.observation_space.shape[0]
         else:
             # GYM_INTERACTION
@@ -47,7 +48,7 @@ class DQNLightning(LightningModule):
             #     entry_point='aintelope.environments.savanna:RawEnv',
             #     kwargs={'env_params': env_params}
             # )
-            self.env = gym.make(self.hparams.env)
+            self.env = gym.make(hparams.env)
             obs_size = self.env.observation_space.shape[0]
 
         n_actions = self.env.action_space.n
@@ -55,13 +56,13 @@ class DQNLightning(LightningModule):
         self.net = DQN(obs_size, n_actions)
         self.target_net = DQN(obs_size, n_actions)
 
-        self.buffer = ReplayBuffer(self.hparams.replay_size)
-        self.agent = InstinctAgent(
-            self.env, self, self.buffer, **self.hparams.agent_params
+        self.buffer = ReplayBuffer(hparams.replay_size)
+        self.agent = get_agent_class(hparams.agent_id)(
+            self.env, self.net, self.buffer, **hparams.agent_params
         )
         self.total_reward = 0
         self.episode_reward = 0
-        self.populate(self.hparams.warm_start_steps)
+        self.populate(hparams.warm_start_steps)
 
     def populate(self, steps: int = 1000) -> None:
         """Carries out several random steps through the environment to
