@@ -58,7 +58,7 @@ class RenderState:
             )
 
         for agent, agent_pos in agents_state.items():
-            assert len(agent_pos) == 2, ("weird agent_pos", agent_pos)
+            assert len(agent_pos) == 2, ("malformed agent_pos", agent_pos)
             # TODO: render agent name as text
             p = project(agent_pos)
             pygame.draw.circle(
