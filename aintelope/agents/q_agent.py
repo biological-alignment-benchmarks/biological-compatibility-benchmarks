@@ -35,7 +35,6 @@ class QAgent(Agent):
             self.action_space = self.env.action_space("agent0")
         else:
             raise TypeError(f"{type(env)} is not a valid environment")
-        self.action_space = self.env.action_space
         self.model = model
         self.replay_buffer = replay_buffer
         self.history = []
