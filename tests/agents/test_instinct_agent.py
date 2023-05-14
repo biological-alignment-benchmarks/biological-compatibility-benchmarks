@@ -1,21 +1,16 @@
-import pathlib
+from typing import Tuple
 
 from omegaconf import OmegaConf, DictConfig
-import pytest
 
+from tests.test_config import root_dir, tparams_hparams
 from aintelope.environments.env_utils.cleanup import cleanup_gym_envs
 from aintelope.training.simple_eval import run_episode
-from tests.test_config import root_dir
 
 
-@pytest.fixture
-def test_hparams(root_dir: pathlib.Path) -> DictConfig:
-    full_params = OmegaConf.load(root_dir / "aintelope/config/config_experiment.yaml")
-    hparams = full_params.hparams
-    return hparams
-
-
-def test_instinctagent_in_savanna_gym(test_hparams: DictConfig):
+def test_instinctagent_in_savanna_gym(
+    tparams_hparams: Tuple[DictConfig, DictConfig]
+) -> None:
+    tparams, hparams = tparams_hparams
     params_savanna_gym = {
         "agent_id": "instinct_agent",
         "env": "savanna-gym-v2",
@@ -30,6 +25,6 @@ def test_instinctagent_in_savanna_gym(test_hparams: DictConfig):
             "amount_water_holes": 1,
         },
     }
-    OmegaConf.merge(test_hparams, params_savanna_gym)
-    run_episode(hparams=test_hparams, device="cpu")
+    OmegaConf.merge(hparams, params_savanna_gym)
+    run_episode(tparams=tparams, hparams=hparams)
     cleanup_gym_envs()

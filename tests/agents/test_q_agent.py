@@ -1,21 +1,16 @@
-import pathlib
+from typing import Tuple
 
 from omegaconf import OmegaConf, DictConfig
-import pytest
 
+from tests.test_config import root_dir, tparams_hparams
 from aintelope.environments.env_utils.cleanup import cleanup_gym_envs
 from aintelope.training.simple_eval import run_episode
-from tests.test_config import root_dir
 
 
-@pytest.fixture
-def test_hparams(root_dir: pathlib.Path) -> DictConfig:
-    full_params = OmegaConf.load(root_dir / "aintelope/config/config_experiment.yaml")
-    hparams = full_params.hparams
-    return hparams
-
-
-def test_qagent_in_savanna_zoo_sequential(test_hparams: DictConfig):
+def test_qagent_in_savanna_zoo_sequential(
+    tparams_hparams: Tuple[DictConfig, DictConfig]
+) -> None:
+    tparams, hparams = tparams_hparams
     params_zoo_sequential = {
         "agent_id": "q_agent",
         "env": "savanna-zoo-sequential-v2",
@@ -33,11 +28,14 @@ def test_qagent_in_savanna_zoo_sequential(test_hparams: DictConfig):
         },
         "agent_params": {},
     }
-    OmegaConf.merge(test_hparams, params_zoo_sequential)
-    run_episode(hparams=test_hparams, device="cpu")
+    OmegaConf.merge(hparams, params_zoo_sequential)
+    run_episode(tparams=tparams, hparams=hparams)
 
 
-def test_qagent_in_savanna_zoo_parallel(test_hparams: DictConfig):
+def test_qagent_in_savanna_zoo_parallel(
+    tparams_hparams: Tuple[DictConfig, DictConfig]
+) -> None:
+    tparams, hparams = tparams_hparams
     params_zoo_parallel = {
         "agent_id": "q_agent",
         "env": "savanna-zoo-parallel-v2",
@@ -54,11 +52,14 @@ def test_qagent_in_savanna_zoo_parallel(test_hparams: DictConfig):
         },
         "agent_params": {},
     }
-    OmegaConf.merge(test_hparams, params_zoo_parallel)
-    run_episode(hparams=test_hparams, device="cpu")
+    OmegaConf.merge(hparams, params_zoo_parallel)
+    run_episode(tparams=tparams, hparams=hparams)
 
 
-def test_qagent_in_savanna_gym(test_hparams: DictConfig):
+def test_qagent_in_savanna_gym(
+    tparams_hparams: Tuple[DictConfig, DictConfig]
+    ) -> None:
+    tparams, hparams = tparams_hparams
     params_savanna_gym = {
         "agent_id": "q_agent",
         "env": "savanna-gym-v2",
@@ -74,6 +75,6 @@ def test_qagent_in_savanna_gym(test_hparams: DictConfig):
         },
         "agent_params": {},
     }
-    OmegaConf.merge(test_hparams, params_savanna_gym)
-    run_episode(hparams=test_hparams, device="cpu")
+    OmegaConf.merge(hparams, params_savanna_gym)
+    run_episode(tparams=tparams, hparams=hparams)
     cleanup_gym_envs()

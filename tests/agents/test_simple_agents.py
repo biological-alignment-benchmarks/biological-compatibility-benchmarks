@@ -1,21 +1,16 @@
-import pathlib
+from typing import Tuple
 
 from omegaconf import OmegaConf, DictConfig
-import pytest
 
+from tests.test_config import root_dir, tparams_hparams
 from aintelope.environments.env_utils.cleanup import cleanup_gym_envs
 from aintelope.training.simple_eval import run_episode
-from tests.test_config import root_dir
 
 
-@pytest.fixture
-def test_hparams(root_dir: pathlib.Path) -> DictConfig:
-    full_params = OmegaConf.load(root_dir / "aintelope/config/config_experiment.yaml")
-    hparams = full_params.hparams
-    return hparams
-
-
-def test_randomwalkagent_in_savanna_gym(test_hparams: DictConfig):
+def test_randomwalkagent_in_savanna_gym(
+    tparams_hparams: Tuple[DictConfig, DictConfig]
+) -> None:
+    tparams, hparams = tparams_hparams
     params_randomwalkagent = {
         "agent": "random_walk_agent",
         "env": "savanna-gym-v2",
@@ -31,12 +26,15 @@ def test_randomwalkagent_in_savanna_gym(test_hparams: DictConfig):
         },
         "agent_params": {},
     }
-    OmegaConf.merge(test_hparams, params_randomwalkagent)
-    run_episode(hparams=test_hparams)
+    OmegaConf.merge(hparams, params_randomwalkagent)
+    run_episode(tparams=tparams, hparams=hparams)
     cleanup_gym_envs()
 
 
-def test_onestepperfectpredictionagent_in_savanna_gym(test_hparams: DictConfig):
+def test_onestepperfectpredictionagent_in_savanna_gym(
+    tparams_hparams: Tuple[DictConfig, DictConfig]
+) -> None:
+    tparams, hparams = tparams_hparams
     params_perfectpredictionagent = {
         "agent": "one_step_perfect_prediction_agent",
         "env": "savanna-gym-v2",
@@ -52,12 +50,15 @@ def test_onestepperfectpredictionagent_in_savanna_gym(test_hparams: DictConfig):
         },
         "agent_params": {},
     }
-    OmegaConf.merge(test_hparams, params_perfectpredictionagent)
-    run_episode(hparams=test_hparams)
+    OmegaConf.merge(hparams, params_perfectpredictionagent)
+    run_episode(tparams=tparams, hparams=hparams)
     cleanup_gym_envs()
 
 
-def test_iterativeweightoptimizationagent_in_savanna_gym(test_hparams: DictConfig):
+def test_iterativeweightoptimizationagent_in_savanna_gym(
+    tparams_hparams: Tuple[DictConfig, DictConfig]
+) -> None:
+    tparams, hparams = tparams_hparams
     params_weightoptimizationagent = {
         "agent": "iterative_weight_optimization_agent",
         "env": "savanna-gym-v2",
@@ -73,6 +74,6 @@ def test_iterativeweightoptimizationagent_in_savanna_gym(test_hparams: DictConfi
         },
         "agent_params": {},
     }
-    OmegaConf.merge(test_hparams, params_weightoptimizationagent)
-    run_episode(hparams=test_hparams)
+    OmegaConf.merge(hparams, params_weightoptimizationagent)
+    run_episode(tparams=tparams, hparams=hparams)
     cleanup_gym_envs()
