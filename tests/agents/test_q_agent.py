@@ -56,9 +56,7 @@ def test_qagent_in_savanna_zoo_parallel(
     run_episode(tparams=tparams, hparams=hparams)
 
 
-def test_qagent_in_savanna_gym(
-    tparams_hparams: Tuple[DictConfig, DictConfig]
-    ) -> None:
+def test_qagent_in_savanna_gym(tparams_hparams: Tuple[DictConfig, DictConfig]) -> None:
     tparams, hparams = tparams_hparams
     params_savanna_gym = {
         "agent_id": "q_agent",
