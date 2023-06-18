@@ -121,6 +121,9 @@ class QAgent(Agent):
         return reward, done
 
     def get_history(self) -> pd.DataFrame:
+        """
+        Method to get the history of the agent. Note that warm_start_steps are excluded.
+        """
         return pd.DataFrame(
             columns=[
                 "state",

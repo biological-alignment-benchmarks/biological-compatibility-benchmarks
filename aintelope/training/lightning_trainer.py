@@ -189,30 +189,6 @@ class DQNLightning(LightningModule):
                 self.current_epoch,
             )
 
-    def record_step(self, nb_batch: int, record_path: Path) -> bool:
-        record_path.parent.mkdir(parents=True, exist_ok=True)
-        if nb_batch == 0:
-            init_string = "state,action,reward,done,instinct_events,new_state\n"
-            with record_path.open("w", encoding="utf-8") as f:
-                f.write(init_string)
-        device = "cpu"
-        epsilon = max(
-            self.hparams.eps_end,
-            self.hparams.eps_start - self.global_step * 1 / self.hparams.eps_last_frame,
-        )
-
-        # step through environment with agent
-        reward, done = self.agent.play_step(
-            self.net, epsilon, device, save_path=record_path
-        )
-        self.episode_reward += reward
-
-        if done:
-            self.total_reward = self.episode_reward
-            self.episode_reward = 0
-
-        return done
-
     def configure_optimizers(self) -> typ.List[Optimizer]:
         """Initialize Adam optimizer."""
         optimizer = Adam(self.net.parameters(), lr=self.hparams.lr)
@@ -271,13 +247,8 @@ def run_experiment(cfg: DictConfig) -> None:
     trainer.fit(lightning_module, ckpt_path=checkpoint)
 
     record_path = cfg.trainer_params.record_path / f"{cfg.timestamp}_records.csv"
-    count = 0
-    record_done = lightning_module.record_step(nb_batch=count, record_path=record_path)
-    while not record_done:
-        count += 1
-        record_done = lightning_module.record_step(
-            nb_batch=count, record_path=record_path
-        )
+    logger.info(f"Saving training records to disk at {record_path}")
+    lightning_module.agent.get_history().to_csv(record_path, index=False)
 
     # Notes
     # resume from a specific checkpoint

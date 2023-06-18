@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 import gym
 from pettingzoo import AECEnv, ParallelEnv
+import pandas as pd
 from torch import nn
 
 GymEnv = gym.Env
@@ -23,6 +24,10 @@ class Agent(ABC):
     def play_step(
         self, net: nn.Module, epsilon: float, device: str, save_path: Optional[str]
     ) -> Tuple[float, bool]:
+        ...
+
+    @abstractmethod
+    def get_history() -> pd.DataFrame:
         ...
 
 

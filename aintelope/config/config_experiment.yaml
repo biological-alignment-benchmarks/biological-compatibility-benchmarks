@@ -1,5 +1,5 @@
 name: experiment
-timestamp: ${now:%Y%m%d%H%M}
+timestamp: ${now:%Y%m%d%H%M%S}
 
 trainer_params:
   resume_from_checkpoint: False
