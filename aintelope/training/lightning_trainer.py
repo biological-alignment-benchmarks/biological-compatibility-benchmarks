@@ -104,9 +104,7 @@ class DQNLightning(LightningModule):
         states, actions, rewards, dones, next_states = batch
 
         state_action_values = (
-            self.net(states)
-            .gather(1, actions.unsqueeze(-1).long())
-            .squeeze(-1)
+            self.net(states).gather(1, actions.unsqueeze(-1).long()).squeeze(-1)
         )
 
         with torch.no_grad():
