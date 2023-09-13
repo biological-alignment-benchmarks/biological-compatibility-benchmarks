@@ -1,7 +1,15 @@
 from typing import Union, Mapping, Tuple, Optional, Type
 from abc import ABC, abstractmethod
 
-import gym
+try:
+    import gymnasium as gym
+
+    gym_v26 = True
+except:
+    import gym
+
+    gym_v26 = False
+
 from pettingzoo import AECEnv, ParallelEnv
 import pandas as pd
 from torch import nn

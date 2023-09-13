@@ -1,7 +1,15 @@
 import pytest
 import numpy as np
 import numpy.testing as npt
-from gym.spaces import Discrete
+
+try:
+    from gymnasium.spaces import Discrete
+
+    gym_v26 = True
+except:
+    from gym.spaces import Discrete
+
+    gym_v26 = False
 
 
 from aintelope.environments import savanna as sut

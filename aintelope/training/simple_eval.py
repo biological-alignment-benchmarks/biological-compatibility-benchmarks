@@ -1,6 +1,14 @@
 import logging
 
-import gym
+try:
+    import gymnasium as gym
+
+    gym_v26 = True
+except:
+    import gym
+
+    gym_v26 = False
+
 from omegaconf import DictConfig
 
 from aintelope.agents.q_agent import Agent as Qagent
@@ -130,8 +138,18 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
             logger.debug("debug actions", actions)
             logger.debug("debug step")
             logger.debug(env.__dict__)
-            logger.debug(env.step(actions))
-            observations, rewards, dones, infos = env.step(actions)
+
+            logger.debug(
+                env.step(actions)
+            )  # TODO: is this a bug? env.step() is called two times - on this line and below
+            if gym_v26:  # zoo interface has also changed with gym_v26
+                observations, rewards, terminateds, truncateds, infos = env.step(action)
+                dones = [
+                    terminated or truncated
+                    for (terminated, truncated) in zip(terminateds, truncateds)
+                ]
+            else:
+                observations, rewards, dones, infos = env.step(actions)
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
             for agent in agents:
@@ -160,7 +178,15 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
                 actions[agent.name] = agent.get_action(
                     epsilon=1.0, device=tparams["device"]
                 )
-            observations, rewards, dones, infos = env.step(actions)
+
+            if gym_v26:  # zoo interface has also changed with gym_v26
+                observations, rewards, terminateds, truncateds, infos = env.step(action)
+                dones = [
+                    terminated or truncated
+                    for (terminated, truncated) in zip(terminateds, truncateds)
+                ]
+            else:
+                observations, rewards, dones, infos = env.step(actions)
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
             for agent in agents:

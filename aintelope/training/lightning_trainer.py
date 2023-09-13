@@ -5,7 +5,16 @@ from collections import OrderedDict
 from datetime import timedelta
 
 from omegaconf import DictConfig
-import gym
+
+try:
+    import gymnasium as gym
+
+    gym_v26 = True
+except:
+    import gym
+
+    gym_v26 = False
+
 import torch
 from torch import Tensor, nn
 from torch.optim import Adam, Optimizer

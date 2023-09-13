@@ -2,7 +2,15 @@ import typing as typ
 from collections import OrderedDict
 from datetime import timedelta
 
-import gym
+try:
+    import gymnasium as gym
+
+    gym_v26 = True
+except:
+    import gym
+
+    gym_v26 = False
+
 import torch
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.utilities import DistributedType

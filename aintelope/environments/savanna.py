@@ -6,8 +6,17 @@ from collections import namedtuple
 import numpy as np
 import numpy.typing as npt
 import pygame
-from gym.spaces import Box, Discrete
-from gym.utils import seeding
+
+try:
+    from gymnasium.spaces import Box, Discrete
+    from gymnasium.utils import seeding
+
+    gym_v26 = True
+except:
+    from gym.spaces import Box, Discrete
+    from gym.utils import seeding
+
+    gym_v26 = False
 
 from aintelope.environments.env_utils.render_ascii import AsciiRenderState
 from aintelope.environments.env_utils.distance import distance_to_closest_item

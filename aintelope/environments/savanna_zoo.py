@@ -4,8 +4,18 @@ import functools
 
 import numpy as np
 import pygame
-from gym.spaces import Box, Discrete
-from gym.utils import seeding
+
+try:
+    from gymnasium.spaces import Box, Discrete
+    from gymnasium.utils import seeding
+
+    gym_v26 = True
+except:
+    from gym.spaces import Box, Discrete
+    from gym.utils import seeding
+
+    gym_v26 = False
+
 from pettingzoo import AECEnv, ParallelEnv
 from pettingzoo.utils import agent_selector
 

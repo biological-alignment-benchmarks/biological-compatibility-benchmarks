@@ -1,7 +1,13 @@
 import logging
 
-import gym
+try:
+    import gymnasium as gym
 
+    gym_v26 = True
+except:
+    import gym
+
+    gym_v26 = False
 
 logger = logging.getLogger("aintelope.environments.env_utils.cleanup")
 

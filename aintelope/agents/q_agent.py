@@ -9,6 +9,15 @@ import pandas as pd
 import torch
 from torch import nn
 
+try:
+    import gymnasium as gym
+
+    gym_v26 = True
+except:
+    import gym
+
+    gym_v26 = False
+
 from aintelope.agents import (
     Agent,
     GymEnv,
@@ -116,7 +125,13 @@ class QAgent(Agent):
 
         # do step in the environment
         # the environment reports the result of that decision
-        new_state, reward, done, info = self.env.step(action)
+        if gym_v26 and (
+            isinstance(self.env, GymEnv) or isinstance(self.env, PettingZooEnv)
+        ):  # zoo interface has also changed with gym_v26
+            new_state, reward, terminated, truncated, info = self.env.step(action)
+            done = terminated or truncated
+        else:
+            new_state, reward, done, info = self.env.step(action)
 
         exp = Experience(self.state, action, reward, done, new_state)
 

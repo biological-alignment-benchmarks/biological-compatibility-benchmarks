@@ -6,6 +6,15 @@ import numpy as np
 import torch
 from torch import nn
 
+try:
+    import gymnasium as gym
+
+    gym_v26 = True
+except:
+    import gym
+
+    gym_v26 = False
+
 from aintelope.agents import Environment, register_agent_class
 from aintelope.agents.q_agent import QAgent, HistoryStep
 from aintelope.agents.memory import Experience, ReplayBuffer
@@ -111,7 +120,13 @@ class InstinctAgent(QAgent):
 
         # do step in the environment
         # the environment reports the result of that decision
-        new_state, env_reward, done, info = self.env.step(action)
+        if gym_v26 and (
+            isinstance(self.env, GymEnv) or isinstance(self.env, PettingZooEnv)
+        ):  # zoo interface has also changed with gym_v26
+            new_state, env_reward, terminated, truncated, info = self.env.step(action)
+            done = terminated or truncated
+        else:
+            new_state, env_reward, done, info = self.env.step(action)
 
         # we need a layer of body interpretation of the physical state of the environment
         # to track things like impact which can cause persistent injuries
