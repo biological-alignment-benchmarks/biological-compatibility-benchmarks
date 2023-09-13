@@ -11,7 +11,8 @@ from aintelope.agents import (
     register_agent_class,
 )
 
-class InferenceAgent(Agent)
+
+class InferenceAgent(Agent):
     """Inference class, for data analysis"""
 
     def __init__(
@@ -36,7 +37,7 @@ class InferenceAgent(Agent)
         if isinstance(self.state, tuple):
             self.state = self.state[0]
 
-    def get_action(self, epsilon: float, device: str) -> int, torch.Tensor:
+    def get_action(self, epsilon: float, device: str) -> Tuple[int, torch.Tensor]:
         # TODO: maybe not return as tensor? maybe not overload this function either?
         state = torch.tensor(np.expand_dims(self.state, 0))
         if device not in ["cpu"]:
@@ -55,7 +56,6 @@ class InferenceAgent(Agent)
         device: str = "cpu",
         save_path: Optional[str] = None,
     ) -> Tuple[float, bool]:
-
         return 0.0, False
 
     def get_history(self) -> pd.DataFrame:
