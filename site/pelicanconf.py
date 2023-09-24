@@ -1,12 +1,12 @@
-AUTHOR = 'aintelope team'
-SITENAME = 'aintelope'
-SITEURL = ''
+AUTHOR = "aintelope team"
+SITENAME = "aintelope"
+SITEURL = ""
 
-PATH = 'content'
+PATH = "content"
 
-TIMEZONE = 'Europe/Rome'
+TIMEZONE = "Europe/Rome"
 
-DEFAULT_LANG = 'en'
+DEFAULT_LANG = "en"
 
 # Feed generation is usually not desired when developing
 FEED_ALL_ATOM = None
@@ -16,11 +16,13 @@ AUTHOR_FEED_ATOM = None
 AUTHOR_FEED_RSS = None
 
 # Blogroll
-LINKS = (('Pelican', 'https://getpelican.com/'),
-         ('Python.org', 'https://www.python.org/'),)
+LINKS = (
+    ("Pelican", "https://getpelican.com/"),
+    ("Python.org", "https://www.python.org/"),
+)
 
 # Social widget
-SOCIAL = (('aintelope on Github', 'https://github.com/GunnarZarncke/aintelope'),)
+SOCIAL = (("aintelope on Github", "https://github.com/GunnarZarncke/aintelope"),)
 
 DEFAULT_PAGINATION = False
 

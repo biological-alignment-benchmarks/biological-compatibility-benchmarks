@@ -310,9 +310,9 @@ class SavannaEnv:
         return res
 
     def set_agent_position(self, agent: str, loc: npt.NDArray[ObservationFloat]):
-        """ Move the agent to a location. Tests and inference"""
+        """Move the agent to a location. Tests and inference"""
         self.agent_states[agent] = loc
-    
+
     def state_to_namedtuple(self, state: npt.NDArray[ObservationFloat]) -> NamedTuple:
         """Method to convert a state array into a named tuple."""
         agent_coords = {"agent_coords": state[:2]}
