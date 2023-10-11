@@ -1,0 +1,7 @@
+defaults:
+  - config_experiment
+
+hparams:
+  agent_id: instinct_agent
+  agent_params:
+    target_instincts: [smell] # from agent/instinct interface, [hunger, thirst, curiosity]
