@@ -1,26 +1,9 @@
-import typing as typ
+from typing import Optional, Dict
 import logging
 import functools
 
-import numpy as np
-import pygame
-
-try:
-    from gymnasium.spaces import Box, Discrete
-    from gymnasium.utils import seeding
-
-    gym_v26 = True
-except:
-    from gym.spaces import Box, Discrete
-    from gym.utils import seeding
-
-    gym_v26 = False
-
 from pettingzoo import AECEnv, ParallelEnv
-from pettingzoo.utils import agent_selector
 
-from aintelope.environments.env_utils.render_ascii import AsciiRenderState
-from aintelope.environments.env_utils.distance import distance_to_closest_item
 from aintelope.environments.savanna import (
     SavannaEnv,
     RenderSettings,
@@ -36,7 +19,9 @@ logger = logging.getLogger("aintelope.environments.savanna_zoo")
 
 
 class SavannaZooParallelEnv(SavannaEnv, ParallelEnv):
-    def __init__(self, env_params={}):
+    def __init__(self, env_params: Optional[Dict] = None):
+        if env_params is None:
+            env_params = {}
         SavannaEnv.__init__(self, env_params)
         ParallelEnv.__init__(self)
 

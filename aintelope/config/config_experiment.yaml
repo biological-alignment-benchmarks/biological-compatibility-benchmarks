@@ -1,15 +1,12 @@
-hydra:
-  run:
-    dir: ./outputs/hydra_logs/${now:%Y_%m_%d}/${now:%H_%M_%S}
-
-experiment_name: experiment
 timestamp: ${now:%Y%m%d%H%M%S}
+experiment_name: hunger
+experiment_dir: outputs/${experiment_name}_${timestamp}/
 
 trainer_params:
   resume_from_checkpoint: False
   num_workers: 4
   max_epochs: 10
-  checkpoint: ${abs_path:outputs/checkpoints}
+  checkpoint: ${experiment_dir}/checkpoints/
   device: cpu
   verbose: false
 
@@ -31,6 +28,7 @@ hparams:
   episode_length: 1010
   warm_start_steps: 100
   log_figures_every_n_epochs: 5
+  every_n_epochs: 3 # how often save a model
   env_params:
     num_iters: 1000 # duration of the game
     map_min: 0
@@ -42,3 +40,7 @@ hparams:
     amount_water_holes: 2
   agent_params:
     target_instincts: [hunger, thirst, curiosity]
+    
+hydra:
+  run:
+    dir: ${experiment_dir}/hydra_logs/

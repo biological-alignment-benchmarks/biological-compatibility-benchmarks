@@ -6,15 +6,6 @@ import numpy as np
 import torch
 from torch import nn
 
-try:
-    import gymnasium as gym
-
-    gym_v26 = True
-except:
-    import gym
-
-    gym_v26 = False
-
 from aintelope.agents import Environment, register_agent_class, GymEnv, PettingZooEnv
 from aintelope.agents.q_agent import QAgent, HistoryStep
 from aintelope.agents.memory import Experience, ReplayBuffer
@@ -120,12 +111,10 @@ class InstinctAgent(QAgent):
 
         # do step in the environment
         # the environment reports the result of that decision
-        if gym_v26 and isinstance(self.env, GymEnv):
+        if isinstance(self.env, GymEnv):
             new_state, env_reward, terminated, truncated, info = self.env.step(action)
             done = terminated or truncated
-        elif gym_v26 and isinstance(
-            self.env, PettingZooEnv
-        ):  # zoo interface has also changed with gym_v26
+        elif isinstance(self.env, PettingZooEnv):
             new_state, env_reward, terminateds, truncateds, info = self.env.step(action)
             done = {
                 key: terminated or truncateds[key]

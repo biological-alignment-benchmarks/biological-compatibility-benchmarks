@@ -1,13 +1,7 @@
+from typing import Optional, Dict
 import logging
 
-try:
-    import gymnasium as gym
-
-    gym_v26 = True
-except:
-    import gym
-
-    gym_v26 = False
+import gymnasium as gym
 
 from aintelope.environments.savanna import (
     SavannaEnv,
@@ -35,7 +29,10 @@ class SavannaGymEnv(SavannaEnv, gym.Env):
         "render_window_size": 512,
     }
 
-    def __init__(self, env_params={}):
+    def __init__(self, env_params: Optional[Dict] = None):
+        if env_params is None:
+            env_params = {}
+
         SavannaEnv.__init__(self, env_params)
         gym.Env.__init__(self)
         assert self.metadata["amount_agents"] == 1, "agents must == 1 for gym env"
@@ -46,14 +43,11 @@ class SavannaGymEnv(SavannaEnv, gym.Env):
         # but per agent
         res = SavannaEnv.step(self, actions)
 
-        if gym_v26:
-            observations, rewards, terminateds, truncateds, infos = res
-            dones = {
-                key: terminated or truncateds[key]
-                for (key, terminated) in terminateds.items()
-            }
-        else:
-            observations, rewards, dones, infos = res
+        observations, rewards, terminateds, truncateds, infos = res
+        dones = {
+            key: terminated or truncateds[key]
+            for (key, terminated) in terminateds.items()
+        }
 
         # so just return the first
         i = self._agent_id
@@ -63,13 +57,13 @@ class SavannaGymEnv(SavannaEnv, gym.Env):
         info = infos[i]
         logger.warning(res)
 
-        if gym_v26:
-            truncated = False
-            return observation, reward, done, truncated, info
-        else:
-            return observation, reward, done, info
+        truncated = False
+        return observation, reward, done, truncated, info
 
-    def reset(self, seed=None, options={}):
+    def reset(self, seed: Optional[int] = None, options: Optional[Dict] = None):
+        if options is None:
+            options = {}
+
         observations = SavannaEnv.reset(self, seed, options)
         # FIXME: infos are additional information for the agent, like some position etc.
         info = {"placeholder": "hmmm"}

@@ -1,5 +1,4 @@
-from typing import Dict, List, Optional, NamedTuple
-from typing import Tuple, Dict
+from typing import Dict, List, Optional, Tuple, NamedTuple
 import logging
 from collections import namedtuple
 
@@ -7,16 +6,8 @@ import numpy as np
 import numpy.typing as npt
 import pygame
 
-try:
-    from gymnasium.spaces import Box, Discrete
-    from gymnasium.utils import seeding
-
-    gym_v26 = True
-except:
-    from gym.spaces import Box, Discrete
-    from gym.utils import seeding
-
-    gym_v26 = False
+from gymnasium.spaces import Box, Discrete
+from gymnasium.utils import seeding
 
 from aintelope.environments.env_utils.render_ascii import AsciiRenderState
 from aintelope.environments.env_utils.distance import distance_to_closest_item
@@ -152,7 +143,9 @@ class SavannaEnv:
         "num_iters": 1,
     }
 
-    def __init__(self, env_params={}):
+    def __init__(self, env_params: Optional[Dict] = None):
+        if env_params is None:
+            env_params = {}
         self.metadata.update(env_params)
         logger.info(f"initializing savanna env with params: {self.metadata}")
 
@@ -299,11 +292,8 @@ class SavannaEnv:
             self.agents = []
         logger.debug("debug return", observations, rewards, self.dones, infos)
 
-        if gym_v26:
-            terminateds = {key: False for key in self.dones.keys()}
-            return observations, rewards, self.dones, terminateds, infos
-        else:
-            return observations, rewards, self.dones, infos
+        terminateds = {key: False for key in self.dones.keys()}
+        return observations, rewards, self.dones, terminateds, infos
 
     def observe(self, agent: str) -> npt.NDArray[ObservationFloat]:
         """Return observation of given agent."""

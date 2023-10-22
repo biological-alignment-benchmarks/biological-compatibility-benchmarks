@@ -2,6 +2,24 @@ import logging
 
 
 import numpy as np
+
+# Code to enable Visual Studio debugging with non-legacy-debugger.
+# If you want to avoid exceptions during code start altogether then an alternative is to use "legacy debugger":
+# Visual Studio -> Tools -> Options -> Python -> Debugging -> Enable "Use legacy debugger".
+import os
+import sys
+
+if os.name == "nt" and sys.gettrace() is not None:  # detect debugging under Windows
+    original_get_terminal_size = os.get_terminal_size
+
+    def get_terminal_size(fd=1):  # 1 = STDOUT_FILENO
+        try:
+            return original_get_terminal_size(fd)
+        except OSError:  # "[WinError 6] The handle is invalid"
+            return os.terminal_size([80, 24])
+
+    os.get_terminal_size = get_terminal_size
+
 from gemini import Scene, Sprite, txtcolours as tc, sleep
 
 logger = logging.getLogger("aintelope.environments.env_utils.render_ascii")

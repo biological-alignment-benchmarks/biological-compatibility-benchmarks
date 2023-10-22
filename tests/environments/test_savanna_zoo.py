@@ -2,14 +2,7 @@ import pytest
 import numpy as np
 import numpy.testing as npt
 
-try:
-    from gymnasium.spaces import Discrete
-
-    gym_v26 = True
-except:
-    from gym.spaces import Discrete
-
-    gym_v26 = False
+from gymnasium.spaces import Discrete
 
 from pettingzoo.test import (
     max_cycles_test,
@@ -132,14 +125,10 @@ def test_step_result():
     agent = env.possible_agents[0]
     action = {agent: env.action_space(agent).sample()}
 
-    if gym_v26:  # zoo interface has also changed with gym_v26
-        observations, rewards, terminateds, truncateds, infos = env.step(action)
-        dones = {
-            key: terminated or truncateds[key]
-            for (key, terminated) in terminateds.items()
-        }
-    else:
-        observations, rewards, dones, info = env.step(action)
+    observations, rewards, terminateds, truncateds, infos = env.step(action)
+    dones = {
+        key: terminated or truncateds[key] for (key, terminated) in terminateds.items()
+    }
 
     assert not dones[agent]
     assert isinstance(observations, dict), "observations is not a dict"
@@ -158,14 +147,11 @@ def test_done_step():
     agent = env.possible_agents[0]
     for _ in range(env.metadata["num_iters"]):
         action = {agent: env.action_space(agent).sample()}
-        if gym_v26:  # zoo interface has also changed with gym_v26
-            _, _, terminateds, truncateds, _ = env.step(action)
-            dones = {
-                key: terminated or truncateds[key]
-                for (key, terminated) in terminateds.items()
-            }
-        else:
-            _, _, dones, _ = env.step(action)
+        _, _, terminateds, truncateds, _ = env.step(action)
+        dones = {
+            key: terminated or truncateds[key]
+            for (key, terminated) in terminateds.items()
+        }
 
     assert dones[agent]
     with pytest.raises(ValueError):

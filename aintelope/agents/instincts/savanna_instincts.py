@@ -1,12 +1,12 @@
-import typing as typ
+from typing import Optional, Dict
 
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 from aintelope.environments.savanna import get_agent_pos_from_state
 
 
 class Hunger:
-    def __init__(self, instinct_params={}) -> None:
-        self.instinct_params = instinct_params
+    def __init__(self, instinct_params: Optional[Dict] = None) -> None:
+        self.instinct_params = {} if instinct_params is None else instinct_params
         self.hunger_rate = None
         self.max_hunger_reward = None
         self.last_ate = None
@@ -38,8 +38,8 @@ class Hunger:
 
 
 class Thirst:
-    def __init__(self, instinct_params={}) -> None:
-        self.instinct_params = instinct_params
+    def __init__(self, instinct_params: Optional[Dict] = None) -> None:
+        self.instinct_params = {} if instinct_params is None else instinct_params
         self.thirst_rate = None
         self.max_thirst_reward = None
         self.last_drank = None
@@ -69,8 +69,8 @@ class Thirst:
 
 
 class Curiosity:
-    def __init__(self, instinct_params={}) -> None:
-        self.instinct_params = instinct_params
+    def __init__(self, instinct_params: Optional[Dict] = None) -> None:
+        self.instinct_params = {} if instinct_params is None else instinct_params
         self.curiosity_rate = None
         self.max_curiosity_reward = None
         self.last_discovery = None
