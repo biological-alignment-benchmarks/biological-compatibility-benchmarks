@@ -4,10 +4,10 @@ TESTS = tests
 VENV = venv_$(PROJECT)
 
 run-training-baseline:
-	python -m ${PROJECT} config_baseline.yaml
+	python -m ${PROJECT} hparams.agent_id=q_agent hparams.agent_params.target_instincts=[]
 
 run-training-instinct:
-	python -m ${PROJECT} config_instinct.yaml
+	python -m ${PROJECT} hparams.agent_id=instinct_agent hparams.agent_params.target_instincts=[smell]
 
 .PHONY: venv
 venv: ## create virtual environment

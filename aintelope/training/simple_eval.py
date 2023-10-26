@@ -101,15 +101,13 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         if len(models) < len(agent_spec):
             models *= len(agent_spec)
         agents = [
-            AGENT_LOOKUP[agent](
-                env, model, buffer, hparams["warm_start_size"], **agent_params
-            )
-            for agent, model in zip(agent_spec, models)
+            AGENT_LOOKUP[agent](env, buffer, hparams["warm_start_size"], **agent_params)
+            for agent in agent_spec
         ]
     else:
         agents = [
             AGENT_LOOKUP[agent_spec](
-                env, models[0], buffer, hparams["warm_start_size"], **agent_params
+                env, buffer, hparams["warm_start_size"], **agent_params
             )
         ]
 
@@ -134,8 +132,8 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
             observations, rewards, dones, infos = env.step(actions)
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
-            for agent in agents:
-                reward, done = agent.play_step(agent.model, epsilon, tparams["device"])
+            for agent, model in zip(agents, models):
+                reward, done = agent.play_step(model, epsilon, tparams["device"])
                 dones = [done]
         if any(dones):
             for agent in agents:
@@ -163,8 +161,8 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
             observations, rewards, dones, infos = env.step(actions)
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
-            for agent in agents:
-                reward, done = agent.play_step(agent.model, epsilon, tparams["device"])
+            for agent, model in zip(agents, models):
+                reward, done = agent.play_step(model, epsilon, tparams["device"])
                 dones = [done]
                 rewards = [reward]
         episode_rewards += rewards

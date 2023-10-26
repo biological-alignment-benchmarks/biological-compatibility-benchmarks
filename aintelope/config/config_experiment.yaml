@@ -39,7 +39,7 @@ hparams:
     amount_grass_patches: 1
     amount_water_holes: 0
   agent_params:
-    target_instincts: [] 
+    target_instincts: []
 
 hydra:
   run:

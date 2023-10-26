@@ -60,7 +60,7 @@ class DQNLightning(LightningModule):
         self.buffer = ReplayBuffer(hparams.replay_size)
         self.agent = get_agent_class(hparams.agent_id)(
             self.env,
-            self.net,
+            # self.net,
             self.buffer,
             hparams.warm_start_steps,
             **hparams.agent_params,
