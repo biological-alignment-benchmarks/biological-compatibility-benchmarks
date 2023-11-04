@@ -119,10 +119,10 @@ class QAgent(Agent):
         # do step in the environment
         # the environment reports the result of that decision
         if isinstance(self.env, GymEnv):
-            new_state, env_reward, terminated, truncated, info = self.env.step(action)
+            new_state, reward, terminated, truncated, info = self.env.step(action)
             done = terminated or truncated
         elif isinstance(self.env, PettingZooEnv):
-            new_state, env_reward, terminateds, truncateds, info = self.env.step(action)
+            new_state, reward, terminateds, truncateds, info = self.env.step(action)
             done = {
                 key: terminated or truncateds[key]
                 for (key, terminated) in terminateds.items()
