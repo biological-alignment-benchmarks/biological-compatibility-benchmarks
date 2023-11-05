@@ -3,12 +3,12 @@ import logging
 
 import gymnasium as gym
 
-from aintelope.environments.savanna import (
-    SavannaEnv,
+from aintelope.environments.typing import (
     Observation,
     Reward,
     Info,
 )
+from aintelope.environments.savanna import SavannaEnv
 
 Step = tuple[Observation, Reward, bool, bool, Info]
 

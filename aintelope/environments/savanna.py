@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple, NamedTuple
+from typing import Dict, List, Optional, NamedTuple, Tuple
 import logging
 from collections import namedtuple
 
@@ -9,21 +9,21 @@ import pygame
 from gymnasium.spaces import Box, Discrete
 from gymnasium.utils import seeding
 
+from aintelope.environments.typing import (
+    ObservationFloat,
+    PositionFloat,
+    Action,
+    AgentId,
+    AgentStates,
+    Observation,
+    Reward,
+    Info,
+)
 from aintelope.environments.env_utils.render_ascii import AsciiRenderState
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 
 logger = logging.getLogger("aintelope.environments.savanna")
 
-# typing aliases
-ObservationFloat = np.float32
-PositionFloat = np.float32
-Action = int
-AgentId = str
-AgentStates = Dict[AgentId, np.ndarray]
-
-Observation = np.ndarray
-Reward = float
-Info = dict
 
 Step = Tuple[
     Dict[AgentId, Observation],
@@ -32,8 +32,6 @@ Step = Tuple[
     Dict[AgentId, bool],
     Dict[AgentId, Info],
 ]
-
-# environment constants
 ACTION_MAP = np.array([[0, 1], [1, 0], [0, -1], [-1, 0]], dtype=PositionFloat)
 
 

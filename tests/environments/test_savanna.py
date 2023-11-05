@@ -1,14 +1,7 @@
 import pytest
 import numpy as np
-import numpy.testing as npt
-
-from gymnasium.spaces import Discrete
-
 
 from aintelope.environments import savanna as sut
-
-# Base Savanna is not yet PettingZoo or Gym env
-# just the shared elements those will depend on
 
 
 def test_max_cycles():

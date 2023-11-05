@@ -17,14 +17,8 @@ from pettingzoo.utils import parallel_to_aec
 
 from aintelope.environments import savanna_zoo as sut
 from aintelope.environments.savanna import ACTION_MAP
-from aintelope.environments.savanna_zoo import (
-    SavannaZooParallelEnv,
-    SavannaZooSequentialEnv,
-)
-from aintelope.environments.env_utils.distance import (
-    vec_distance,
-    distance_to_closest_item,
-)
+from aintelope.environments.savanna_zoo import SavannaZooParallelEnv
+from aintelope.environments.env_utils.distance import distance_to_closest_item
 
 
 def test_pettingzoo_api_parallel():
