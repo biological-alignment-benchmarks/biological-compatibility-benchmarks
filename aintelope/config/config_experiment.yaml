@@ -28,7 +28,7 @@ hparams:
   episode_length: 1010
   warm_start_steps: 100
   log_figures_every_n_epochs: 5
-  every_n_epochs: 3 # how often save a model
+  every_n_epochs: 1 # how often save a model
   env_params:
     num_iters: 1000 # duration of the game
     map_min: 0
