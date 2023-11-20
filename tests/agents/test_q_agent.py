@@ -56,3 +56,10 @@ def test_qagent_in_savanna_gridworlds_parallel(
     }
     OmegaConf.merge(hparams, params_zoo_parallel)
     run_episode(tparams=tparams, hparams=hparams)
+
+
+if __name__ == '__main__':
+    tparams_hparams = tparams_hparams(root_dir())
+    test_qagent_in_savanna_zoo_parallel(tparams_hparams)
+    test_qagent_in_savanna_gridworlds_parallel(tparams_hparams)
+

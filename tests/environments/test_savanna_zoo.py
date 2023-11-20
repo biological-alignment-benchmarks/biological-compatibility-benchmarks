@@ -25,7 +25,7 @@ def test_pettingzoo_api_parallel():
     parallel_api_test(sut.SavannaZooParallelEnv(), num_cycles=1000)
 
 
-# def test_pettingzoo_api_sequential():    # TODO
+#def test_pettingzoo_api_sequential():      # TODO
 #    # TODO: refactor these values out to a test-params file
 #    env_params = {
 #        "num_iters": 500,  # duration of the game
@@ -219,3 +219,16 @@ def test_performance_benchmark():
     # will print only timing to stdout; not shown per default
     # performance_benchmark(sut.SavannaZooParallelEnv())
     pass
+
+
+if __name__ == '__main__':
+    test_seed()
+    test_agent_states()
+    test_reward_agent()
+    test_move_agent()
+    test_step_result()
+    test_done_step()
+    test_agents()
+    test_action_spaces()
+    test_action_space_valid_step()
+

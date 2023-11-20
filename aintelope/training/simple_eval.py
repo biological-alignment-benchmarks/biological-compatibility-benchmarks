@@ -70,21 +70,6 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         logger.info("obs size", obs_size)
         n_actions = env.action_space("agent_0").n
         logger.info("n actions", n_actions)
-
-    elif env_type == "gym":
-        # GYM_INTERACTION
-        if hparams["env_entry_point"] is not None:
-            gym.envs.register(
-                id=hparams["env"],
-                entry_point=hparams[
-                    "env_entry_point"
-                ],  # e.g. 'aintelope.environments.savanna_gym:SavannaGymEnv'
-                kwargs={"env_params": env_params},
-            )
-        env = gym.make(hparams["env"])
-        obs_size = env.observation_space.shape[0]
-        n_actions = env.action_space.n
-        # env = gym_vec_env_v0(env, num_envs=1)
     else:
         logger.info(
             f"env_type {hparams['env_type']} not implemented."
@@ -129,7 +114,8 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
             for agent in agents:
                 # agent doesn't get to play_step, only env can, for multi-agent env compatibility
                 # reward, score, done = agent.play_step(nets[i], epsilon=1.0)
-                actions[agent.name] = agent.get_action(
+                actions["agent_0"] = agent.get_action(    # TODO: agent_name
+                    models[0],    # TODO: net per agent
                     epsilon=epsilon, device=tparams["device"]
                 )
             logger.debug("debug actions", actions)
