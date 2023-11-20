@@ -51,7 +51,9 @@ class DQNLightning(LightningModule):
             # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
             obs_size = self.env.observation_space("agent_0").shape[0]
             n_actions = self.env.action_space("agent_0").n
-        elif hparams.env == "savanna-safetygrid-parallel-v1": # TODO: merge with above block
+        elif (
+            hparams.env == "savanna-safetygrid-parallel-v1"
+        ):  # TODO: merge with above block
             self.env = SavannaGridworldParallelEnv(env_params=hparams.env_params)
             # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
             obs_size = self.env.observation_space("agent_0").shape[0]
@@ -62,7 +64,9 @@ class DQNLightning(LightningModule):
             # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
             obs_size = self.env.observation_space("agent_0").shape[0]
             n_actions = self.env.action_space("agent_0").n
-        elif hparams.env == "savanna-safetygrid-sequential-v1": # TODO: merge with above block
+        elif (
+            hparams.env == "savanna-safetygrid-sequential-v1"
+        ):  # TODO: merge with above block
             self.env = SavannaGridworldSequentialEnv(env_params=hparams.env_params)
             # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
             obs_size = self.env.observation_space("agent_0").shape[0]

@@ -129,7 +129,8 @@ def get_agent_pos_from_state(agent_state) -> List[PositionFloat]:
 class SavannaEnv:
     # @zoo-api
     metadata = {
-        "name": "savanna-v2",
+        "render.modes": ["human", "ansi", "rgb_array"],  # needed for zoo
+        "name": "savanna-v2",  # savanna-zoo-parallel-v2
         "render_fps": 3,
         "render_agent_radius": 5,
         "render_agent_color": (200, 50, 0),
