@@ -19,6 +19,9 @@ logger = logging.getLogger("aintelope.environments.savanna_zoo")
 
 
 class SavannaZooParallelEnv(SavannaEnv, ParallelEnv):
+
+    metadata = {"render.modes": ["human", "ansi", "rgb_array"]}
+
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
