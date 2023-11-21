@@ -3,7 +3,7 @@ from typing import Tuple
 
 from omegaconf import OmegaConf, DictConfig
 
-from tests.test_config import root_dir, tparams_hparams
+from tests.test_config import root_dir, tparams_hparams, root_dir_debug, tparams_hparams_debug
 from aintelope.training.simple_eval import run_episode
 
 
@@ -155,7 +155,7 @@ def test_iterativeweightoptimizationagent_in_savanna_gridworlds_parallel(
 
 
 if __name__ == "__main__" and sys.gettrace() is not None:  # detect debugging
-    tparams_hparams = tparams_hparams(root_dir())
+    tparams_hparams = tparams_hparams_debug(root_dir_debug())
     test_randomwalkagent_in_savanna_zoo_parallel(tparams_hparams)
     test_onestepperfectpredictionagent_in_savanna_zoo_parallel(tparams_hparams)
     test_iterativeweightoptimizationagent_in_savanna_zoo_parallel(tparams_hparams)

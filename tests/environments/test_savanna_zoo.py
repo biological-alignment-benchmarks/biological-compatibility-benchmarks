@@ -99,7 +99,12 @@ def test_move_agent():
     for _ in range(1000):
         prev_state = np.copy(agent_states[agent])
         action = env.action_space(agent).sample()
-        agent_states[agent] = sut.move_agent(agent_states[agent], action)
+        agent_states[agent] = sut.move_agent(
+            agent_states[agent], 
+            action,
+            map_min=env.metadata["map_min"],
+            map_max=env.metadata["map_max"],
+        )
         npt.assert_array_equal(
             np.clip(
                 prev_state + ACTION_MAP[action],
@@ -118,7 +123,7 @@ def test_move_agent():
 
 
 def test_step_result():
-    env = sut.SavannaZooParallelEnv()
+    env = sut.SavannaZooParallelEnv(env_params={"num_iters": 2})  # default is 1 iter which means that the env is done after 1 step below and the test will fail
     num_agents = len(env.possible_agents)
     assert num_agents, f"expected 1 agent, got: {num_agents}"
     env.reset()
@@ -223,12 +228,12 @@ def test_performance_benchmark():
 
 
 if __name__ == "__main__" and sys.gettrace() is not None:  # detect debugging
-    test_seed()
-    test_agent_states()
-    test_reward_agent()
+    #test_seed()
+    #test_agent_states()
+    #test_reward_agent()
     test_move_agent()
     test_step_result()
-    test_done_step()
-    test_agents()
-    test_action_spaces()
-    test_action_space_valid_step()
+    #test_done_step()
+    #test_agents()
+    #test_action_spaces()
+    #test_action_space_valid_step()
