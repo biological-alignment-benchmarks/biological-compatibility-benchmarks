@@ -16,12 +16,9 @@ from aintelope.environments.savanna_gym import SavannaGymEnv #TODO used for hack
 from aintelope.training.dqn_training import Trainer 
 from aintelope.agents import (
     Agent,
-    GymEnv,
-    PettingZooEnv,
-    Environment,
     register_agent_class,
 )
-from aintelope.agents.memory import Experience#, ReplayBuffer
+#from aintelope.agents.memory import Experience
 from aintelope.environments.typing import (
     ObservationFloat,
     PositionFloat,
@@ -34,7 +31,6 @@ from aintelope.environments.typing import (
 )
 
 logger = logging.getLogger("aintelope.agents.q_agent")
-
 
 class HistoryStep(NamedTuple):
     state: NamedTuple
@@ -50,26 +46,17 @@ class QAgent(Agent):
 
     def __init__(
         self,
-        # env: Environment,
-        # model: nn.Module,
-        # replay_buffer: ReplayBuffer,
         agent_id: str,
         trainer: Trainer,
         action_space: Discrete, 
-        #warm_start_steps: int, # needs to go to experiment
         target_instincts: List[str] = [],
     ) -> None:
-        # TODO: remove env calss from agent class
-        # self.env = env
         self.id = agent_id
         self.action_space = action_space
         self.trainer = trainer
-        #self.replay_buffer = replay_buffer
-        # self.warm_start_steps = warm_start_steps
         self.history: List[HistoryStep] = []
         self.done = False
         self.last_action = 0
-        #self.reset() #needs state, reset done in experiment.py where can ask for it
 
     def reset(self, state) -> None:
         """Resets self and updates the state."""
@@ -97,68 +84,12 @@ class QAgent(Agent):
         if self.done:
             return None
         else:
-            # observation goes to instincts here also
-            action = self.trainer.get_action(self.id, observation, step) # TODO: better name, now same
-        '''
-        elif np.random.random() < epsilon:
-            action = self.action_space.sample()
-        else:
-            logger.debug("debug state", type(state))
-            state = torch.tensor(np.expand_dims(state, 0))
-            logger.debug("debug state tensor", type(state), state.shape)
-            if device not in ["cpu"]:
-                state = state.cuda(device)
-
-            q_values = net(state)
-            _, action = torch.max(q_values, dim=1)
-            action = int(action.item())
-        '''
+            # For future: observation can go to instincts here
+            action = self.trainer.get_action(self.id, observation, step)
+        
         self.last_action = action
         return action
 
-    # double check that all the logic of `play_step` is within experiments.py and then
-    # delete this method
-    @torch.no_grad()
-    def play_step(
-        self,
-        net: nn.Module,
-        epsilon: float = 0.0,
-        device: str = "cpu",
-        save_path: Optional[str] = None,
-    ) -> Tuple[float, float, bool]:
-        """
-        Only for Gym envs, not PettingZoo envs
-        Carries out a single interaction step between the agent and the
-        environment.
-
-        Args:
-            net: DQN network
-            epsilon: value to determine likelihood of taking a random action
-            device: current device
-
-        Returns:
-            reward, score, done
-        """
-
-        '''
-        # The 'mind' (model) of the agent decides what to do next
-        action = self.get_action(net, epsilon, device)
-
-        # do step in the environment
-        # the environment reports the result of that decision
-        if isinstance(self.env, GymEnv):
-            next_state, env_reward, terminated, truncated, _ = self.env.step(action)
-            done = terminated or truncated
-        elif isinstance(self.env, PettingZooEnv):
-            next_state, env_reward, terminateds, truncateds, _ = self.env.step(action)
-            done = {
-                key: terminated or truncateds[key]
-                for (key, terminated) in terminateds.items()
-            }
-        else:
-            logger.warning(f"{self.env} is not of type GymEnv or PettingZooEnv")
-            next_state, env_reward, done, _ = self.env.step(action)
-        '''
     def update(
         self,
         env: SavannaGymEnv = None, #TODO hack, figure out if state_to_namedtuple can be static somewhere
@@ -178,8 +109,9 @@ class QAgent(Agent):
         Returns:
             None
         """
-        next_state = observation # add state (interoception) handling here when needed
-        exp = Experience(self.state, self.last_action, score, done, next_state)
+        next_state = observation 
+        # For future: add state (interoception) handling here when needed
+        #exp = Experience(self.state, self.last_action, score, done, next_state)
         self.history.append(
             HistoryStep(
                 state=env.state_to_namedtuple(self.state.tolist()),
@@ -197,7 +129,7 @@ class QAgent(Agent):
                 csv_writer.writerow(
                     [
                         self.state.tolist(),
-                        action,
+                        self.last_action,
                         score,
                         done,
                         [],
@@ -205,8 +137,7 @@ class QAgent(Agent):
                     ]
                 )
 
-        #self.replay_buffer.append(exp)
-        self.trainer.update_memory(self.id, exp)
+        self.trainer.update_memory(self.id, self.state, self.last_action, score, done, next_state) #exp)
         self.state = next_state
 
         # if scenario is complete or agent experiences catastrophic failure,

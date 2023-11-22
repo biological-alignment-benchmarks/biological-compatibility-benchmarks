@@ -22,12 +22,6 @@ class Agent(ABC):
         ...
 
     @abstractmethod
-    def play_step(
-        self, net: nn.Module, epsilon: float, device: str, save_path: Optional[str]
-    ) -> Tuple[float, float, bool]:
-        ...
-
-    @abstractmethod
     def get_history() -> pd.DataFrame:
         ...
 
