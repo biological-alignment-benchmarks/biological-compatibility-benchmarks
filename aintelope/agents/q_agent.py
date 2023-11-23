@@ -12,13 +12,14 @@ from torch import nn
 
 from gymnasium.spaces import Discrete
 
-from aintelope.environments.savanna_gym import SavannaGymEnv #TODO used for hack
-from aintelope.training.dqn_training import Trainer 
+from aintelope.environments.savanna_gym import SavannaGymEnv  # TODO used for hack
+from aintelope.training.dqn_training import Trainer
 from aintelope.agents import (
     Agent,
     register_agent_class,
 )
-#from aintelope.agents.memory import Experience
+
+# from aintelope.agents.memory import Experience
 from aintelope.environments.typing import (
     ObservationFloat,
     PositionFloat,
@@ -31,6 +32,7 @@ from aintelope.environments.typing import (
 )
 
 logger = logging.getLogger("aintelope.agents.q_agent")
+
 
 class HistoryStep(NamedTuple):
     state: NamedTuple
@@ -48,7 +50,7 @@ class QAgent(Agent):
         self,
         agent_id: str,
         trainer: Trainer,
-        action_space: Discrete, 
+        action_space: Discrete,
         target_instincts: List[str] = [],
     ) -> None:
         self.id = agent_id
@@ -66,9 +68,9 @@ class QAgent(Agent):
             self.state = self.state[0]
 
     def get_action(
-        self, 
+        self,
         observation: npt.NDArray[ObservationFloat] = None,
-        step: int = 0, #net: nn.Module, epsilon: float, device: str
+        step: int = 0,  # net: nn.Module, epsilon: float, device: str
     ) -> Optional[int]:
         """Given an observation, ask your net what to do. State is needed to be given here
         as other agents have changed the state!
@@ -86,14 +88,13 @@ class QAgent(Agent):
         else:
             # For future: observation can go to instincts here
             action = self.trainer.get_action(self.id, observation, step)
-        
+
         self.last_action = action
         return action
 
-    
     def update(
         self,
-        env: SavannaGymEnv = None, #TODO hack, figure out if state_to_namedtuple can be static somewhere
+        env: SavannaGymEnv = None,  # TODO hack, figure out if state_to_namedtuple can be static somewhere
         observation: npt.NDArray[ObservationFloat] = None,
         score: float = 0.0,
         done: bool = False,
@@ -105,17 +106,17 @@ class QAgent(Agent):
         Args:
             observation: ObservationArray
             score: Only baseline uses score as a reward
-            done: boolean whether run is done 
+            done: boolean whether run is done
 
         Returns:
             None
         """
-        next_state = observation 
+        next_state = observation
         # For future: add state (interoception) handling here when needed
         # TODO: hacky. empty next states introduced by new example code,
         # and I'm wondering if we need to save these steps too due to agent death
         # Discussion in slack.
-        if next_state is not None: 
+        if next_state is not None:
             next_s_hist = env.state_to_namedtuple(next_state.tolist())
         else:
             next_s_hist = None
@@ -144,7 +145,9 @@ class QAgent(Agent):
                     ]
                 )
 
-        self.trainer.update_memory(self.id, self.state, self.last_action, score, done, next_state) #exp)
+        self.trainer.update_memory(
+            self.id, self.state, self.last_action, score, done, next_state
+        )  # exp)
         self.state = next_state
 
     def get_history(self) -> pd.DataFrame:

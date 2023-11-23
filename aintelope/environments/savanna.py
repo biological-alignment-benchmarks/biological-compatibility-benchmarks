@@ -236,8 +236,8 @@ class SavannaEnv:
         # self.agent_selection = self._agent_selector.next()
         self.dones = {agent: False for agent in self.agents}
         observations = {agent: self.observe(agent) for agent in self.agents}
-        infos = {agent: {} for agent in self.agents} 
-        return observations, infos # TODO remove these returns as unused?
+        infos = {agent: {} for agent in self.agents}
+        return observations, infos  # TODO remove these returns as unused?
 
     def step(self, actions: Dict[str, Action]) -> Step:
         """step(action) takes in an action for each agent and should return the
