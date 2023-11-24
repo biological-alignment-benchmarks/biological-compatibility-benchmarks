@@ -64,4 +64,4 @@ def test_qagent_in_savanna_gridworlds_parallel(
 
 
 if __name__ == "__main__" and sys.gettrace() is not None:  # detect debugging
-    pytest.main([__file__])   # run tests only in this file
+    pytest.main([__file__])  # run tests only in this file
