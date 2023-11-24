@@ -101,9 +101,8 @@ def run_experiment(cfg: DictConfig) -> None:
         # Save models
         # https://pytorch.org/tutorials/recipes/recipes/saving_and_loading_a_general_checkpoint.html
         dir_out = f"{cfg.experiment_dir}"
-        file_name = f"{i_episode}"
         if i_episode % cfg.hparams.every_n_episodes == 0:
-            trainer.save_models(i_episode, dir_out + "/" + file_name)
+            trainer.save_models(i_episode, dir_out + "/")
 
 
 # @hydra.main(version_base=None, config_path="config", config_name="config_experiment")

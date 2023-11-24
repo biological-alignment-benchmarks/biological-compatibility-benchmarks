@@ -221,5 +221,5 @@ class Trainer:
                     "optimizer_state_dict": self.optimizer.state_dict(),
                     "loss": loss,
                 },
-                path + "_" + agent_id,
+                path + agent_id + "_" + str(episode),
             )
