@@ -16,12 +16,12 @@ hparams:
   __env: savanna-zoo-parallel-v2
   __env_entry_point: "aintelope.environments.savanna_zoo:SavannaZooParallelEnv"
   __env_type: gym
-  ___env: savanna-safetygrid-parallel-v1
-  ___env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
-  ___env_type: zoo
-  env: savanna-safetygrid-sequential-v1
-  env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
+  env: savanna-safetygrid-parallel-v1
+  env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
   env_type: zoo
+  _env: savanna-safetygrid-sequential-v1
+  _env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
+  _env_type: zoo
   model: dqn
   agent_id: instinct_agent
   gamma: 0.99

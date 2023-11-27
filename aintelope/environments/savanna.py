@@ -322,6 +322,20 @@ class SavannaEnv:
         """Move the agent to a location. Tests and inference"""
         self.agent_states[agent] = loc
 
+    def observe_from_location(self, agents_coordinates: Dict):
+        """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
+        Each given agent observes itself and the environment as if the agent was in the given location.
+        """
+        observations = {}
+        for agent, coordinate in agents_coordinates.items():
+            original_coordinate = self.agent_states[agent]  # save original state
+            self.set_agent_position(agent, np.array(coordinate))
+            observations[agent] = self.observe(agent)
+            self.set_agent_position(
+                agent, original_coordinate
+            )  # restore original state
+        return observations
+
     def state_to_namedtuple(self, state: npt.NDArray[ObservationFloat]) -> NamedTuple:
         """Method to convert a state array into a named tuple."""
         agent_coords = {"agent_coords": state[:2]}

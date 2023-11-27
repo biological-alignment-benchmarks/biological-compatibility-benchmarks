@@ -66,5 +66,4 @@ def test_training_pipeline_instinct():
 
 if __name__ == "__main__" and sys.gettrace() is not None:  # detect debugging
     register_resolvers()  # needs to be called only once
-    # running via pytest does not work in case of subprocesses here for some reason
     pytest.main([__file__])  # run tests only in this file
