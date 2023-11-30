@@ -122,6 +122,13 @@ def move_agent(
     return agent_pos
 
 
+# These methods are temporary, and will not scale for more agents nor more grasses
+# they are for instincts, and should be rewritten such that state (observation)
+# contains the information necessary for instincts (and distinction for models)
+def get_grass_pos_from_state(agent_state) -> List[PositionFloat]:
+    return [agent_state[2], agent_state[3]]
+
+
 def get_agent_pos_from_state(agent_state) -> List[PositionFloat]:
     return [agent_state[0], agent_state[1]]
 

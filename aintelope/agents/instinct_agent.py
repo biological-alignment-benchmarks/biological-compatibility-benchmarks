@@ -1,13 +1,19 @@
 from typing import Optional, List
 import logging
 import csv
+import numpy.typing as npt
 
-import numpy as np
+from gymnasium.spaces import Discrete
 
 from aintelope.agents import Environment, register_agent_class
 from aintelope.agents.q_agent import QAgent, HistoryStep
+from aintelope.training.dqn_training import Trainer
 from aintelope.agents.instincts.savanna_instincts import available_instincts_dict
 from aintelope.environments.savanna_gym import SavannaGymEnv
+
+from aintelope.environments.typing import (
+    ObservationFloat,
+)
 
 logger = logging.getLogger("aintelope.agents.instinct_agent")
 
@@ -17,52 +23,42 @@ class InstinctAgent(QAgent):
 
     def __init__(
         self,
-        env: Environment,
-        # model: nn.Module,
-        replay_buffer: ReplayBuffer,
-        warm_start_steps: int,
+        agent_id: str,
+        trainer: Trainer,
+        action_space: Discrete,
         target_instincts: List[str] = [],
     ) -> None:
-        """
-        Args:
-            env (Environment): environment instance
-            #model (nn.Module): neural network instance
-            replay_buffer (ReplayBuffer): replay buffer of the agent
-            warm_start_steps (int): amount of initial random buffer
-            target_instincts (List[str]): names if used instincts
-        """
         self.target_instincts = target_instincts
         self.instincts = {}
-        self.done = False
 
-        # reset after attribute setup
         super().__init__(
-            env=env,
-            # model=model,
-            replay_buffer=replay_buffer,
-            warm_start_steps=warm_start_steps,
+            agent_id=agent_id,
+            trainer=trainer,
+            action_space=action_space,
         )
 
-    def reset(self) -> None:
-        """Reset environment and initialize instincts"""
-        super().reset()
+    def reset(self, state) -> None:
+        """Resets self and updates the state."""
+        super().reset(state)
         self.init_instincts()
 
-    def get_action(self, net: nn.Module, epsilon: float, device: str) -> int:
-        """Decide what action to carry out using an
-        epsilon-greedy policy.
+    def get_action(
+        self,
+        observation: npt.NDArray[ObservationFloat] = None,
+        step: int = 0,  # net: nn.Module, epsilon: float, device: str
+    ) -> Optional[int]:
+        """Given an observation, ask your net what to do. State is needed to be given here
+        as other agents have changed the state!
 
         Args:
-            net (nn.Module): neural network instance
-            epsilon (float): value to determine likelihood of taking a random action
-            device (str): current device
+            net: pytorch Module instance, the model
+            epsilon: value to determine likelihood of taking a random action
+            device: current device
 
         Returns:
-            action (int): index of action
+            action (Optional[int]): index of action
         """
-        action = super().get_action(net, epsilon, device)
-        # Add further instinctual responses here later to modify action
-        return action
+        return super().get_action(observation, step)
 
     def update(
         self,
@@ -98,17 +94,18 @@ class InstinctAgent(QAgent):
             # interpret new_state and score to compute actual reward
             reward = 0
             instinct_events = []
-            for instinct_name, instinct_object in self.instincts.items():
-                instinct_reward, instinct_event = instinct_object.calc_reward(
-                    self, new_state
-                )
-                reward += instinct_reward
-                logger.debug(
-                    f"Reward of {instinct_name}: {instinct_reward}; "
-                    f"total reward: {reward}"
-                )
-                if instinct_event != 0:
-                    instinct_events.append((instinct_name, instinct_event))
+            if next_state is not None:  # temporary, until we solve final states
+                for instinct_name, instinct_object in self.instincts.items():
+                    instinct_reward, instinct_event = instinct_object.calc_reward(
+                        next_state
+                    )
+                    reward += instinct_reward
+                    logger.debug(
+                        f"Reward of {instinct_name}: {instinct_reward}; "
+                        f"total reward: {reward}"
+                    )
+                    if instinct_event != 0:
+                        instinct_events.append((instinct_name, instinct_event))
         # interruption done
 
         if next_state is not None:

@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import logging
 from omegaconf import DictConfig
-#import hydra
+
 import os
 
 from aintelope.environments.savanna_gym import SavannaGymEnv

@@ -1,7 +1,8 @@
 from typing import Optional, Dict
-
+import numpy as np
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 from aintelope.environments.savanna import get_agent_pos_from_state
+from aintelope.environments.savanna import get_grass_pos_from_state
 
 
 class Smell:
@@ -11,11 +12,11 @@ class Smell:
     def reset(self):
         pass
 
-    def calc_reward(self, agent, new_state):
+    def calc_reward(self, state):
         """function of smell intensity for food"""
-        agent_pos = get_agent_pos_from_state(new_state)
+        agent_pos = get_agent_pos_from_state(state)
         min_grass_distance = distance_to_closest_item(
-            agent_pos, agent.env.grass_patches
+            agent_pos, np.array(get_grass_pos_from_state(state))
         )
         event_signal = 0
         smell_reward = 1.0 / (min_grass_distance + 1.0)
@@ -32,10 +33,10 @@ class Hunger:
         self.max_hunger_reward = self.instinct_params.get("max_hunger_reward", 3.0)
         self.last_ate = self.instinct_params.get("last_ate", -10)
 
-    def calc_reward(self, agent, new_state):
+    def calc_reward(self, agent, state):
         """function of time since last ate and hunger rate and opportunity to eat"""
         current_step = agent.env.num_moves
-        agent_pos = get_agent_pos_from_state(new_state)
+        agent_pos = get_agent_pos_from_state(state)
         min_grass_distance = distance_to_closest_item(
             agent_pos, agent.env.grass_patches
         )
@@ -63,10 +64,10 @@ class Thirst:
         self.max_thirst_reward = self.instinct_params.get("max_thirst_reward", 4.0)
         self.last_drank = self.instinct_params.get("last_drank", 0)
 
-    def calc_reward(self, agent, new_state):
+    def calc_reward(self, agent, state):
         """function of time since last ate and thirst rate and opportunity to eat"""
         current_step = agent.env.num_moves
-        agent_pos = [new_state[1], new_state[2]]
+        agent_pos = [state[1], state[2]]
         min_water_distance = distance_to_closest_item(agent_pos, agent.env.water_holes)
 
         event_signal = 0
@@ -95,14 +96,14 @@ class Curiosity:
         self.curiosity_window = self.instinct_params.get("curiosity_window", 20)
         self.last_discovery = self.instinct_params.get("last_discovery", 0)
 
-    def calc_reward(self, agent, new_state):
+    def calc_reward(self, agent, state):
         """prefer not to revist tiles within curiosity window
         if agent had a sight-range, I'd add a preference to see new areas and objects
         could make this proportional to the nearest point in some sort of shifted
         window (e.g. 10 - 30)
         """
         current_step = agent.env.num_moves
-        agent_pos = [new_state[1], new_state[2]]
+        agent_pos = [state[1], state[2]]
         recent_states = agent.replay_buffer.fetch_recent_states(self.curiosity_window)
         recent_positions = [[x[1], x[2]] for x in recent_states]
         event_signal = 0
