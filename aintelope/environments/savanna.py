@@ -192,6 +192,7 @@ class SavannaEnv:
         self.human_render_state = None
         self.ascii_render_state = None
         self.dones = None
+        self.infos = { agent: {} for agent in self.possible_agents }   # needed for Zoo sequential API
 
     def seed(self, seed: Optional[int] = None) -> None:
         self.np_random, seed = seeding.np_random(seed)
@@ -210,7 +211,7 @@ class SavannaEnv:
         self.seed(seed)
 
         self.agents = self.possible_agents[:]
-        # self.rewards = {agent: 0 for agent in self.agents}
+        self.rewards = {agent: 0.0 for agent in self.agents}       # storing in self is needed for Zoo sequential API
         # self._cumulative_rewards = {agent: 0 for agent in self.agents}
         # self.dones = {agent: False for agent in self.agents}
         # self.infos = {agent: {} for agent in self.agents}
@@ -259,7 +260,7 @@ class SavannaEnv:
         if self.agents == []:
             raise ValueError("No agents found; num_iters reached?")
 
-        rewards = {}
+        self.rewards = {}   # storing in self is needed for Zoo sequential API
         for agent in self.agents:
             action = actions.get(agent)
             if isinstance(action, dict):
@@ -277,7 +278,7 @@ class SavannaEnv:
             min_grass_distance = distance_to_closest_item(
                 self.agent_states[agent], self.grass_patches
             )
-            rewards[agent] = reward_agent(min_grass_distance)
+            self.rewards[agent] = reward_agent(min_grass_distance)
 
         self.num_moves += 1
         env_done = (self.num_moves >= self.metadata["num_iters"]) or all(
@@ -295,10 +296,10 @@ class SavannaEnv:
 
         if env_done:
             self.agents = []
-        logger.debug("debug return", observations, rewards, self.dones, infos)
+        logger.debug("debug return", observations, self.rewards, self.dones, infos)
 
         terminateds = {key: False for key in self.dones.keys()}
-        return observations, rewards, self.dones, terminateds, infos
+        return observations, self.rewards, self.dones, terminateds, infos
 
     def observe(self, agent: str) -> npt.NDArray[ObservationFloat]:
         """Return observation of given agent."""
