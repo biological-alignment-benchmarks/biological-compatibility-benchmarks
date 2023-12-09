@@ -81,6 +81,7 @@ class GridworldZooBaseEnv:
         "map_randomization_frequency": 1,  # TODO   # 0 - off, 1 - once per experiment run, 2 - once per trial (a trial is a sequence of training episodes separated by env.reset call, but using a same model instance), 3 - once per training episode.
         "remove_unused_tile_types_from_layers": True,  # Whether to remove tile types not present on initial map from observation layers. - set to False when same agent brain is trained over multiple environments
         "observe_bitmap_layers": False,  # Alternate observation format to current vector of absolute coordinates. Bitmap representation enables representing objects which might be outside of agent's observation zone for time being.
+        "override_infos": False,  # Needed for tests. Zoo is unable to compare infos unless they have simple structure.
     }
 
     def __init__(self, env_params: Optional[Dict] = None):
@@ -112,7 +113,8 @@ class GridworldZooBaseEnv:
             ],  # Whether to remove tile types not present on initial map from observation layers. - set to False when same agent brain is trained over multiple environments
         }
 
-        self.observe_bitmap_layers = self.metadata["observe_bitmap_layers"]
+        self._observe_bitmap_layers = self.metadata["observe_bitmap_layers"]
+        self._override_infos = self.metadata["override_infos"]
 
     def init_observation_spaces(self):
         # for @zoo-api
@@ -138,7 +140,7 @@ class GridworldZooBaseEnv:
 
     # this method has no side effects
     def transform_observation(self, agent: str, info) -> npt.NDArray[ObservationFloat]:
-        if self.observe_bitmap_layers:
+        if self._observe_bitmap_layers:
             return info[INFO_OBSERVATION_LAYERS_CUBE]
 
         else:
@@ -348,6 +350,10 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
         # transform observations
         for agent in infos.keys():
             self.observations2[agent] = self.transform_observation(agent, infos[agent])
+
+        if self._override_infos:
+            infos = {agent: {} for agent in infos.keys()}
+
         return self.observations2, infos
 
     def step(self, actions: Dict[str, Action]) -> Step:
@@ -386,6 +392,9 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
             min_grass_distance = self.calc_min_grass_distance(agent, infos[agent])
             rewards2[agent] = self.reward_agent(min_grass_distance)
 
+        if self._override_infos:
+            infos = {agent: {} for agent in infos.keys()}
+
         logger.debug(
             "debug return", self.observations2, rewards, terminateds, truncateds, infos
         )
@@ -405,6 +414,35 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         self.init_observation_spaces()
         self._last_infos = {}
         self.observations2 = {}
+
+    @property
+    def rewards(self):  # Needed for tests
+        rewards = GridworldZooAecEnv.rewards.fget(
+            self
+        )  # property needs .fget() to become callable
+
+        rewards2 = {}
+        # transform rewards
+        for agent in rewards.keys():
+            min_grass_distance = self.calc_min_grass_distance(
+                agent, self._last_infos[agent]
+            )
+            rewards2[agent] = self.reward_agent(min_grass_distance)
+
+        return rewards2
+
+    @property
+    def infos(
+        self,
+    ):  # Needed for tests. Zoo is unable to compare infos unless they have simple structure.
+        infos = GridworldZooAecEnv.infos.fget(
+            self
+        )  # property needs .fget() to become callable
+
+        if self._override_infos:
+            return {agent: {} for agent in infos.keys()}
+        else:
+            return infos
 
     # def observe_from_location(self, agents_coordinates: Dict):
     #    """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
@@ -435,18 +473,32 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
             self.observations2[agent] = self.transform_observation(agent, info)
 
         self._last_infos = infos
+
+        if self._override_infos:
+            infos = {agent: {} for agent in infos.keys()}
+
         return self.observations2, infos
 
-    def last(self):
-        observation, reward, terminated, truncated, info = GridworldZooAecEnv.last(self)
+    def last(self, observe=True):
+        observation, reward, terminated, truncated, info = GridworldZooAecEnv.last(
+            self, observe=observe
+        )
 
         agent = self.agent_selection
 
-        observation2 = self.transform_observation(agent, info)
-        self.observations2[agent] = observation2
+        if observe:
+            observation2 = self.transform_observation(agent, info)
+            self.observations2[agent] = observation2
+        else:
+            observation2 = None  # that's how Zoo api_test.py requires it
 
         min_grass_distance = self.calc_min_grass_distance(agent, info)
         reward2 = self.reward_agent(min_grass_distance)
+
+        self._last_infos[agent] = info
+
+        if self._override_infos:
+            info = {}
 
         return observation2, reward2, terminated, truncated, info
 
@@ -480,6 +532,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         truncated = self.truncations[agent]
 
         self._last_infos[agent] = info
+
+        if self._override_infos:
+            info = {}
 
         logger.debug("debug return", observation2, reward2, terminated, truncated, info)
         return observation2, reward2, terminated, truncated, info
@@ -545,6 +600,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         truncateds = self.truncations
 
         self._last_infos = infos
+
+        if self._override_infos:
+            infos = {agent: {} for agent in infos.keys()}
 
         logger.debug(
             "debug return", self.observations2, rewards2, terminateds, truncateds, infos

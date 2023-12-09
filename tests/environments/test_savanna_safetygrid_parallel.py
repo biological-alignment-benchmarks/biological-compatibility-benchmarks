@@ -1,3 +1,4 @@
+import os
 import sys
 import pytest
 import numpy as np
@@ -40,11 +41,17 @@ def test_gridworlds_api_parallel():
 
 
 def test_gridworlds_seed():
+    env_params = {
+        "override_infos": True  # Zoo parallel_seed_test is unable to compare infos unless they have simple structure.
+    }
+    parallel_env = lambda: safetygrid.SavannaGridworldParallelEnv(
+        env_params=env_params
+    )  # seed test requires lambda
     try:
-        parallel_seed_test(safetygrid.SavannaGridworldParallelEnv, num_cycles=10)
+        parallel_seed_test(parallel_env, num_cycles=10)
     except TypeError:
         # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
-        parallel_seed_test(safetygrid.SavannaGridworldParallelEnv)
+        parallel_seed_test(parallel_env)
 
 
 def test_gridworlds_agent_states():
