@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple, NamedTuple, Union
 import logging
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 import numpy as np
 import numpy.typing as npt
@@ -80,7 +80,7 @@ class GridworldZooBaseEnv:
         "action_direction_mode": 0,  # TODO: Joel wanted to use relative direction, so need to use mode 1 or 2 in this case    # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions.
         "map_randomization_frequency": 1,  # TODO   # 0 - off, 1 - once per experiment run, 2 - once per trial (a trial is a sequence of training episodes separated by env.reset call, but using a same model instance), 3 - once per training episode.
         "remove_unused_tile_types_from_layers": True,  # Whether to remove tile types not present on initial map from observation layers. - set to False when same agent brain is trained over multiple environments
-        "observe_bitmap_layers": True,     # Alternate observation format to current vector of absolute coordinates. Bitmap representation enables representing objects which might be outside of agent's observation zone for time being.
+        "observe_bitmap_layers": False,     # Alternate observation format to current vector of absolute coordinates. Bitmap representation enables representing objects which might be outside of agent's observation zone for time being.
     }
 
     def __init__(self, env_params: Optional[Dict] = None):
@@ -259,7 +259,7 @@ class GridworldZooBaseEnv:
     # This API is intended primarily as input for the neural network. Relative observation bitmap is agent centric and considers the agent's observation radius. Environments with different sizes will have same-shaped relative observation bitmaps as long as the agent's observation radius is same.
     # if observe_bitmap_layers == True then observe() method returns same value as observe_relative_bitmaps()
     def observe_relative_bitmaps(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
-        iif agent is None:
+        if agent is None:
             return { agent: self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_CUBE] for agent in self._last_infos.keys() }
         else:
             return self._last_infos[agent][INFO_AGENT_OBSERVATION_LAYERS_CUBE]
@@ -315,9 +315,9 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
     #    return observations2
 
     def reset(
-        self, seed: Optional[int] = None, options=None
+        self, seed: Optional[int] = None, options=None, *args, **kwargs
     ) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
-        observations, infos = GridworldZooParallelEnv.reset(self)
+        observations, infos = GridworldZooParallelEnv.reset(self, seed=seed, options=options, *args, **kwargs)
         self._last_infos = infos
         # transform observations
         for agent in infos.keys():
@@ -345,7 +345,7 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
             terminateds,
             truncateds,
             infos,
-        ) = GridworldZooParallelEnv.step(self, actions)
+        ) = GridworldZooParallelEnv.step(self, OrderedDict({ agent: {"step": action} for agent, action in actions.items() }))
         self._last_infos = infos
 
         rewards2 = {}
@@ -392,9 +392,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
     #    return observations2
 
     def reset(
-        self, seed: Optional[int] = None, options=None
+        self, seed: Optional[int] = None, options=None, *args, **kwargs
     ) -> Tuple[Dict[AgentId, Observation], Dict[AgentId, Info]]:
-        GridworldZooAecEnv.reset(self)
+        GridworldZooAecEnv.reset(self, seed=seed, options=options, *args, **kwargs)
 
         # observe observations, transform observations
         infos = {}
@@ -421,7 +421,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
             action = (
                 Actions.NOOP
             )  # all agents need to take a step, the stepping order cannot be modified
-        GridworldZooAecEnv.step(self, action)
+        GridworldZooAecEnv.step(self, {"step": action})
 
         # observe observations, transform observations and rewards
         info = self.observe_info(agent)
@@ -470,7 +470,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
                 action = (
                     Actions.NOOP
                 )  # all agents need to take a step, the stepping order cannot be modified
-            GridworldZooAecEnv.step(self, action)
+            GridworldZooAecEnv.step(self, {"step": action})
 
             if (
                 self.observe_immediately_after_agent_action
