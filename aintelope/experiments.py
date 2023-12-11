@@ -46,10 +46,23 @@ def run_experiment(cfg: DictConfig) -> None:
         raise NotImplementedError()
 
     action_space = env.action_space
-    observation, info = env.reset()  # TODO: each agent has their own state, refactor
-    n_observations = len(
-        observation["agent_0"]
-    )  # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+
+    if isinstance(env, ParallelEnv):
+        (
+            observations,
+            infos,
+        ) = env.reset()  # TODO: each agent has their own state, refactor
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        n_observations = len(  # TODO: support for 3D-observation cube
+            observations["agent_0"]
+        )
+    else:
+        env.reset()
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        observation = env.observe(
+            "agent_0"
+        )  # TODO: each agent has their own state, refactor
+        n_observations = len(observation)  # TODO: support for 3D-observation cube
 
     # Common trainer for each agent's models
     trainer = Trainer(
@@ -80,10 +93,20 @@ def run_experiment(cfg: DictConfig) -> None:
     # Main loop
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
-        _, _ = env.reset()
-        for agent in agents:
-            agent.reset(env.observe(agent.id))
-            dones[agent.id] = False
+        if isinstance(env, ParallelEnv):
+            (
+                observations,
+                infos,
+            ) = env.reset()
+            for agent in agents:
+                agent.reset(observations[agent.id])
+                dones[agent.id] = False
+
+        elif isinstance(env, AECEnv):
+            env.reset()
+            for agent in agents:
+                agent.reset(env.observe(agent.id))
+                dones[agent.id] = False
 
         for step in range(cfg.hparams.env_params.num_iters):
             if isinstance(env, ParallelEnv):
@@ -121,13 +144,15 @@ def run_experiment(cfg: DictConfig) -> None:
                     action = agent.get_action(observation, step)
 
                     # Env step
+                    # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values.
+                    result = env.step(action)
                     (
                         observation,
                         score,
                         terminated,
                         truncated,
                         info,
-                    ) = env.step_single_agent(action)
+                    ) = result
                     done = terminated or truncated
 
                     # Agent is updated based on what the env shows. All commented above included ^

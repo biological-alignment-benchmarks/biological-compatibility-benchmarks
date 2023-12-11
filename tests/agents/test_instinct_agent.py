@@ -59,9 +59,9 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
 
 # TODO: parallel API support
 
-#def test_instinctagent_in_savanna_zoo_parallel(
+# def test_instinctagent_in_savanna_zoo_parallel(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
-#) -> None:
+# ) -> None:
 #    tparams, hparams = tparams_hparams
 #    params_savanna_zoo = {
 #        "agent_id": "instinct_agent",
@@ -82,9 +82,9 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
 #    run_episode(tparams=tparams, hparams=hparams)
 
 
-#def test_instinctagent_in_savanna_gridworlds_parallel(
+# def test_instinctagent_in_savanna_gridworlds_parallel(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
-#) -> None:
+# ) -> None:
 #    tparams, hparams = tparams_hparams
 #    params_savanna_zoo = {
 #        "agent_id": "instinct_agent",

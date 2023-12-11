@@ -508,6 +508,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         return observation2, reward2, terminated, truncated, info
 
+    def step(self, action: Action) -> Step:
+        return self.step_single_agent(action)
+
     def step_single_agent(self, action: Action) -> Step:
         """step(action) takes in an action for each agent and should return the
         - observation

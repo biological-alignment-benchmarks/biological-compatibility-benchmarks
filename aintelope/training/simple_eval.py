@@ -2,7 +2,9 @@ import logging
 
 import gymnasium as gym
 
-from omegaconf import DictConfig
+from omegaconf import OmegaConf, DictConfig
+
+from pettingzoo import AECEnv, ParallelEnv
 
 from aintelope.agents.q_agent import QAgent
 from aintelope.agents.instinct_agent import InstinctAgent
@@ -21,6 +23,9 @@ from aintelope.environments.savanna_safetygrid import (
     SavannaGridworldParallelEnv,
     SavannaGridworldSequentialEnv,
 )
+
+from aintelope.training.dqn_training import Trainer
+
 
 logger = logging.getLogger("aintelope.training.simple_eval")
 
@@ -65,10 +70,12 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         #     env = parallel_to_aec(env)
         # assumption here: all agents in zoo have same observation space shape
         env.reset()
-        obs_size = env.observation_space("agent_0").shape[0]
+        obs_size = env.observation_space("agent_0").shape[
+            0
+        ]  # TODO: multi-agent compatibility
 
         logger.info("obs size", obs_size)
-        n_actions = env.action_space("agent_0").n
+        n_actions = env.action_space("agent_0").n  # TODO: multi-agent compatibility
         logger.info("n actions", n_actions)
     else:
         logger.info(
@@ -77,6 +84,31 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         )
 
     env.reset(options={})
+
+    action_space = env.action_space
+
+    if isinstance(env, ParallelEnv):
+        (
+            observations,
+            infos,
+        ) = env.reset()  # TODO: each agent has their own state, refactor
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        n_observations = len(  # TODO: support for 3D-observation cube
+            observations["agent_0"]
+        )
+    else:
+        env.reset()
+        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
+        observation = env.observe(
+            "agent_0"
+        )  # TODO: each agent has their own state, refactor
+        n_observations = len(observation)  # TODO: support for 3D-observation cube
+
+    # Common trainer for each agent's models
+    cfg = OmegaConf.merge(hparams, tparams)
+    trainer = Trainer(
+        cfg, n_observations, action_space
+    )  # TODO: have a section in params for trainer? its trainer and hparams now tho
 
     buffer = ReplayBuffer(hparams["replay_size"])
 
@@ -93,13 +125,23 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         if len(models) < len(agent_spec):
             models *= len(agent_spec)
         agents = [
-            AGENT_LOOKUP[agent](env, buffer, hparams["warm_start_size"], **agent_params)
+            AGENT_LOOKUP[agent](
+                agent_id=agent,
+                trainer=trainer,
+                action_space=env.action_space(agent),
+                # target_instincts: List[str] = [],
+                # env, buffer, hparams["warm_start_size"], **agent_params
+            )
             for agent in agent_spec
         ]
     else:
         agents = [
             AGENT_LOOKUP[agent_spec](
-                env, buffer, hparams["warm_start_size"], **agent_params
+                agent_id=agent,
+                trainer=trainer,
+                action_space=env.action_space(agent),
+                # target_instincts: List[str] = [],
+                # env, buffer, hparams["warm_start_size"], **agent_params
             )
         ]
 
@@ -112,23 +154,26 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         if env_type == "zoo":
             actions = {}
             for agent in agents:
+                observation = env.observe(agent.id)
                 # agent doesn't get to play_step, only env can, for multi-agent env compatibility
                 # reward, score, done = agent.play_step(nets[i], epsilon=1.0)
                 actions["agent_0"] = agent.get_action(  # TODO: agent_name
-                    models[0],  # TODO: net per agent
-                    epsilon=epsilon,
-                    device=tparams["device"],
+                    # models[0],  # TODO: net per agent
+                    # epsilon=epsilon,
+                    # device=tparams["device"],
+                    # observations[agent],
+                    observation,
+                    step=0,
                 )
             logger.debug("debug actions", actions)
             logger.debug("debug step")
             logger.debug(env.__dict__)
 
-            observations, rewards, terminateds, truncateds, infos = env.step(actions)
-            logger.debug((observations, rewards, terminateds, truncateds, infos))
-            dones = {
-                key: terminated or truncateds[key]
-                for (key, terminated) in terminateds.items()
-            }
+            observation, reward, terminated, truncated, info = env.step(actions)
+            logger.debug((observation, reward, terminated, truncated, info))
+            done = terminated or truncated
+
+            # observations[agent] = observation
         else:
             # the assumption by non-zoo env will be 1 agent generally I think
             for agent, model in zip(agents, models):
