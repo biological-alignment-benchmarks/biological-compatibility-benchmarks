@@ -12,9 +12,6 @@ from tests.test_config import (
 from aintelope.training.simple_eval import run_episode
 
 
-# TODO: looks like these parameters here have no effect and only the yaml config is used?
-
-
 def test_randomwalkagent_in_savanna_zoo_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
