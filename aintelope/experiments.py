@@ -84,7 +84,7 @@ def run_experiment(cfg: DictConfig) -> None:
                 **cfg.hparams.agent_params,
             )
         )
-        observation = env.observe(agent_id)
+        observation = env.observe(agent_id)  # TODO parallel env observation handling
         agents[-1].reset(observation)
         trainer.add_agent(agent_id)
 

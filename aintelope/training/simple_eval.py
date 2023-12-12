@@ -5,6 +5,7 @@ import logging
 import gymnasium as gym
 
 from omegaconf import OmegaConf, DictConfig
+from typing import Dict
 
 from pettingzoo import AECEnv, ParallelEnv
 
@@ -51,7 +52,10 @@ ENV_LOOKUP = {
 MODEL_LOOKUP = {"dqn": DQN}
 
 
-def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
+def run_episode(full_params: Dict) -> None:
+    tparams = full_params.trainer_params
+    hparams = full_params.hparams
+
     env_params = hparams["env_params"]
     agent_params = hparams["agent_params"]
     render_mode = env_params["render_mode"]
@@ -112,11 +116,11 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
         raise NotImplementedError(f"Unknown environment type {type(env)}")
 
     # Common trainer for each agent's models
-    cfg = OmegaConf.merge(hparams, tparams)
-    # trainer = Trainer(
-    #    cfg, n_observations, action_space
-    # )  # TODO: have a section in params for trainer? its trainer and hparams now tho
-    trainer = None  # TODO
+    # cfg = OmegaConf.merge(full_params.hparams, tparams)
+    trainer = Trainer(
+        full_params, n_observations, action_space
+    )  # TODO: have a section in params for trainer? its trainer and hparams now tho
+    # trainer = None  # TODO
 
     buffer = ReplayBuffer(hparams["replay_size"])
 
@@ -155,6 +159,12 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
             )
         ]
 
+    # Agents
+    for agent in agents:
+        observation = env.observe(agent.id)  # TODO parallel env observation handling
+        agent.reset(observation)
+        trainer.add_agent(agent.id)
+
     agents_dict = {agent.id: agent for agent in agents}
 
     episode_rewards = Counter(
@@ -176,14 +186,14 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
                 observation = env.observe(agent.id)  # TODO: parallel env support
                 # agent doesn't get to play_step, only env can, for multi-agent env compatibility
                 # reward, score, done = agent.play_step(nets[i], epsilon=1.0)
-                action = action_space("agent_0").sample()  # TODO: agent.get_action()
-                # action = agent.get_action(
-                #    # models[0],
-                #    # epsilon=epsilon,
-                #    # device=tparams["device"],
-                #    observation,
-                #    step=0,
-                # )
+                # action = action_space("agent_0").sample()  # TODO: agent.get_action()
+                action = agent.get_action(
+                    # models[0],
+                    # epsilon=epsilon,
+                    # device=tparams["device"],
+                    observation,
+                    step=0,
+                )
                 logger.debug("debug action", action)
                 logger.debug("debug step")
                 logger.debug(env.__dict__)
@@ -234,13 +244,13 @@ def run_episode(tparams: DictConfig, hparams: DictConfig) -> None:
                 # agent doesn't get to play_step, only env can, for multi-agent env compatibility
                 # reward, score, done = agent.play_step(nets[i], epsilon=1.0)
                 action = action_space("agent_0").sample()  # TODO: agent.get_action()
-                # action = agent.get_action(
-                #    # models[0],
-                #    # epsilon=epsilon,
-                #    # device=tparams["device"],
-                #    observation,
-                #    step=0,
-                # )
+                action = agent.get_action(
+                    # models[0],
+                    # epsilon=epsilon,
+                    # device=tparams["device"],
+                    observation,
+                    step=0,
+                )
                 logger.debug("debug action", action)
                 logger.debug("debug step")
                 logger.debug(env.__dict__)
