@@ -18,7 +18,7 @@ from aintelope.training.simple_eval import run_episode
 def test_randomwalkagent_in_savanna_zoo_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_randomwalkagent = {
         "agent": "random_walk_agent",
         "env": "savanna-zoo-sequential-v2",
@@ -35,14 +35,14 @@ def test_randomwalkagent_in_savanna_zoo_sequential(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_randomwalkagent)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_randomwalkagent)
+    run_episode(full_params=full_params)
 
 
 def test_onestepperfectpredictionagent_in_savanna_zoo_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_perfectpredictionagent = {
         "agent": "one_step_perfect_prediction_agent",
         "env": "savanna-zoo-sequential-v2",
@@ -59,14 +59,14 @@ def test_onestepperfectpredictionagent_in_savanna_zoo_sequential(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_perfectpredictionagent)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_perfectpredictionagent)
+    run_episode(full_params=full_params)
 
 
 def test_iterativeweightoptimizationagent_in_savanna_zoo_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_weightoptimizationagent = {
         "agent": "iterative_weight_optimization_agent",
         "env": "savanna-zoo-sequential-v2",
@@ -83,14 +83,14 @@ def test_iterativeweightoptimizationagent_in_savanna_zoo_sequential(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_weightoptimizationagent)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_weightoptimizationagent)
+    run_episode(full_params=full_params)
 
 
 def test_randomwalkagent_in_savanna_gridworlds_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_randomwalkagent = {
         "agent": "random_walk_agent",
         "env": "savanna-safetygrid-sequential-v1",
@@ -107,14 +107,14 @@ def test_randomwalkagent_in_savanna_gridworlds_sequential(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_randomwalkagent)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_randomwalkagent)
+    run_episode(full_params=full_params)
 
 
 def test_onestepperfectpredictionagent_in_savanna_gridworlds_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_perfectpredictionagent = {
         "agent": "one_step_perfect_prediction_agent",
         "env": "savanna-safetygrid-sequential-v1",
@@ -131,14 +131,14 @@ def test_onestepperfectpredictionagent_in_savanna_gridworlds_sequential(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_perfectpredictionagent)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_perfectpredictionagent)
+    run_episode(full_params=full_params)
 
 
 def test_iterativeweightoptimizationagent_in_savanna_gridworlds_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_weightoptimizationagent = {
         "agent": "iterative_weight_optimization_agent",
         "env": "savanna-safetygrid-sequential-v1",
@@ -155,8 +155,8 @@ def test_iterativeweightoptimizationagent_in_savanna_gridworlds_sequential(
         },
         "agent_params": {},
     }
-    OmegaConf.merge(hparams, params_weightoptimizationagent)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_weightoptimizationagent)
+    run_episode(full_params=full_params)
 
 
 if (

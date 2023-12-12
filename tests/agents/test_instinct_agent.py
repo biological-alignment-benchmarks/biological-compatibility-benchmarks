@@ -15,7 +15,7 @@ from aintelope.training.simple_eval import run_episode
 def test_instinctagent_in_savanna_zoo_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_savanna_zoo = {
         "agent_id": "instinct_agent",
         "env": "savanna-zoo-sequential-v2",
@@ -31,14 +31,14 @@ def test_instinctagent_in_savanna_zoo_sequential(
             "amount_water_holes": 1,
         },
     }
-    OmegaConf.merge(hparams, params_savanna_zoo)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+    run_episode(full_params=full_params)
 
 
 def test_instinctagent_in_savanna_gridworlds_sequential(
     tparams_hparams: Tuple[DictConfig, DictConfig]
 ) -> None:
-    tparams, hparams = tparams_hparams
+    full_params = tparams_hparams
     params_savanna_zoo = {
         "agent_id": "instinct_agent",
         "env": "savanna-safetygrid-sequential-v1",
@@ -54,8 +54,8 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
             "amount_water_holes": 1,
         },
     }
-    OmegaConf.merge(hparams, params_savanna_zoo)
-    run_episode(tparams=tparams, hparams=hparams)
+    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+    run_episode(full_params=full_params)
 
 
 # TODO: parallel API support
@@ -63,7 +63,7 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
 # def test_instinctagent_in_savanna_zoo_parallel(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
 # ) -> None:
-#    tparams, hparams = tparams_hparams
+#    full_params = tparams_hparams
 #    params_savanna_zoo = {
 #        "agent_id": "instinct_agent",
 #        "env": "savanna-zoo-parallel-v2",
@@ -79,14 +79,14 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
 #            "amount_water_holes": 1,
 #        },
 #    }
-#    OmegaConf.merge(hparams, params_savanna_zoo)
-#    run_episode(tparams=tparams, hparams=hparams)
+#    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+#    run_episode(full_params=full_params)
 
 
 # def test_instinctagent_in_savanna_gridworlds_parallel(
 #    tparams_hparams: Tuple[DictConfig, DictConfig]
 # ) -> None:
-#    tparams, hparams = tparams_hparams
+#    full_params = tparams_hparams
 #    params_savanna_zoo = {
 #        "agent_id": "instinct_agent",
 #        "env": "savanna-safetygrid-parallel-v1",
@@ -102,8 +102,8 @@ def test_instinctagent_in_savanna_gridworlds_sequential(
 #            "amount_water_holes": 1,
 #        },
 #    }
-#    OmegaConf.merge(hparams, params_savanna_zoo)
-#    run_episode(tparams=tparams, hparams=hparams)
+#    OmegaConf.merge(full_params.hparams, params_savanna_zoo)
+#    run_episode(full_params=full_params)
 
 
 if (

@@ -41,7 +41,7 @@ hparams:
   log_figures_every_n_epochs: 5
   every_n_episodes: 1 # how often save a model
   env_params:
-    num_iters: 1000 # duration of a single episode (should be step, zoo needs iter?)
+    num_iters: 200 # duration of a single episode (should be step, zoo needs iter?). warm_start_steps will be subtracted from this value
     map_min: 0
     map_max: 5
     render_mode: null
