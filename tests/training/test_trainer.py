@@ -21,6 +21,8 @@ def test_training_pipeline_main():
 def test_training_pipeline_baseline():
     const = constants()
     if os.name == "nt":  # run all code in single process in case of debugging
+        # TODO: find a way to parse Makefile and get sys.argv that way
+        # sys.argv = [""] + shlex.split(const.BASELINE_ARGS, comments=False, posix=True) # posix=True removes quotes around arguments
         sys.argv = [
             "",
             "hparams.agent_id=q_agent",
@@ -38,6 +40,8 @@ def test_training_pipeline_baseline():
 def test_training_pipeline_instinct():
     const = constants()
     if os.name == "nt":  # run all code in single process in case of debugging
+        # TODO: find a way to parse Makefile and get sys.argv that way
+        # sys.argv = [""] + shlex.split(const.INSTINCT_ARGS, comments=False, posix=True) # posix=True removes quotes around arguments
         sys.argv = [
             "",
             "hparams.agent_id=instinct_agent",

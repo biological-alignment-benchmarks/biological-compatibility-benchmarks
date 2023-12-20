@@ -62,6 +62,7 @@ Step = Tuple[
 
 class GridworldZooBaseEnv:
     metadata = {
+        "seed": None,  # This seed is used only for environment map randomisation. Later the test calls .seed() method on the wrapper and this will determine the random action sampling and other random events during the game play.
         # "name": "savanna-safetygrid-v1",
         # "render_fps": 3,
         "render_agent_radius": 5,
@@ -92,6 +93,9 @@ class GridworldZooBaseEnv:
 
         self.super_initargs = {
             "env_name": "aintelope.aintelope_smell",
+            "seed": self.metadata[
+                "seed"
+            ],  # This seed is used only for environment map randomisation. Later the test calls .seed() method on the wrapper and this will determine the random action sampling and other random events during the game play.
             "max_iterations": self.metadata["num_iters"],
             "amount_food_patches": self.metadata["amount_grass_patches"],
             "amount_drink_holes": self.metadata["amount_water_holes"],
@@ -416,6 +420,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         self._last_rewards2 = {
             agent: None for agent in self.possible_agents
         }  # Rewards should be only updated after step, not on each observation before step. Rewards should be initialised to None before any reset() is called so that .rewards property returns dictionary with existing agents.
+        self._cumulative_rewards2 = {agent: 0.0 for agent in self.possible_agents}
         self.observations2 = {}
 
     @property
@@ -499,7 +504,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         else:
             observation2 = None  # that's how Zoo api_test.py requires it
 
-        reward2 = self._last_rewards2[
+        reward2 = self._cumulative_rewards2[
             agent
         ]  # rewards should be only updated after step, not on each observation before step
 
@@ -508,15 +513,20 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         return observation2, reward2, terminated, truncated, info
 
-    def step(self, action: Action):
+    def step(self, action: Action) -> None:
         logger.debug("debug action", action)
 
         agent = self.agent_selection
-        if action is None:
-            action = (
-                Actions.NOOP
-            )  # all agents need to take a step, the stepping order cannot be modified
+
+        self._cumulative_rewards2[agent] = 0
+
         GridworldZooAecEnv.step(self, {"step": action})
+
+        info = self.observe_info(agent)
+        min_grass_distance = self.calc_min_grass_distance(agent, info)
+        reward2 = self.reward_agent(min_grass_distance)
+        self._last_rewards2[agent] = reward2
+        self._cumulative_rewards2[agent] += reward2
 
     def step_single_agent(self, action: Action):
         """step(action) takes in an action for each agent and should return the
@@ -529,6 +539,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         logger.debug("debug action", action)
 
         agent = self.agent_selection
+        self._cumulative_rewards2[agent] = 0
         if action is None:
             action = (
                 Actions.NOOP
@@ -545,6 +556,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         min_grass_distance = self.calc_min_grass_distance(agent, info)
         reward2 = self.reward_agent(min_grass_distance)
         self._last_rewards2[agent] = reward2
+        self._cumulative_rewards2[agent] += reward2
 
         terminated = self.terminations[agent]
         truncated = self.truncations[agent]

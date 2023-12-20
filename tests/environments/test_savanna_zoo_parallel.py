@@ -34,10 +34,10 @@ def test_pettingzoo_api_parallel():
         "amount_grass_patches": 2,
         "amount_water_holes": 2,
     }
-    parallel_env = zoo.SavannaZooParallelEnv(env_params=env_params)
-    # TODO: Nathan was able to get the sequential-turn env to work, using this conversion, but not the parallel env. why??
-    # sequential_env = parallel_to_aec(parallel_env)
-    parallel_api_test(parallel_env, num_cycles=10)
+    env = zoo.SavannaZooParallelEnv(env_params=env_params)
+
+    # sequential_env = parallel_to_aec(env)
+    parallel_api_test(env, num_cycles=10)
 
 
 def test_zoo_seed():
@@ -145,7 +145,7 @@ def test_zoo_step_result():
 
 
 def test_zoo_done_step():
-    env = zoo.SavannaZooParallelEnv()
+    env = zoo.SavannaZooParallelEnv(env_params={"amount_agents": 1})
     assert len(env.possible_agents) == 1
     env.reset()
 

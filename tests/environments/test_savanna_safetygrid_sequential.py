@@ -39,24 +39,30 @@ def test_gridworlds_api_sequential():
         "amount_water_holes": 2,
         # "seed": seed,    # TODO
     }
-    sequential_env = safetygrid.SavannaGridworldSequentialEnv(env_params=env_params)
-    # TODO: Nathan was able to get the sequential-turn env to work, using this conversion, but not the parallel env. why??
-    # sequential_env = parallel_to_aec(parallel_env)
-    api_test(sequential_env, num_cycles=10, verbose_progress=True)
+    env = safetygrid.SavannaGridworldSequentialEnv(env_params=env_params)
+
+    # env = parallel_to_aec(parallel_env)
+    api_test(env, num_cycles=10, verbose_progress=True)
 
 
 def test_gridworlds_seed():
-    env_params = {
-        "override_infos": True  # Zoo seed_test is unable to compare infos unless they have simple structure.
-    }
-    sequential_env = lambda: safetygrid.SavannaGridworldSequentialEnv(
-        env_params=env_params
-    )  # seed test requires lambda
-    try:
-        seed_test(sequential_env, num_cycles=10)
-    except TypeError:
-        # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
-        seed_test(sequential_env)
+    seed = 0
+    for index in range(
+        0, 3
+    ):  # construct the environment multiple times with different seeds
+        seed += 1
+        env_params = {
+            "override_infos": True,  # Zoo seed_test is unable to compare infos unless they have simple structure.
+            "seed": seed,
+        }
+        env = lambda: safetygrid.SavannaGridworldSequentialEnv(
+            env_params=env_params
+        )  # seed test requires lambda
+        try:
+            seed_test(env, num_cycles=10)
+        except TypeError:
+            # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
+            seed_test(env)
 
 
 def test_gridworlds_agent_states():
@@ -99,7 +105,7 @@ def test_gridworlds_step_result():
 
 
 def test_gridworlds_done_step():
-    env = safetygrid.SavannaGridworldSequentialEnv()
+    env = safetygrid.SavannaGridworldSequentialEnv(env_params={"amount_agents": 1})
     assert len(env.possible_agents) == 1
     env.reset()
 

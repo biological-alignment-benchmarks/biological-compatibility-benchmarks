@@ -34,24 +34,30 @@ def test_gridworlds_api_parallel():
         "amount_grass_patches": 2,
         "amount_water_holes": 2,
     }
-    parallel_env = safetygrid.SavannaGridworldParallelEnv(env_params=env_params)
-    # TODO: Nathan was able to get the sequential-turn env to work, using this conversion, but not the parallel env. why??
-    # sequential_env = parallel_to_aec(parallel_env)
-    parallel_api_test(parallel_env, num_cycles=10)
+    env = safetygrid.SavannaGridworldParallelEnv(env_params=env_params)
+
+    # sequential_env = parallel_to_aec(env)
+    parallel_api_test(env, num_cycles=10)
 
 
 def test_gridworlds_seed():
-    env_params = {
-        "override_infos": True  # Zoo parallel_seed_test is unable to compare infos unless they have simple structure.
-    }
-    parallel_env = lambda: safetygrid.SavannaGridworldParallelEnv(
-        env_params=env_params
-    )  # seed test requires lambda
-    try:
-        parallel_seed_test(parallel_env, num_cycles=10)
-    except TypeError:
-        # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
-        parallel_seed_test(parallel_env)
+    seed = 0
+    for index in range(
+        0, 3
+    ):  # construct the environment multiple times with different seeds
+        seed += 1
+        env_params = {
+            "override_infos": True,  # Zoo parallel_seed_test is unable to compare infos unless they have simple structure.
+            "seed": seed,
+        }
+        env = lambda: safetygrid.SavannaGridworldParallelEnv(
+            env_params=env_params
+        )  # seed test requires lambda
+        try:
+            parallel_seed_test(env, num_cycles=10)
+        except TypeError:
+            # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
+            parallel_seed_test(env)
 
 
 def test_gridworlds_agent_states():
@@ -92,7 +98,7 @@ def test_gridworlds_step_result():
 
 
 def test_gridworlds_done_step():
-    env = safetygrid.SavannaGridworldParallelEnv()
+    env = safetygrid.SavannaGridworldParallelEnv(env_params={"amount_agents": 1})
     assert len(env.possible_agents) == 1
     env.reset()
 
