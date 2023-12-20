@@ -9,7 +9,9 @@ import numpy as np
 import os
 import sys
 
-if os.name == "nt" and sys.gettrace() is not None:  # detect debugging under Windows
+if (
+    os.name == "nt"
+):  # Detect running under Windows. The problem needs handling both while debugging or running outside of the debugger.
     original_get_terminal_size = os.get_terminal_size
 
     def get_terminal_size(fd=1):  # 1 = STDOUT_FILENO
