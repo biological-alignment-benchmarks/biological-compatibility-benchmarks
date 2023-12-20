@@ -24,7 +24,6 @@ class InstinctAgent(QAgent):
         self,
         agent_id: str,
         trainer: Trainer,
-        action_space: Discrete,
         target_instincts: List[str] = [],
     ) -> None:
         self.target_instincts = target_instincts
@@ -33,7 +32,6 @@ class InstinctAgent(QAgent):
         super().__init__(
             agent_id=agent_id,
             trainer=trainer,
-            action_space=action_space,
         )
 
     def reset(self, state) -> None:
@@ -80,9 +78,6 @@ class InstinctAgent(QAgent):
         """
         next_state = observation
         # For future: add state (interoception) handling here when needed
-        # TODO: hacky. empty next states introduced by new example code,
-        # and I'm wondering if we need to save these steps too due to agent death
-        # Discussion in slack.
 
         # interrupt to do instinctual learning
         if len(self.instincts) == 0:

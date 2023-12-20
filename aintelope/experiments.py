@@ -6,6 +6,16 @@ from omegaconf import DictConfig
 import os
 from pathlib import Path
 
+from aintelope.training.dqn_training import Trainer
+
+from aintelope.agents import (
+    Agent,
+    PettingZooEnv,
+    Environment,
+    register_agent_class,
+)
+
+# initialize environment registries
 from pettingzoo import AECEnv, ParallelEnv
 from aintelope.environments.savanna_zoo import (
     SavannaZooParallelEnv,
@@ -15,84 +25,55 @@ from aintelope.environments.savanna_safetygrid import (
     SavannaGridworldParallelEnv,
     SavannaGridworldSequentialEnv,
 )
-from aintelope.environments.savanna_safetygrid import SavannaGridworldSequentialEnv
+from aintelope.environments import get_env_class
 
-from aintelope.models.dqn import DQN
-from aintelope.agents import (
-    Agent,
-    PettingZooEnv,
-    Environment,
-    register_agent_class,
-)
-from aintelope.agents.instinct_agent import QAgent  # initialize agent registry
+# initialize agent registries
+from aintelope.agents.instinct_agent import InstinctAgent
+from aintelope.agents.q_agent import QAgent
 from aintelope.agents import get_agent_class
-from aintelope.training.dqn_training import Trainer
 
 
 def run_experiment(cfg: DictConfig) -> None:
     logger = logging.getLogger("aintelope.experiment")
 
     # Environment
-    hparams = cfg.hparams
-    if hparams.env == "savanna-zoo-parallel-v2":
-        env = SavannaZooParallelEnv(env_params=hparams.env_params)
-    elif hparams.env == "savanna-safetygrid-parallel-v1":
-        env = SavannaGridworldParallelEnv(env_params=hparams.env_params)
-    elif hparams.env == "savanna-zoo-sequential-v2":
-        env = SavannaZooSequentialEnv(env_params=hparams.env_params)
-    elif hparams.env == "savanna-safetygrid-sequential-v1":
-        env = SavannaGridworldSequentialEnv(env_params=hparams.env_params)
-    else:
-        raise NotImplementedError()
-
-    action_space = env.action_space
-
+    env = get_env_class(cfg.hparams.env)(env_params=cfg.hparams.env_params)
     if isinstance(env, ParallelEnv):
         (
             observations,
             infos,
-        ) = env.reset()  # TODO: each agent has their own state, refactor
-        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
-        n_observations = len(  # TODO: support for 3D-observation cube
-            observations["agent_0"]
-        )
+        ) = env.reset()
     elif isinstance(env, AECEnv):
         env.reset()
-        # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
-        observation = env.observe(
-            "agent_0"
-        )  # TODO: each agent has their own state, refactor
-        n_observations = len(observation)  # TODO: support for 3D-observation cube
     else:
         raise NotImplementedError(f"Unknown environment type {type(env)}")
 
     # Common trainer for each agent's models
-    trainer = Trainer(
-        cfg, n_observations, action_space
-    )  # TODO: have a section in params for trainer? its trainer and hparams now tho
+    trainer = Trainer(cfg)
 
     # Agents
     agents = []
-    dones = {}  # are agents done
+    dones = {}
     for i in range(cfg.hparams.env_params.amount_agents):
         agent_id = f"agent_{i}"
         agents.append(
             get_agent_class(cfg.hparams.agent_id)(
                 agent_id,
                 trainer,
-                cfg.hparams.warm_start_steps,
                 **cfg.hparams.agent_params,
             )
         )
-        observation = env.observe(agent_id)  # TODO parallel env observation handling
+		# TODO: it is possible to call env.observation_space(agent_id) directly to get the observation shape. No need to call observe().
+		if isinstance(env, ParallelEnv):
+        	observation = observations[agent_id]
+		elif isinstance(env, AECEnv):
+			observation = env.observe(agent_id)
         agents[-1].reset(observation)
-        trainer.add_agent(agent_id)
+        trainer.add_agent(agent_id, observation.shape, env.action_space)
 
-    agents_dict = {agent.id: agent for agent in agents}
-
-    # Warmup not supported atm, would be here
+    # Warmup NIY
     # for _ in range(hparams.warm_start_steps):
-    #     agents.play_step(self.net, epsilon=1.0)
+    #    agents.play_step(self.net, epsilon=1.0)
 
     # Main loop
     for i_episode in range(cfg.hparams.num_episodes):
@@ -112,6 +93,7 @@ def run_experiment(cfg: DictConfig) -> None:
                 agent.reset(env.observe(agent.id))
                 dones[agent.id] = False
 
+        # Iterations within the episode
         for step in range(cfg.hparams.env_params.num_iters):
             if isinstance(env, ParallelEnv):
                 # loop: get observations and collect actions
@@ -141,6 +123,7 @@ def run_experiment(cfg: DictConfig) -> None:
 
             elif isinstance(env, AECEnv):
                 # loop: observe, collect action, send action, get observation, update
+                agents_dict = {agent.id: agent for agent in agents}
                 for agent_id in env.agent_iter(
                     max_iter=env.num_agents
                 ):  # num_agents returns number of alive (non-done) agents
@@ -180,7 +163,7 @@ def run_experiment(cfg: DictConfig) -> None:
                 raise NotImplementedError(f"Unknown environment type {type(env)}")
 
             # Perform one step of the optimization (on the policy network)
-            trainer.optimize_models(step)
+            trainer.optimize_models()
 
             # Break when all agents are done
             if all(dones.values()):

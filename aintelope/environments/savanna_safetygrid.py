@@ -10,6 +10,8 @@ from pettingzoo import AECEnv, ParallelEnv
 
 from aintelope.environments.env_utils.distance import distance_to_closest_item
 
+from aintelope.environments import register_env_class
+
 # from ai_safety_gridworlds.environments.shared.mo_reward import mo_reward
 from ai_safety_gridworlds.helpers.gridworld_zoo_aec_env import GridworldZooAecEnv
 from ai_safety_gridworlds.helpers.gridworld_zoo_parallel_env import (
@@ -694,3 +696,7 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
             "debug return", self.observations2, rewards2, terminateds, truncateds, infos
         )
         return self.observations2, rewards2, terminateds, truncateds, infos
+
+
+register_env_class("savanna-safetygrid-sequential-v1", SavannaGridworldSequentialEnv)
+register_env_class("savanna-safetygrid-parallel-v1", SavannaGridworldParallelEnv)

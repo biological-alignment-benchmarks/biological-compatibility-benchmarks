@@ -4,6 +4,8 @@ import functools
 
 from pettingzoo import AECEnv, ParallelEnv
 
+from aintelope.environments import register_env_class
+
 from aintelope.environments.savanna import (
     SavannaEnv,
     RenderSettings,
@@ -177,3 +179,7 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
         self._next_agent = agent
 
     # / def _move_to_next_agent(self):
+
+
+register_env_class("savanna-zoo-sequential-v2", SavannaZooSequentialEnv)
+register_env_class("savanna-zoo-parallel-v2", SavannaZooParallelEnv)

@@ -41,11 +41,9 @@ class QAgent(Agent):
         self,
         agent_id: str,
         trainer: Trainer,
-        action_space: Discrete,
         target_instincts: List[str] = [],
     ) -> None:
         self.id = agent_id
-        self.action_space = action_space
         self.trainer = trainer
         self.history: List[HistoryStep] = []
         self.done = False
@@ -78,7 +76,8 @@ class QAgent(Agent):
             return None
         else:
             # For future: observation can go to instincts here
-            action = self.trainer.get_action(self.id, observation, step)
+            # TODO: remove the parameter observation here for this version
+            action = self.trainer.get_action(self.id, self.state, step)
 
         self.last_action = action
         return action
@@ -104,9 +103,7 @@ class QAgent(Agent):
         """
         next_state = observation
         # For future: add state (interoception) handling here when needed
-        # TODO: hacky. empty next states introduced by new example code,
-        # and I'm wondering if we need to save these steps too due to agent death
-        # Discussion in slack.
+
         if next_state is not None:
             next_s_hist = env.state_to_namedtuple(next_state.tolist())
         else:

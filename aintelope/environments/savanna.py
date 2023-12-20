@@ -138,7 +138,6 @@ class SavannaEnv:
     metadata = {
         "render.modes": ["human", "ansi", "rgb_array"],  # needed for zoo
         "name": "savanna-v2",
-        "render_fps": 3,
         "render_agent_radius": 5,
         "render_agent_color": (200, 50, 0),
         "render_grass_radius": 5,
@@ -165,10 +164,6 @@ class SavannaEnv:
         self.possible_agents = [
             f"agent_{r}" for r in range(self.metadata["amount_agents"])
         ]
-        # FIXME: needed?
-        self.agent_name_mapping = dict(
-            zip(self.possible_agents, list(range(self.metadata["amount_agents"])))
-        )
 
         # for @zoo-api
         self._action_spaces = {
@@ -191,6 +186,9 @@ class SavannaEnv:
             )
             for agent in self.possible_agents
         }
+        self.agent_name_mapping = dict(
+            zip(self.possible_agents, list(range(self.metadata["amount_agents"])))
+        )
 
         # our own state
         self.agent_states: AgentStates = {}

@@ -16,7 +16,6 @@ from aintelope.agents.simple_agents import (
     OneStepPerfectPredictionAgent,
     IterativeWeightOptimizationAgent,
 )
-from aintelope.agents.memory import ReplayBuffer
 from aintelope.models.dqn import DQN
 from aintelope.environments.savanna_zoo import (
     SavannaZooParallelEnv,
@@ -32,8 +31,7 @@ from aintelope.training.dqn_training import Trainer
 
 logger = logging.getLogger("aintelope.training.simple_eval")
 
-# is there a better way to do this?
-# to register a lookup table from hparam name to function?
+# TODO: use registration instead?
 AGENT_LOOKUP = {
     "q_agent": QAgent,
     "instinct_agent": InstinctAgent,
@@ -42,6 +40,7 @@ AGENT_LOOKUP = {
     "iterative_weight_optimization_agent": IterativeWeightOptimizationAgent,
 }
 
+# TODO: use registration instead?
 ENV_LOOKUP = {
     "savanna-zoo-parallel-v2": SavannaZooParallelEnv,
     "savanna-zoo-sequential-v2": SavannaZooSequentialEnv,
@@ -79,7 +78,7 @@ def run_episode(full_params: Dict) -> None:
 
         # TODO: multi-agent compatibility
         # TODO: support for 3D-observation cube
-        obs_size = env.observation_space("agent_0").shape[0]
+        obs_size = env.observation_space("agent_0").shape
         logger.info("obs size", obs_size)
 
         # TODO: multi-agent compatibility
@@ -102,25 +101,16 @@ def run_episode(full_params: Dict) -> None:
             infos,
         ) = env.reset()  # TODO: each agent has their own state, refactor
         # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
-        n_observations = len(  # TODO: support for 3D-observation cube
-            observations["agent_0"]
-        )
+        observation = observations["agent_0"]
     elif isinstance(env, AECEnv):
         env.reset()
         # TODO: each agent has their own observation size    # observation_space and action_space require agent argument: https://pettingzoo.farama.org/content/basic_usage/#additional-environment-api
-        observation = env.observe(
-            "agent_0"
-        )  # TODO: each agent has their own state, refactor
-        n_observations = len(observation)  # TODO: support for 3D-observation cube
+        observation = env.observe("agent_0")
     else:
         raise NotImplementedError(f"Unknown environment type {type(env)}")
 
     # Common trainer for each agent's models
-    trainer = Trainer(
-        full_params, n_observations, action_space
-    )  # TODO: have a section in params for trainer? its trainer and hparams now tho
-
-    buffer = ReplayBuffer(hparams["replay_size"])
+    trainer = Trainer(full_params)
 
     model_spec = hparams["model"]
     if isinstance(model_spec, list):
@@ -136,24 +126,18 @@ def run_episode(full_params: Dict) -> None:
             models *= len(agent_spec)
         agents = [
             AGENT_LOOKUP[agent](
-                # TODO: cannot use agent_spec value "q_agent" here, env expects the agent names to be like "agent_0", "agent_1", etc. Use env.possible_agents to get list of agent names.
-                agent_id="agent_0",  # TODO
+                agent_id="agent_0",
                 trainer=trainer,
-                action_space=env.action_space("agent_0"),  # TODO
-                # target_instincts: List[str] = [],
-                # env, buffer, hparams["warm_start_size"], **agent_params
+                target_instincts=[],
             )
             for agent in agent_spec
         ]
     else:
         agents = [
             AGENT_LOOKUP[agent_spec](
-                # TODO: cannot use agent_spec value "q_agent" here, env expects the agent names to be like "agent_0", "agent_1", etc. Use env.possible_agents to get list of agent names.
-                agent_id="agent_0",  # TODO
+                agent_id="agent_0",
                 trainer=trainer,
-                action_space=env.action_space("agent_0"),  # TODO
-                # target_instincts: List[str] = [],
-                # env, buffer, hparams["warm_start_size"], **agent_params
+                target_instincts=[],
             )
         ]
 
@@ -161,7 +145,7 @@ def run_episode(full_params: Dict) -> None:
     for agent in agents:
         observation = env.observe(agent.id)  # TODO parallel env observation handling
         agent.reset(observation)
-        trainer.add_agent(agent.id)
+        trainer.add_agent(agent.id, observation.shape, env.action_space)
 
     agents_dict = {agent.id: agent for agent in agents}
 
@@ -174,7 +158,6 @@ def run_episode(full_params: Dict) -> None:
     warm_start_steps = hparams["warm_start_steps"]
 
     for step in range(warm_start_steps):
-        # epsilon = 1.0  # forces random action for warmup steps
         if env_type == "zoo":
             dones = {}
             for agent_id in env.agent_iter(
@@ -188,11 +171,8 @@ def run_episode(full_params: Dict) -> None:
                 if env.terminations[agent_id] or env.truncations[agent.id]:
                     action = None
                 else:
-                    # action = action_space("agent_0").sample()  # TODO: agent.get_action()
+                    # action = action_space(agent.id).sample()
                     action = agent.get_action(
-                        # models[0],
-                        # epsilon=epsilon,
-                        # device=tparams["device"],
                         observation,
                         step=0,
                     )
@@ -218,10 +198,8 @@ def run_episode(full_params: Dict) -> None:
                     dones[agent.id] = done
 
         else:
-            # the assumption by non-zoo env will be 1 agent generally I think
-            for agent, model in zip(agents, models):
-                reward, score, done = agent.play_step(model, epsilon, tparams["device"])
-                dones[agent.id] = done
+            logger.warning("Simple_eval: non-zoo env, test not yet implemented!")
+            pass
 
         if any(dones.values()):
             for agent in agents:
@@ -235,11 +213,7 @@ def run_episode(full_params: Dict) -> None:
 
     step = -1
     while not all(dones.values()):
-        step += 1  # for debugging
-        # epsilon = max(
-        #    hparams["eps_end"],
-        #    hparams["eps_start"] - env.num_moves * 1 / hparams["eps_last_frame"],
-        # )
+        step += 1  # debugging only
         if env_type == "zoo":
             rewards = {}
             for agent_id in env.agent_iter(
@@ -252,11 +226,8 @@ def run_episode(full_params: Dict) -> None:
                 if env.terminations[agent_id] or env.truncations[agent.id]:
                     action = None
                 else:
-                    # action = action_space("agent_0").sample()  # TODO: agent.get_action()
+                    # action = action_space(agent.id).sample()
                     action = agent.get_action(
-                        # models[0],
-                        # epsilon=epsilon,
-                        # device=tparams["device"],
                         observation,
                         step=0,
                     )
@@ -282,12 +253,8 @@ def run_episode(full_params: Dict) -> None:
                     dones[agent.id] = done
                     rewards[agent] = reward
         else:
-            # the assumption by non-zoo env will be 1 agent generally I think
-            rewards = {}
-            for agent, model in zip(agents, models):
-                reward, score, done = agent.play_step(model, epsilon, tparams["device"])
-                dones[agent.id] = done
-                rewards[agent] = reward
+            logger.warning("Simple_eval: non-zoo env, test not yet implemented!")
+            pass
 
         episode_rewards += rewards  # Counter class allows addition per dictionary keys
         if render_mode is not None:
