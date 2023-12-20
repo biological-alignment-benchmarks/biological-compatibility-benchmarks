@@ -54,7 +54,7 @@ class OneStepPerfectPredictionAgent(QAgent):
             # agent_pos, grass = observation[:2], observation[2:].reshape(2, -1)
             bestreward = -INF
             ibestaction = 0
-            for iaction in range(self.action_space.n):
+            for iaction in range(self.action_space(self.id).n):
                 p = move_agent(agent_pos, iaction)
                 reward = reward_agent(p, min_grass_distance)
                 if reward > bestreward:
@@ -66,9 +66,9 @@ class OneStepPerfectPredictionAgent(QAgent):
 
 class IterativeWeightOptimizationAgent(QAgent):
     def reset(self) -> None:
-        """Resents the environment and updates the state."""
+        """Resets the environment and updates the state."""
         self.done = False
-        self.action_weights = np.repeat([1.0], self.action_space.n)
+        self.action_weights = np.repeat([1.0], self.action_space(self.id).n)
         # GYM_INTERACTION
         self.state = self.env.reset()
         if isinstance(self.state, tuple):
