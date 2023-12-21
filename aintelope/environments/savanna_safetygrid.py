@@ -92,6 +92,9 @@ class GridworldZooBaseEnv:
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
+        self.metadata = dict(
+            self.metadata
+        )  # NB! Need to clone in order to not modify the default dict. Similar problem to mutable default arguments.
         self.metadata.update(env_params)
         logger.info(f"initializing savanna env with params: {self.metadata}")
 
