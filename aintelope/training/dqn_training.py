@@ -1,7 +1,6 @@
 from typing import Optional
 import logging
-from collections import deque, namedtuple
-import random
+from collections import namedtuple
 
 import numpy.typing as npt
 import numpy as np
@@ -11,32 +10,13 @@ from torch import nn
 import torch.optim as optim
 
 from aintelope.models.dqn import DQN
-
+from aintelope.training.memory import ReplayMemory
 from aintelope.environments.typing import ObservationFloat
 
 logger = logging.getLogger("aintelope.training.dqn_training")
 Transition = namedtuple(
     "Transition", ("state", "action", "reward", "done", "next_state")
 )
-
-
-class ReplayMemory(object):
-    """
-    Replay memory for each agent, saves transitions (from RL literature).
-    """
-
-    def __init__(self, capacity):
-        self.memory = deque([], maxlen=capacity)
-
-    def push(self, *args):
-        """Save a transition"""
-        self.memory.append(Transition(*args))
-
-    def sample(self, batch_size):
-        return random.sample(self.memory, batch_size)
-
-    def __len__(self):
-        return len(self.memory)
 
 
 def load_checkpoint(path, obs_size, action_space_size):
@@ -90,9 +70,9 @@ class Trainer:
         Register an agent.
 
         Args:
-            agent_id: str, same as elsewhere (f.ex. "agent_0")
-            observation_shape: int-tuple, shape of the observations
-            action_space: Discrete, action_space from environment
+            agent_id (str): same as elsewhere (f.ex. "agent_0")
+            observation_shape (tuple): numpy shape of the observations
+            action_space (Discrete): action_space from environment
 
         Returns:
             None
@@ -126,9 +106,9 @@ class Trainer:
         Get action from an agent
 
         Args:
-            agent_id: str, same as elsewhere ("agent_0" among them)
-            observation: npt.NDArray[ObservationFloat], input for the net
-            step: int, used to calculate epsilon
+            agent_id (str): same as elsewhere ("agent_0" among them)
+            observation (npt.NDArray[ObservationFloat]): input for the net
+            step (int): used to calculate epsilon
 
         Returns:
             None
@@ -160,17 +140,25 @@ class Trainer:
 
         return action
 
-    def update_memory(self, agent_id: str, state, action, reward, done, next_state):
+    def update_memory(
+        self,
+        agent_id: str,
+        state: npt.NDArray[ObservationFloat],
+        action: int,
+        reward: float,
+        done: bool,
+        next_state: npt.NDArray[ObservationFloat],
+    ):
         """
         Add transition into agent specific ReplayMemory.
 
         Args:
-            agent_id: str, same as elsewhere ("agent_0" among them)
-            state: npt.NDArray[ObservationFloat], input for the net
-            action: int, index of action
-            reward: float, reward signal
-            done: bool, if agent is done
-            next_state: npt.NDArray[ObservationFloat], input for the net
+            agent_id (str): same as elsewhere ("agent_0" among them)
+            state (npt.NDArray[ObservationFloat]): input for the net
+            action (int): index of action
+            reward (float): reward signal
+            done (bool): if agent is done
+            next_state (npt.NDArray[ObservationFloat]): input for the net
 
         Returns:
             None
@@ -258,11 +246,11 @@ class Trainer:
 
     def save_models(self, episode, path):
         """
-        Save models to the given directory.
+        Save model artifacts to 'path'.
 
         Args:
-            episode: point in training, used by torch
-            path: path defined outside
+            episode (int): number of environment cycle; each cycle is divided into steps
+            path (str): location where artifact is saved
 
         Returns:
             None

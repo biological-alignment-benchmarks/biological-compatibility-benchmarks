@@ -12,7 +12,9 @@ Environment = Union[gym.Env, PettingZooEnv]
 ENV_REGISTRY: Mapping[str, Type[Environment]] = {}
 
 
-class Irrelevant(ABC):  # CLEANUP: Needed to import the below functions
+class Irrelevant(
+    ABC
+):  # TODO CLEANUP: Needed to import the below functions. Discuss in slack
     ...
 
 

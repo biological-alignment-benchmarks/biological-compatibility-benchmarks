@@ -153,3 +153,6 @@ tags
 /ai_safety_gridworlds
 /pettingzoo
 /pycolab
+
+# VScode
+.vscode/

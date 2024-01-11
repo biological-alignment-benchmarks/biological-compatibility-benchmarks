@@ -76,7 +76,6 @@ class QAgent(Agent):
             return None
         else:
             # For future: observation can go to instincts here
-            # TODO: remove the parameter observation here for this version
             action = self.trainer.get_action(self.id, self.state, step)
 
         self.last_action = action
