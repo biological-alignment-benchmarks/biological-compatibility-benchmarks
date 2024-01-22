@@ -48,3 +48,4 @@ def test_observation_spaces():
 
 if __name__ == "__main__" and os.name == "nt":  # detect debugging
     pytest.main([__file__])  # run tests only in this file
+	# pytest.main([__file__ + "::test_grass_patches"])

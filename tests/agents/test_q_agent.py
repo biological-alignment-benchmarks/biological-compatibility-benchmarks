@@ -236,5 +236,4 @@ def test_qagent_in_savanna_gridworlds_parallel_with_death(
 
 if __name__ == "__main__" and os.name == "nt":  # detect debugging
     pytest.main([__file__])  # run tests only in this file
-    # test_qagent_in_savanna_zoo_sequential_with_death(tparams_hparams_debug())
-    # test_qagent_in_savanna_gridworlds_sequential_with_death(tparams_hparams_debug())
+    # pytest.main([__file__ + "::test_qagent_in_savanna_zoo_sequential_with_death"])

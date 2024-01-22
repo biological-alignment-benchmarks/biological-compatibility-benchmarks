@@ -23,9 +23,3 @@ def root_dir() -> pathlib.Path:
 def tparams_hparams(root_dir: pathlib.Path) -> Dict:
     full_params = OmegaConf.load(root_dir / "aintelope/config/config_experiment.yaml")
     return full_params
-
-
-def tparams_hparams_debug() -> Dict:
-    root_dir = pathlib.Path(__file__).parents[1]
-    full_params = OmegaConf.load(root_dir / "aintelope/config/config_experiment.yaml")
-    return full_params
