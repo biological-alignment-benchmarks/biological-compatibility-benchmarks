@@ -101,7 +101,9 @@ def test_qagent_in_savanna_gridworlds_sequential_with_death(
     params_savanna_zoo = {
         "agent_id": "q_agent",
         "env": "savanna-safetygrid-sequential-v1",
-        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv",
+        "env_entry_point": (
+            "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
+        ),
         "env_type": "zoo",
         "env_params": {
             "num_iters": 40,  # duration of the game
@@ -185,7 +187,9 @@ def test_qagent_in_savanna_gridworlds_parallel(
     params_savanna_zoo = {
         "agent_id": "q_agent",
         "env": "savanna-safetygrid-parallel-v1",
-        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv",
+        "env_entry_point": (
+            "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
+        ),
         "env_type": "zoo",
         "env_params": {
             "num_iters": 40,  # duration of the game
@@ -211,7 +215,9 @@ def test_qagent_in_savanna_gridworlds_parallel_with_death(
     params_savanna_zoo = {
         "agent_id": "q_agent",
         "env": "savanna-safetygrid-parallel-v1",
-        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv",
+        "env_entry_point": (
+            "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
+        ),
         "env_type": "zoo",
         "env_params": {
             "num_iters": 40,  # duration of the game

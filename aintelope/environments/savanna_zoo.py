@@ -32,9 +32,8 @@ class SavannaZooParallelEnv(SavannaEnv, ParallelEnv):
             self, actions, *args, **kwargs
         )
 
-        dones = dict(
-            dones
-        )  # NB! clone since it will be modified below (dones is reference to self.dones)
+        # NB! clone since it will be modified below (dones is reference to self.dones)
+        dones = dict(dones)
         for agent in list(
             self.agents
         ):  # clone list since it will be modified during iteration
@@ -82,34 +81,44 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
         )  # NB! no return here, else Zoo tests will fail
 
     def step_single_agent(self, action: Action, *args, **kwargs):
-        # a dead agent must call .step(None) once more after becoming dead. Only after that call will this dead agent be removed from various dictionaries and from .agent_iter loop.
+        # a dead agent must call .step(None) once more after becoming dead.
+        # Only after that call will this dead agent be removed from various
+        # dictionaries and from .agent_iter loop.
         if self.terminations[self._next_agent] or self.truncations[self._next_agent]:
             if action is not None:
                 raise ValueError("When an agent is dead, the only valid action is None")
 
-            # Dead agents should stay in the agent_iter for one more loop, but should get None as action.
-            # Dead agents need to be removed from agents list only upon next step function on this dead agent.
+            # Dead agents should stay in the agent_iter for one more loop,
+            # but should get None as action.
+            # Dead agents need to be removed from agents list only upon next step
+            # function on this dead agent.
             del self.dones[self._next_agent]
             del self.infos[self._next_agent]
             # del self._cumulative_rewards[self._next_agent]
             self.agents.remove(self._next_agent)
 
-            reward = 0.0  # other agents do not collect reward from current agent's "dead step" and rewards from previous step need to be cleared
+            # other agents do not collect reward from current agent's "dead step" and
+            # rewards from previous step need to be cleared
+            reward = 0.0
             self.rewards = {agent: reward for agent in self.agents}
 
             self._move_to_next_agent()
             return
 
         for agent in self.agents:
-            # the agent should be visible in .rewards after it dies (until its "dead step"), but during next agent's step it should get zero reward
+            # the agent should be visible in .rewards after it dies
+            # (until its "dead step"), but during next agent's step it
+            # should get zero reward
             if self.dones[agent]:
                 self.rewards[agent] = 0.0
 
-        self._cumulative_rewards[
-            self._next_agent
-        ] = 0.0  # this needs to be so according to Zoo unit test. See https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+        # this needs to be so according to Zoo unit test. See
+        # https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+        self._cumulative_rewards[self._next_agent] = 0.0
 
-        # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide slightly modified Zoo API. Normal Zoo sequential API step() method does not return values.
+        # NB! both AIntelope Zoo and Gridworlds Zoo wrapper in AIntelope provide
+        # slightly modified Zoo API. Normal Zoo sequential API step()
+        # method does not return values.
         result = SavannaEnv.step(self, {self._next_agent: action}, *args, **kwargs)
         (
             observations,
@@ -119,9 +128,9 @@ class SavannaZooSequentialEnv(SavannaEnv, AECEnv):
             infos,
         ) = result
 
-        step_agent = (
-            self._next_agent
-        )  # NB! the agent_selection will change after call to _move_to_next_agent() so we need to save the agent_id which just took the step
+        # NB! the agent_selection will change after call to _move_to_next_agent()
+        # so we need to save the agent_id which just took the step
+        step_agent = self._next_agent
         self._move_to_next_agent()
         return (
             observations[step_agent],

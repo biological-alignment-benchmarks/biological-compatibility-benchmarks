@@ -159,9 +159,10 @@ class SavannaEnv:
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
-        self.metadata = dict(
-            self.metadata
-        )  # NB! Need to clone in order to not modify the default dict. Similar problem to mutable default arguments.
+
+        # NB! Need to clone in order to not modify the default dict.
+        # Similar problem to mutable default arguments.
+        self.metadata = dict(self.metadata)
         self.metadata.update(env_params)
         logger.info(f"initializing savanna env with params: {self.metadata}")
 
@@ -222,7 +223,8 @@ class SavannaEnv:
         And must set up the environment so that render(), step(), and observe()
         can be called without issues.
         """
-        # if seed is not provided as an argument to reset() then do not re-seed. It is possible that seed was set during construction
+        # if seed is not provided as an argument to reset() then do not re-seed.
+        # It is possible that seed was set during construction
         if seed is not None:
             self.seed(seed)
 
@@ -298,7 +300,8 @@ class SavannaEnv:
                     map_max=self.metadata["map_max"],
                 )
 
-            # NB! reward should be calculated for all agents, including those who were not specified in actions
+            # NB! reward should be calculated for all agents,
+            # including those who were not specified in actions
             min_grass_distance = distance_to_closest_item(
                 self.agent_states[agent], self.grass_patches
             )

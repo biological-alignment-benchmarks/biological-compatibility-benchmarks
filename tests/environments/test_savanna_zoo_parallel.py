@@ -135,9 +135,9 @@ def test_zoo_move_agent():
 
 @pytest.mark.parametrize("execution_number", range(10))
 def test_zoo_step_result(execution_number):
-    env = SavannaZooParallelEnv(
-        env_params={"num_iters": 2}
-    )  # default is 1 iter which means that the env is done after 1 step below and the test will fail
+    # default is 1 iter which means that the env is done after 1 step below and the
+    # test will fail
+    env = SavannaZooParallelEnv(env_params={"num_iters": 2})
     num_agents = len(env.possible_agents)
     assert num_agents, f"expected 1 agent, got: {num_agents}"
     env.seed(execution_number)

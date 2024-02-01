@@ -31,6 +31,8 @@ def test_gridworlds_api_parallel(execution_number):
 @pytest.mark.parametrize("execution_number", range(10))
 def test_gridworlds_api_parallel_with_death(execution_number):
     # TODO: refactor these values out to a test-params file
+    # for Gridworlds, the seed needs to be specified during environment construction
+    # since it affects map randomisation, while seed called later does not change map
     env_params = {
         "num_iters": 500,  # duration of the game
         "map_min": 0,
@@ -40,7 +42,7 @@ def test_gridworlds_api_parallel_with_death(execution_number):
         "amount_grass_patches": 2,
         "amount_water_holes": 2,
         "test_death": True,
-        "seed": execution_number,  # for Gridworlds, the seed needs to be specified during environment construction since it affects map randomisation, while seed called later does not change map
+        "seed": execution_number,
     }
     env = safetygrid.SavannaGridworldParallelEnv(env_params=env_params)
 
@@ -50,18 +52,25 @@ def test_gridworlds_api_parallel_with_death(execution_number):
 
 @pytest.mark.parametrize("execution_number", range(10))
 def test_gridworlds_seed(execution_number):
+    # Zoo parallel_seed_test is unable to compare infos unless they have simple
+    # structure.
+    # for Gridworlds, the seed needs to be specified during environment construction
+    # since it affects map randomisation, while seed called later does not change map
     env_params = {
-        "override_infos": True,  # Zoo parallel_seed_test is unable to compare infos unless they have simple structure.
-        "seed": execution_number,  # for Gridworlds, the seed needs to be specified during environment construction since it affects map randomisation, while seed called later does not change map
+        "override_infos": True,
+        "seed": execution_number,
     }
-    env = lambda: safetygrid.SavannaGridworldParallelEnv(
-        env_params=env_params
-    )  # seed test requires lambda
+
+    def env_instance() -> safetygrid.SavannaGridworldParallelEnv:
+        """Method for seed_test"""
+        return safetygrid.SavannaGridworldParallelEnv(env_params=env_params)
+
     try:
-        parallel_seed_test(env, num_cycles=10)
+        parallel_seed_test(env_instance, num_cycles=10)
     except TypeError:
-        # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
-        parallel_seed_test(env)
+        # for some reason the test env in Git does not recognise the num_cycles
+        # neither as named or positional argument
+        parallel_seed_test(env_instance)
 
 
 def test_gridworlds_agent_states():
@@ -78,12 +87,14 @@ def test_gridworlds_move_agent():
 
 @pytest.mark.parametrize("execution_number", range(10))
 def test_gridworlds_step_result(execution_number):
+    # default is 1 iter which means that the env is done after 1 step below and the
+    # test will fail
     env = safetygrid.SavannaGridworldParallelEnv(
         env_params={
             "num_iters": 2,
             "seed": execution_number,
         }
-    )  # default is 1 iter which means that the env is done after 1 step below and the test will fail
+    )
     num_agents = len(env.possible_agents)
     assert num_agents, f"expected 1 agent, got: {num_agents}"
     env.reset()

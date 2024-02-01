@@ -89,17 +89,20 @@ class GridworldZooBaseEnv:
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
-        self.metadata = dict(
-            self.metadata
-        )  # NB! Need to clone in order to not modify the default dict. Similar problem to mutable default arguments.
+
+        # NB! Need to clone in order to not modify the default dict.
+        # Similar problem to mutable default arguments.
+        self.metadata = dict(self.metadata)
         self.metadata.update(env_params)
         logger.info(f"initializing savanna env with params: {self.metadata}")
 
         self.super_initargs = {
             "env_name": "aintelope.aintelope_smell",
-            "seed": self.metadata[
-                "seed"
-            ],  # This seed is used mainly for environment map randomisation. Later the test calls .seed() method on the wrapper and this will determine the random action sampling and other random events during the game play.
+            # This seed is used mainly for environment map randomisation.
+            # Later the test calls .seed() method on the wrapper and this will
+            # determine the random action sampling and other random events
+            # during the game play.
+            "seed": self.metadata["seed"],
             "max_iterations": self.metadata["num_iters"],
             "amount_food_patches": self.metadata["amount_grass_patches"],
             "amount_drink_holes": self.metadata["amount_water_holes"],
@@ -581,13 +584,14 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         agent = self.agent_selection
 
-        self._cumulative_rewards2[
-            agent
-        ] = 0.0  # this needs to be so according to Zoo unit test. See https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+        # this needs to be so according to Zoo unit test. See
+        # https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+        self._cumulative_rewards2[agent] = 0.0
 
         # need to set current step rewards to zero for other agents
+        # the agent should be visible in .rewards after it dies (until its "dead step"),
+        # but during next agent's step it should get zero reward
         for agent in self.agents:
-            # the agent should be visible in .rewards after it dies (until its "dead step"), but during next agent's step it should get zero reward
             if self.terminations[agent] or self.truncations[agent]:
                 self._last_rewards2[agent] = 0.0
 
@@ -620,13 +624,15 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
 
         agent = self.agent_selection
 
-        self._cumulative_rewards2[
-            agent
-        ] = 0.0  # this needs to be so according to Zoo unit test. See https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+        # this needs to be so according to Zoo unit test. See
+        # https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+        self._cumulative_rewards2[agent] = 0.0
 
         # need to set current step rewards to zero for other agents
         for agent in self.agents:
-            # the agent should be visible in .rewards after it dies (until its "dead step"), but during next agent's step it should get zero reward
+            # the agent should be visible in .rewards after it dies
+            # (until its "dead step"), but during next agent's step
+            # it should get zero reward
             if self.terminations[agent] or self.truncations[agent]:
                 self._last_rewards2[agent] = 0.0
 
@@ -685,9 +691,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         infos = {}
 
         for agent in actions.keys():
-            self._cumulative_rewards2[
-                agent
-            ] = 0.0  # this needs to be so according to Zoo unit test. See https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+            # this needs to be so according to Zoo unit test. See
+            # https://github.com/Farama-Foundation/PettingZoo/blob/master/pettingzoo/test/api_test.py
+            self._cumulative_rewards2[agent] = 0.0
 
         # loop over all agents in ENV NOT IN ACTIONS DICT
         for index in range(
@@ -698,9 +704,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
             action = actions.get(agent, None)
             GridworldZooAecEnv.step(self, {"step": action})
 
-            if (
-                agent not in self.agents
-            ):  # was not "dead step" in which case the agent was removed in the above call from self.agents list
+            # was not "dead step" in which case the agent was removed in the above
+            # call from self.agents list
+            if agent not in self.agents:
                 # dead agent needs to be removed from observations2 and _last_rewards2
                 del self.observations2[agent]
                 del self._last_rewards2[agent]
@@ -720,7 +726,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
                     rewards2[agent] = reward2
                     self._last_rewards2[agent] = reward2
 
-                    # NB! if the action of current agent somehow affects the rewards of other agents then the cumulative reward of the other agents needs to be updated here as well.
+                    # NB! if the action of current agent somehow affects the rewards
+                    # of other agents then the cumulative reward of the other agents
+                    # needs to be updated here as well.
                     self._cumulative_rewards2[agent] += reward2
 
                 else:
@@ -730,7 +738,9 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
                     rewards2[agent] = reward2
                     self._last_rewards2[agent] = reward2
 
-                    # NB! if the action of current agent somehow affects the rewards of other agents then the cumulative reward of the other agents needs to be updated here as well.
+                    # NB! if the action of current agent somehow affects the rewards
+                    # of other agents then the cumulative reward of the other agents
+                    # needs to be updated here as well.
                     self._cumulative_rewards2[agent] += reward2
 
         # / for index in range(0, self.num_agents)
