@@ -23,12 +23,16 @@ class Agent(ABC):
         ...
 
     @abstractmethod
-    def update(self, env: Environment,
+    def update(
+        self,
+        env: Environment,
         observation: npt.NDArray[ObservationFloat],
         score: float,
         done: bool,
-        save_path: Optional[str]) -> list:
+        save_path: Optional[str],
+    ) -> list:
         ...
+
 
 AGENT_REGISTRY: Mapping[str, Type[Agent]] = {}
 

@@ -135,7 +135,7 @@ class InstinctAgent(QAgent):
         event = [self.id, self.state, self.last_action, score, done, next_state]
         self.trainer.update_memory(*event)
         self.state = next_state
-        
+
         return event
 
     def init_instincts(self) -> None:

@@ -84,9 +84,19 @@ def run_experiment(cfg: DictConfig) -> None:
     #    agents.play_step(self.net, epsilon=1.0)
 
     # Main loop
-    history = pd.DataFrame(columns=["Episode","Step","Agent_id","State","Action",
-                                    "Reward","Done","Next_state"]
-                                    +["Score"]) #TODO: replace this with env.score_titles
+    history = pd.DataFrame(
+        columns=[
+            "Episode",
+            "Step",
+            "Agent_id",
+            "State",
+            "Action",
+            "Reward",
+            "Done",
+            "Next_state",
+        ]
+        + ["Score"]
+    )  # TODO: replace this with env.score_titles
 
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
@@ -139,8 +149,10 @@ def run_experiment(cfg: DictConfig) -> None:
                     )
 
                     # Record what just happened
-                    env_step_info = [score] #TODO package the score info into a list
-                    history.loc[len(history)] = [i_episode,step]+agent_step_info+env_step_info
+                    env_step_info = [score]  # TODO package the score info into a list
+                    history.loc[len(history)] = (
+                        [i_episode, step] + agent_step_info + env_step_info
+                    )
 
             elif isinstance(env, AECEnv):
                 # loop: observe, collect action, send action, get observation, update
@@ -183,8 +195,12 @@ def run_experiment(cfg: DictConfig) -> None:
                         )  # note that score is used ONLY by baseline
 
                         # Record what just happened
-                        env_step_info = [score] #TODO package the score info into a list
-                        history.loc[len(history)] = [i_episode,step]+agent_step_info+env_step_info
+                        env_step_info = [
+                            score
+                        ]  # TODO package the score info into a list
+                        history.loc[len(history)] = (
+                            [i_episode, step] + agent_step_info + env_step_info
+                        )
 
                         # NB! any agent could die at any other agent's step
                         for agent_id in env.agents:
@@ -212,8 +228,7 @@ def run_experiment(cfg: DictConfig) -> None:
             trainer.save_models(i_episode, dir_cp)
 
     record_path = Path(cfg.experiment_dir) / "history.csv"
-    rec.record_history(record_path, history)  
-
+    rec.record_history(record_path, history)
 
 
 # @hydra.main(version_base=None, config_path="config", config_name="config_experiment")

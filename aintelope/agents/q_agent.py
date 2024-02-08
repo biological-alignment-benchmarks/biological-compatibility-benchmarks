@@ -100,7 +100,7 @@ class QAgent(Agent):
             done (bool): if agent is done
             next_state (npt.NDArray[ObservationFloat]): input for the net
         """
-        
+
         next_state = observation
         # For future: add state (interoception) handling here when needed
 
@@ -135,7 +135,8 @@ class QAgent(Agent):
         event = [self.id, self.state, self.last_action, score, done, next_state]
         self.trainer.update_memory(*event)
         self.state = next_state
-        
+
         return event
+
 
 register_agent_class("q_agent", QAgent)
