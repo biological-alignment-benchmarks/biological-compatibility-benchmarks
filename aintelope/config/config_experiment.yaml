@@ -1,12 +1,13 @@
 timestamp: ${now:%Y%m%d%H%M%S}
+log_dir: outputs/${timestamp}/
 experiment_name: experiment
-experiment_dir: outputs/${timestamp}/${experiment_name}/
+experiment_dir: ${log_dir}/${experiment_name}/
 
 trainer_params:
   resume_from_checkpoint: False
   num_workers: 4
   max_epochs: 10
-  checkpoint: ${experiment_dir}/checkpoints/
+  checkpoint: ${log_dir}/checkpoints/
   device: cpu
   verbose: false
 
@@ -46,4 +47,4 @@ hparams:
 
 hydra:
   run:
-    dir: ${experiment_dir}/hydra_logs/
+    dir: ${log_dir}/hydra_logs/
