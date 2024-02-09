@@ -1,6 +1,6 @@
 timestamp: ${now:%Y%m%d%H%M%S}
-experiment_name: hunger
-experiment_dir: outputs/${experiment_name}_${timestamp}/
+experiment_name: experiment
+experiment_dir: outputs/${timestamp}/${experiment_name}/
 
 trainer_params:
   resume_from_checkpoint: False
