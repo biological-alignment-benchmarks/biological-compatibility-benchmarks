@@ -9,6 +9,9 @@ run-training-baseline:
 run-training-instinct:
 	python -m ${PROJECT} hparams.agent_id=instinct_agent hparams.agent_params.target_instincts=[smell]
 
+run-pipeline:
+	python -m pipeline.py
+
 .PHONY: venv
 venv: ## create virtual environment
 	@if [ ! -f "$(VENV)/bin/activate" ]; then python3 -m venv $(VENV) ; fi;
