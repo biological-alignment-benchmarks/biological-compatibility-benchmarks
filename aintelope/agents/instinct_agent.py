@@ -105,12 +105,16 @@ class InstinctAgent(QAgent):
         # interruption done
 
         if next_state is not None:
-            next_s_hist = env.state_to_namedtuple(next_state.tolist())
+            next_s_hist = env.state_to_namedtuple(
+                next_state[0].tolist()
+            )  # TODO: state has no longer namedtuple representation in new 3D observation
         else:
             next_s_hist = None
         self.history.append(
             HistoryStep(
-                state=env.state_to_namedtuple(self.state.tolist()),
+                state=env.state_to_namedtuple(
+                    self.state[0].tolist()
+                ),  # TODO: state has no longer namedtuple representation in new 3D observation
                 action=self.last_action,
                 reward=reward,
                 done=done,

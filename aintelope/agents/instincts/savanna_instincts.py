@@ -14,9 +14,14 @@ class Smell:
 
     def calc_reward(self, state):
         """function of smell intensity for food"""
-        agent_pos = get_agent_pos_from_state(state)
+        agent_pos = get_agent_pos_from_state(
+            state[0]
+        )  # TODO: this works only with old AIntelope 1D observation
         min_grass_distance = distance_to_closest_item(
-            agent_pos, np.array(get_grass_pos_from_state(state))
+            agent_pos,
+            np.array(
+                get_grass_pos_from_state(state[0])
+            ),  # TODO: this works only with old AIntelope 1D observation
         )
         event_signal = 0
         smell_reward = 1.0 / (min_grass_distance + 1.0)
@@ -67,7 +72,10 @@ class Thirst:
     def calc_reward(self, agent, state):
         """function of time since last ate and thirst rate and opportunity to eat"""
         current_step = agent.env.num_moves
-        agent_pos = [state[1], state[2]]
+        agent_pos = [
+            state[0][1],
+            state[0][2],
+        ]  # TODO: this works only with old AIntelope 1D observation
         min_water_distance = distance_to_closest_item(agent_pos, agent.env.water_holes)
 
         event_signal = 0
@@ -103,7 +111,10 @@ class Curiosity:
         window (e.g. 10 - 30)
         """
         current_step = agent.env.num_moves
-        agent_pos = [state[1], state[2]]
+        agent_pos = [
+            state[0][1],
+            state[0][2],
+        ]  # TODO: this works only with old AIntelope 1D observation
         recent_states = agent.replay_buffer.fetch_recent_states(self.curiosity_window)
         recent_positions = [[x[1], x[2]] for x in recent_states]
         event_signal = 0
