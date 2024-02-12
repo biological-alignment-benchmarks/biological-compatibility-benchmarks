@@ -78,7 +78,10 @@ def run_episode(full_params: Dict) -> None:
 
         # TODO: multi-agent compatibility
         # TODO: support for 3D-observation cube
-        obs_size = env.observation_space("agent_0").shape
+        obs_size = (
+            env.observation_space("agent_0")[0].shape,
+            env.observation_space("agent_0")[1].shape,
+        )
         logger.info("obs size", obs_size)
 
         # TODO: multi-agent compatibility
@@ -153,7 +156,9 @@ def run_episode(full_params: Dict) -> None:
             info = env.observe_info(agent.id)
 
         agent.reset(observation, info)
-        trainer.add_agent(agent.id, observation.shape, env.action_space)
+        trainer.add_agent(
+            agent.id, (observation[0].shape, observation[1].shape), env.action_space
+        )
 
     agents_dict = {agent.id: agent for agent in agents}
 

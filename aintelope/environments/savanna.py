@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import pygame
 
+import gymnasium.spaces  # cannot import gymnasium.spaces.Tuple directly since it is already used by typing
 from gymnasium.spaces import Box, Discrete
 from gymnasium.utils import seeding
 
@@ -176,17 +177,24 @@ class SavannaEnv:
 
         # for @zoo-api
         self._observation_spaces = {
-            agent: Box(
-                low=self.metadata["map_min"],
-                high=self.metadata["map_max"],
-                shape=(
-                    2
-                    * (
-                        self.metadata["amount_agents"]
-                        + self.metadata["amount_grass_patches"]
-                        + self.metadata["amount_water_holes"]
+            agent: gymnasium.spaces.Tuple(
+                [
+                    Box(
+                        low=self.metadata["map_min"],
+                        high=self.metadata["map_max"],
+                        shape=(
+                            2
+                            * (
+                                self.metadata["amount_agents"]
+                                + self.metadata["amount_grass_patches"]
+                                + self.metadata["amount_water_holes"]
+                            ),
+                        ),
                     ),
-                ),
+                    Box(
+                        low=-np.inf, high=np.inf, shape=(2,)
+                    ),  # dummy interoception vector
+                ]
             )
             for agent in self.possible_agents
         }
@@ -206,6 +214,7 @@ class SavannaEnv:
         self.infos = {
             agent: {} for agent in self.possible_agents
         }  # needed for Zoo sequential API
+        self.dummy_interoception_vector = np.zeros([2])
 
     def seed(self, seed: Optional[int] = None) -> None:
         self.np_random, seed = seeding.np_random(seed)
@@ -322,7 +331,13 @@ class SavannaEnv:
         logger.debug("debug return", observations, self.rewards, self.dones, infos)
 
         truncateds = {key: False for key in self.dones.keys()}
-        return observations, self.rewards, self.dones, truncateds, infos
+        return (
+            observations,
+            self.rewards,
+            self.dones,
+            truncateds,
+            infos,
+        )
 
     def observe(self, agent: str) -> npt.NDArray[ObservationFloat]:
         """Return observation of given agent."""
@@ -340,9 +355,9 @@ class SavannaEnv:
         # just put all positions into one row
         res = observations.reshape(-1)
         assert (
-            res.shape == next(iter(self._observation_spaces.values())).shape
+            res.shape == next(iter(self._observation_spaces.values()))[0].shape
         ), "observation / observation space shape mismatch"
-        return res
+        return (res, self.dummy_interoception_vector)
 
     def set_agent_position(self, agent: str, loc: npt.NDArray[ObservationFloat]):
         """Move the agent to a location. Tests and inference"""

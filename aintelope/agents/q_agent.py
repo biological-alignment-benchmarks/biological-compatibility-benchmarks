@@ -54,12 +54,14 @@ class QAgent(Agent):
         self.done = False
         self.state = state
         self.info = info
-        if isinstance(self.state, tuple):
-            self.state = self.state[0]
+        # if isinstance(self.state, tuple):
+        #    self.state = self.state[0]
 
     def get_action(
         self,
-        observation: npt.NDArray[ObservationFloat] = None,
+        observation: Tuple[
+            npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
+        ] = None,
         info: dict = {},
         step: int = 0,  # net: nn.Module, epsilon: float, device: str
     ) -> Optional[int]:
@@ -86,7 +88,9 @@ class QAgent(Agent):
     def update(
         self,
         env: SavannaGymEnv = None,  # TODO hack, figure out if state_to_namedtuple can be static somewhere
-        observation: npt.NDArray[ObservationFloat] = None,
+        observation: Tuple[
+            npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
+        ] = None,
         info: dict = {},
         score: float = 0.0,
         done: bool = False,
@@ -96,7 +100,7 @@ class QAgent(Agent):
         Takes observations and updates trainer on perceived experiences. Needed here to catch instincts.
 
         Args:
-            observation: ObservationArray
+            observation: Tuple[ObservationArray, ObservationArray]
             score: Only baseline uses score as a reward
             done: boolean whether run is done
 

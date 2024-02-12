@@ -113,8 +113,11 @@ def test_gridworlds_step_result(execution_number):
     assert not dones[agent]
     assert isinstance(observations, dict), "observations is not a dict"
     assert isinstance(
-        observations[agent], np.ndarray
-    ), "observations of agent is not an array"
+        observations[agent][0], np.ndarray
+    ), "observations[0] of agent is not an array"
+    assert isinstance(
+        observations[agent][1], np.ndarray
+    ), "observations[1] of agent is not an array"
     assert isinstance(rewards, dict), "rewards is not a dict"
     assert isinstance(rewards[agent], np.float64), "reward of agent is not a float64"
 
@@ -148,7 +151,7 @@ def test_gridworlds_done_step(execution_number):
 def test_gridworlds_agents():
     env = safetygrid.SavannaGridworldParallelEnv()
 
-    assert len(env.possible_agents) == env.metadata["amount_agents"]
+    # assert len(env.possible_agents) == env.metadata["amount_agents"]  # TODO: this is now determined by the environment, not by config
     assert isinstance(env.possible_agents, list)
     assert isinstance(env.unwrapped.agent_name_mapping, dict)
     assert all(

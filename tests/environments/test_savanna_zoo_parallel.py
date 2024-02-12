@@ -39,7 +39,9 @@ def test_pettingzoo_api_parallel(execution_number):
     env.seed(execution_number)
 
     # sequential_env = parallel_to_aec(env)
-    parallel_api_test(env, num_cycles=10)
+    parallel_api_test(
+        env, num_cycles=10
+    )  # TODO: there is some problem with observation space check
 
 
 @pytest.mark.parametrize("execution_number", range(10))
@@ -166,8 +168,11 @@ def test_zoo_step_result(execution_number):
     assert not dones[agent]
     assert isinstance(observations, dict), "observations is not a dict"
     assert isinstance(
-        observations[agent], np.ndarray
-    ), "observations of agent is not an array"
+        observations[agent][0], np.ndarray
+    ), "observations[0] of agent is not an array"
+    assert isinstance(
+        observations[agent][1], np.ndarray
+    ), "observations[1] of agent is not an array"
     assert isinstance(rewards, dict), "rewards is not a dict"
     assert isinstance(rewards[agent], np.float64), "reward of agent is not a float64"
 

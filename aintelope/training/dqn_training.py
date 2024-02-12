@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 import logging
 from collections import namedtuple
 
@@ -71,7 +71,7 @@ class Trainer:
 
         Args:
             agent_id (str): same as elsewhere (f.ex. "agent_0")
-            observation_shape (tuple): numpy shape of the observations
+            observation_shape (tuple of tuples): numpy shapes of the observations (vision, interoception)
             action_space (Discrete): action_space from environment
 
         Returns:
@@ -99,7 +99,9 @@ class Trainer:
     def get_action(
         self,
         agent_id: str = "",
-        observation: npt.NDArray[ObservationFloat] = None,
+        observation: Tuple[
+            npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
+        ] = None,
         info: dict = {},
         step: int = 0,
     ) -> Optional[int]:
@@ -126,16 +128,29 @@ class Trainer:
             action = self.action_spaces[agent_id].sample()
         else:
             logger.debug("debug observation", type(observation))
-            observation = torch.tensor(np.expand_dims(observation, 0))
+
+            observation = (
+                torch.tensor(
+                    np.expand_dims(observation[0], 0),  # vision
+                ),
+                torch.tensor(np.expand_dims(observation[1], 0)),  # interoception
+            )
             logger.debug(
-                "debug observation tensor", type(observation), observation.shape
+                "debug observation tensor",
+                (type(observation[0]), type(observation[1])),
+                (observation[0].shape, observation[1].shape),
             )
 
             if str(self.device) not in ["cpu"]:
                 print(self.device not in ["cpu"])
-                observation = observation.cuda(self.device)
+                observation = (
+                    observation[0].cuda(self.device),
+                    observation[1].cuda(self.device),
+                )
 
-            q_values = self.policy_nets[agent_id].net(observation)
+            # TODO Joel: handle vision cube dimensions, currently there will be an error "RuntimeError: mat1 and mat2 shapes cannot be multiplied (121x5 and 11x128)"
+            # TODO Joel: handle observation[1] which contains interoception
+            q_values = self.policy_nets[agent_id].net(observation[0])
             _, action = torch.max(q_values, dim=1)
             action = int(action.item())
 
@@ -144,11 +159,11 @@ class Trainer:
     def update_memory(
         self,
         agent_id: str,
-        state: npt.NDArray[ObservationFloat],
+        state: Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]],
         action: int,
         reward: float,
         done: bool,
-        next_state: npt.NDArray[ObservationFloat],
+        next_state: Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]],
     ):
         """
         Add transition into agent specific ReplayMemory.
@@ -167,16 +182,27 @@ class Trainer:
         # add experience to torch device if bugged
         if done:
             return
-        state = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(
-            0
+        state = (
+            torch.tensor(state[0], dtype=torch.float32, device=self.device).unsqueeze(
+                0
+            ),
+            torch.tensor(state[1], dtype=torch.float32, device=self.device).unsqueeze(
+                0
+            ),
         )
         action = torch.tensor(action, device=self.device).unsqueeze(0).view(1, 1)
         reward = torch.tensor(
             reward, dtype=torch.float32, device=self.device
         ).unsqueeze(0)
-        next_state = torch.tensor(
-            next_state, dtype=torch.float32, device=self.device
-        ).unsqueeze(0)
+        next_state = (
+            torch.tensor(
+                next_state[0], dtype=torch.float32, device=self.device
+            ).unsqueeze(0),
+            torch.tensor(
+                next_state[1], dtype=torch.float32, device=self.device
+            ).unsqueeze(0),
+        )
+        # TODO Joel: handle state[1] and next_state[1] which contains interoception
         self.replay_memories[agent_id].push(state, action, reward, done, next_state)
 
     def optimize_models(self):

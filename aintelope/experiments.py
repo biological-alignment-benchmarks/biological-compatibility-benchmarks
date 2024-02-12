@@ -75,7 +75,9 @@ def run_experiment(cfg: DictConfig) -> None:
         agents[-1].reset(
             observation, info
         )  # TODO: is this reset necessary here? In main loop below, there is also a reset call
-        trainer.add_agent(agent_id, observation.shape, env.action_space)
+        trainer.add_agent(
+            agent_id, (observation[0].shape, observation[1].shape), env.action_space
+        )
         dones[agent_id] = False
 
     # Warmup not yet implemented

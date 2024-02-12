@@ -124,7 +124,12 @@ def test_gridworlds_step_result(execution_number):
     done = terminated or truncated
 
     assert not done
-    assert isinstance(observation, np.ndarray), "observation of agent is not an array"
+    assert isinstance(
+        observation[0], np.ndarray
+    ), "observation[0] of agent is not an array"
+    assert isinstance(
+        observation[1], np.ndarray
+    ), "observation[1] of agent is not an array"
     assert isinstance(reward, np.float64), "reward of agent is not a float64"
 
 
@@ -157,7 +162,7 @@ def test_gridworlds_done_step(execution_number):
 def test_gridworlds_agents():
     env = safetygrid.SavannaGridworldSequentialEnv()
 
-    assert len(env.possible_agents) == env.metadata["amount_agents"]
+    # assert len(env.possible_agents) == env.metadata["amount_agents"]  # TODO: this is now determined by the environment, not by config
     assert isinstance(env.possible_agents, list)
     assert isinstance(env.unwrapped.agent_name_mapping, dict)
     assert all(
