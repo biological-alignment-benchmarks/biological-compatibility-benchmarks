@@ -1,8 +1,8 @@
-from typing import Tuple, Dict
 import pathlib
+from typing import Union
 
-from omegaconf import DictConfig, OmegaConf
 import pytest
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 
 def constants() -> DictConfig:
@@ -20,6 +20,6 @@ def root_dir() -> pathlib.Path:
 
 
 @pytest.fixture
-def tparams_hparams(root_dir: pathlib.Path) -> Dict:
+def tparams_hparams(root_dir: pathlib.Path) -> Union[DictConfig, ListConfig]:
     full_params = OmegaConf.load(root_dir / "aintelope/config/config_experiment.yaml")
     return full_params

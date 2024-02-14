@@ -1,5 +1,5 @@
 from typing import Union, Mapping, Type
-from abc import ABC, abstractmethod
+from abc import ABC
 
 import gymnasium as gym
 

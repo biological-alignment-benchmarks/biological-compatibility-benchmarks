@@ -9,12 +9,12 @@ import numpy as np
 
 from aintelope.agents import register_agent_class
 from aintelope.agents.q_agent import QAgent
+from aintelope.environments.env_utils.distance import distance_to_closest_item
 from aintelope.environments.savanna import (
+    get_agent_pos_from_state,
     move_agent,
     reward_agent,
-    get_agent_pos_from_state,
 )
-from aintelope.environments.env_utils.distance import distance_to_closest_item
 
 logger = logging.getLogger("aintelope.agents.simple_agents")
 
@@ -79,10 +79,6 @@ class IterativeWeightOptimizationAgent(QAgent):
         learning_rate = 0.01
         learning_randomness = 0.00
 
-        LAST_ACTION_KEY = "last_action"
-        LAST_REWARD_KEY = "last_reward"
-        ACTIONS_WEIGHTS = "actions_weights"
-
         if np.random.random() < epsilon:
             # GYM_INTERACTION
             action = self.action_space.sample()
@@ -91,10 +87,6 @@ class IterativeWeightOptimizationAgent(QAgent):
         recent_memories = self.replay_buffer.fetch_recent_memories(2)
 
         logger.info("info", recent_memories)
-
-        # last_action = info.get(LAST_ACTION_KEY)
-        # last_reward = info.get(LAST_REWARD_KEY, 0)
-        # action_weights = info[ACTIONS_WEIGHTS]
 
         reward = self.replay_buffer.get_reward_from_memory(recent_memories[0])
         previous_reward = self.replay_buffer.get_reward_from_memory(recent_memories[1])

@@ -1,17 +1,17 @@
+"""
+Code to enable Visual Studio debugging with non-legacy-debugger.
+If you want to avoid exceptions during code start altogether then an alternative is
+to use "legacy debugger":
+Visual Studio -> Tools -> Options -> Python
+-> Debugging -> Enable "Use legacy debugger".
+"""
+
 import logging
-
-
-import numpy as np
-
-# Code to enable Visual Studio debugging with non-legacy-debugger.
-# If you want to avoid exceptions during code start altogether then an alternative is to use "legacy debugger":
-# Visual Studio -> Tools -> Options -> Python -> Debugging -> Enable "Use legacy debugger".
 import os
-import sys
 
-if (
-    os.name == "nt"
-):  # Detect running under Windows. The problem needs handling both while debugging or running outside of the debugger.
+# Detect running under Windows.
+# The problem needs handling both while debugging or running outside of the debugger.
+if os.name == "nt":
     original_get_terminal_size = os.get_terminal_size
 
     def get_terminal_size(fd=1):  # 1 = STDOUT_FILENO
@@ -22,7 +22,9 @@ if (
 
     os.get_terminal_size = get_terminal_size
 
-from gemini import Scene, Sprite, txtcolours as tc, sleep
+import numpy as np
+from gemini import Scene, Sprite, sleep
+from gemini import txtcolours as tc
 
 logger = logging.getLogger("aintelope.environments.env_utils.render_ascii")
 
@@ -100,8 +102,6 @@ class AsciiRenderState:
             # collisions handled elsewhere, don't have rendering engine do that
             self.agent_sprites[agent_name].move(agent_movement, collide=False)
 
-        for x in self.grass_sprites:
-            x = None
         self.grass_sprites = []
         for grass_pos in np.argwhere(grass_patches == 1):
             grass_image = """x""".replace("x", self.ascii_symbols["food"])

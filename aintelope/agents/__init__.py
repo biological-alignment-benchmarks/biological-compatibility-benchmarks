@@ -1,10 +1,9 @@
-from typing import Union, Mapping, Optional, Type
 from abc import ABC, abstractmethod
+from typing import Mapping, Optional, Type, Union
 
 import gymnasium as gym
-
-from pettingzoo import AECEnv, ParallelEnv
 import pandas as pd
+from pettingzoo import AECEnv, ParallelEnv
 
 PettingZooEnv = Union[AECEnv, ParallelEnv]
 Environment = Union[gym.Env, PettingZooEnv]

@@ -33,12 +33,21 @@ For development and testing follow (active environment):
 2. Install project locally: `make build-local`
 3. Run tests: `make tests-local`
 
-### Code formatting
+### Code formatting and style
 
 To autoformat python files you can use [`black`](https://github.com/psf/black).
 To automatically sort the imports you can run
 [`isort .`](https://github.com/PyCQA/isort) from the root level of the project.
-Configurations of the formatters can be found in `pyproject.toml`
+Configurations of the formatters can be found in `pyproject.toml`.
+For linting/code style use [`flake8`](https://flake8.pycqa.org/en/latest/).
+
+These tools can be invoked via `make`:
+
+```bash
+make format
+make isort
+make flake8
+```
 
 ## Executing `aintelope`
 

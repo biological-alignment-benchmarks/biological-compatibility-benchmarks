@@ -1,26 +1,18 @@
-from typing import Optional, Tuple, NamedTuple, List
-import logging
 import csv
-import numpy.typing as npt
+import logging
+from typing import List, NamedTuple, Optional, Tuple
 
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
+from matplotlib.figure import Figure
 
-from gymnasium.spaces import Discrete
-
+from aintelope.agents import Agent, register_agent_class
 from aintelope.environments.savanna_gym import SavannaGymEnv  # TODO used for hack
+from aintelope.environments.typing import ObservationFloat
 from aintelope.training.dqn_training import Trainer
-from aintelope.agents import (
-    Agent,
-    register_agent_class,
-)
-
-from aintelope.environments.typing import (
-    ObservationFloat,
-)
 
 logger = logging.getLogger("aintelope.agents.q_agent")
 
@@ -61,8 +53,8 @@ class QAgent(Agent):
         observation: npt.NDArray[ObservationFloat] = None,
         step: int = 0,  # net: nn.Module, epsilon: float, device: str
     ) -> Optional[int]:
-        """Given an observation, ask your net what to do. State is needed to be given here
-        as other agents have changed the state!
+        """Given an observation, ask your net what to do. State is needed to be given
+        here as other agents have changed the state!
 
         Args:
             net: pytorch Module instance, the model
@@ -81,16 +73,18 @@ class QAgent(Agent):
         self.last_action = action
         return action
 
+    # TODO hack, figure out if state_to_namedtuple can be static somewhere
     def update(
         self,
-        env: SavannaGymEnv = None,  # TODO hack, figure out if state_to_namedtuple can be static somewhere
+        env: SavannaGymEnv = None,
         observation: npt.NDArray[ObservationFloat] = None,
         score: float = 0.0,
         done: bool = False,
         save_path: Optional[str] = None,
     ) -> None:
         """
-        Takes observations and updates trainer on perceived experiences. Needed here to catch instincts.
+        Takes observations and updates trainer on perceived experiences.
+        Needed here to catch instincts.
 
         Args:
             observation: ObservationArray

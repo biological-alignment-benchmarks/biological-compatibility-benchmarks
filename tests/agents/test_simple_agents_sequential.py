@@ -1,15 +1,10 @@
-import sys
 import os
+from typing import Dict
+
 import pytest
 import numpy as np
-from typing import Tuple, Dict
+from omegaconf import OmegaConf
 
-from omegaconf import OmegaConf, DictConfig
-
-from tests.test_config import (
-    root_dir,
-    tparams_hparams,
-)
 from aintelope.training.simple_eval import run_episode
 
 
@@ -106,7 +101,9 @@ def test_randomwalkagent_in_savanna_gridworlds_sequential(
     params_randomwalkagent = {
         "agent": "random_walk_agent",
         "env": "savanna-safetygrid-sequential-v1",
-        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv",
+        "env_entry_point": (
+            "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
+        ),
         "env_type": "zoo",
         "env_params": {
             "num_iters": 40,  # duration of the game
@@ -132,7 +129,9 @@ def test_onestepperfectpredictionagent_in_savanna_gridworlds_sequential(
     params_perfectpredictionagent = {
         "agent": "one_step_perfect_prediction_agent",
         "env": "savanna-safetygrid-sequential-v1",
-        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv",
+        "env_entry_point": (
+            "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv"
+        ),
         "env_type": "zoo",
         "env_params": {
             "num_iters": 40,  # duration of the game
@@ -160,7 +159,9 @@ def test_iterativeweightoptimizationagent_in_savanna_gridworlds_sequential(
     params_weightoptimizationagent = {
         "agent": "iterative_weight_optimization_agent",
         "env": "savanna-safetygrid-sequential-v1",
-        "env_entry_point": "aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv",
+        "env_entry_point": (
+            "aintelope.environments.savanna_safetygrid:" "SavannaGridworldSequentialEnv"
+        ),
         "env_type": "zoo",
         "env_params": {
             "num_iters": 40,  # duration of the game

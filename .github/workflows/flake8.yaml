@@ -1,0 +1,16 @@
+name: Linting and code style
+
+on: [push]
+
+jobs:
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - uses: py-actions/flake8@v2
+        with:
+          flake8-version: "6.1.0"
+          max-line-length: "88"
+          ignore: "E121,E123,E126,E226,E24,E704,W503,W504,E203"
+          path: "aintelope tests site"

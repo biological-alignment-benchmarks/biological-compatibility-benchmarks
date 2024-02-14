@@ -1,26 +1,25 @@
-from typing import Dict, List, Optional, NamedTuple, Tuple
 import logging
 from collections import namedtuple
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
 import pygame
-
 from gymnasium.spaces import Box, Discrete
 from gymnasium.utils import seeding
 
+from aintelope.environments.env_utils.distance import distance_to_closest_item
+from aintelope.environments.env_utils.render_ascii import AsciiRenderState
 from aintelope.environments.typing import (
-    ObservationFloat,
-    PositionFloat,
     Action,
     AgentId,
     AgentStates,
-    Observation,
-    Reward,
     Info,
+    Observation,
+    ObservationFloat,
+    PositionFloat,
+    Reward,
 )
-from aintelope.environments.env_utils.render_ascii import AsciiRenderState
-from aintelope.environments.env_utils.distance import distance_to_closest_item
 
 logger = logging.getLogger("aintelope.environments.savanna")
 
@@ -101,12 +100,14 @@ class HumanRenderState:
         pygame.display.update()
 
         # We need to ensure that human-rendering occurs at the predefined framerate.
-        # The following line will automatically add a delay to keep the framerate stable.
+        # The following line will automatically add a delay
+        # to keep the framerate stable.
         self.clock.tick(self.fps)
 
 
 def reward_agent(min_grass_distance):
-    # For now measure if agent can eat. Was #1 / (1 + min_grass_distance), moving to instincts
+    # For now measure if agent can eat.
+    # Was 1 / (1 + min_grass_distance), moving to instincts
     if min_grass_distance > 1:
         return np.float64(0.0)
     else:
@@ -158,9 +159,10 @@ class SavannaEnv:
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
-        self.metadata = dict(
-            self.metadata
-        )  # NB! Need to clone in order to not modify the default dict. Similar problem to mutable default arguments.
+
+        # NB! Need to clone in order to not modify the default dict.
+        # Similar problem to mutable default arguments.
+        self.metadata = dict(self.metadata)
         self.metadata.update(env_params)
         logger.info(f"initializing savanna env with params: {self.metadata}")
 
@@ -221,7 +223,8 @@ class SavannaEnv:
         And must set up the environment so that render(), step(), and observe()
         can be called without issues.
         """
-        # if seed is not provided as an argument to reset() then do not re-seed. It is possible that seed was set during construction
+        # if seed is not provided as an argument to reset() then do not re-seed.
+        # It is possible that seed was set during construction
         if seed is not None:
             self.seed(seed)
 
@@ -263,11 +266,14 @@ class SavannaEnv:
         - dones
         - truncateds
         - info
-        dicts where each dict looks like {agent_1: action_of_agent_1, agent_2: action_of_agent_2}
-        or generally {<agent_name>: <agent_action or None if agent is done>}
+        dicts where each dict looks like:
+            {agent_1: action_of_agent_1, agent_2: action_of_agent_2}
+        or generally:
+            {<agent_name>: <agent_action or None if agent is done>}
         """
         logger.debug("debug actions", actions)
-        # If a user passes in actions with no agents, then just return empty observations, etc.
+        # If a user passes in actions with no agents,
+        # then just return empty observations, etc.
         if not actions:
             return {}, {}, {}, {}, {}
 
@@ -294,7 +300,8 @@ class SavannaEnv:
                     map_max=self.metadata["map_max"],
                 )
 
-            # NB! reward should be calculated for all agents, including those who were not specified in actions
+            # NB! reward should be calculated for all agents,
+            # including those who were not specified in actions
             min_grass_distance = distance_to_closest_item(
                 self.agent_states[agent], self.grass_patches
             )
@@ -349,8 +356,9 @@ class SavannaEnv:
         self.agent_states[agent] = loc
 
     def observe_from_location(self, agents_coordinates: Dict):
-        """This method is read-only (does not change the actual state of the environment nor the actual state of agents).
-        Each given agent observes itself and the environment as if the agent was in the given location.
+        """This method is read-only (does not change the actual state of the
+        environment nor the actual state of agents). Each given agent observes itself
+        and the environment as if the agent was in the given location.
         """
         observations = {}
         for agent, coordinate in agents_coordinates.items():

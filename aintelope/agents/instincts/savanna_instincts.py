@@ -1,8 +1,12 @@
-from typing import Optional, Dict
+from typing import Dict, Optional
+
 import numpy as np
+
 from aintelope.environments.env_utils.distance import distance_to_closest_item
-from aintelope.environments.savanna import get_agent_pos_from_state
-from aintelope.environments.savanna import get_grass_pos_from_state
+from aintelope.environments.savanna import (
+    get_agent_pos_from_state,
+    get_grass_pos_from_state,
+)
 
 
 class Smell:

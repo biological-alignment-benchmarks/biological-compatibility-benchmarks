@@ -1,26 +1,16 @@
-import sys
 import os
-import pytest
+
 import numpy as np
 import numpy.testing as npt
-
-from gymnasium.spaces import Discrete, MultiDiscrete
-
-from pettingzoo.test import (
-    max_cycles_test,
-    render_test,
-    performance_benchmark,
-)
+import pytest
+from gymnasium.spaces import Discrete
 from pettingzoo.test import api_test
 from pettingzoo.test.seed_test import seed_test
 
-# from pettingzoo.utils import parallel_to_aec
-
-
-from aintelope.environments import savanna_zoo as zoo
-from aintelope.environments.savanna import ACTION_MAP
-from aintelope.environments.savanna_zoo import SavannaZooSequentialEnv
 from aintelope.environments.env_utils.distance import distance_to_closest_item
+from aintelope.environments.savanna import ACTION_MAP, move_agent, reward_agent
+from aintelope.environments.savanna_zoo import SavannaZooSequentialEnv
+from aintelope.environments.typing import PositionFloat
 
 
 @pytest.mark.parametrize("execution_number", range(10))
@@ -67,14 +57,15 @@ def test_zoo_seed(execution_number):
     np.random.seed(execution_number)
 
     try:
-        seed_test(zoo.SavannaZooSequentialEnv, num_cycles=10)
+        seed_test(SavannaZooSequentialEnv, num_cycles=10)
     except TypeError:
-        # for some reason the test env in Git does not recognise the num_cycles neither as named or positional argument
-        seed_test(zoo.SavannaZooSequentialEnv)
+        # for some reason the test env in Git does not recognise the num_cycles
+        # neither as named or positional argument
+        seed_test(SavannaZooSequentialEnv)
 
 
 def test_zoo_agent_states():
-    env = zoo.SavannaZooSequentialEnv()
+    env = SavannaZooSequentialEnv()
 
     env.reset()
     assert isinstance(env.unwrapped.agent_states, dict)
@@ -89,31 +80,28 @@ def test_zoo_agent_states():
 
 @pytest.mark.parametrize("execution_number", range(10))
 def test_zoo_reward_agent(execution_number):
-    env = zoo.SavannaZooSequentialEnv()
+    env = SavannaZooSequentialEnv()
     env.reset(seed=execution_number)
     # single grass patch
     agent_pos = np.random.randint(env.metadata["map_min"], env.metadata["map_max"], 2)
     grass_patch = np.random.randint(env.metadata["map_min"], env.metadata["map_max"], 2)
     min_grass_distance = distance_to_closest_item(agent_pos, grass_patch)
-    reward_single = zoo.reward_agent(min_grass_distance)
-    # assert reward_single == 1 / (1 + vec_distance(grass_patch, agent_pos))
-    assert reward_single >= 0.0 and reward_single <= 1.0
+    reward_single = reward_agent(min_grass_distance)
+    exp_reward = min_grass_distance <= 1
+    assert reward_single == exp_reward
 
     # multiple grass patches
     grass_patches = np.random.randint(
         env.metadata["map_min"], env.metadata["map_max"], size=(10, 2)
     )
     min_grass_distance = distance_to_closest_item(agent_pos, grass_patches)
-    reward_many = zoo.reward_agent(min_grass_distance)
-    grass_patch_closest = grass_patches[
-        np.argmin(np.linalg.norm(np.subtract(grass_patches, agent_pos), axis=1))
-    ]
-    # assert reward_many == 1 / (1 + vec_distance(grass_patch_closest, agent_pos))
-    assert reward_many >= 0.0 and reward_many <= 1.0
+    reward_many = reward_agent(min_grass_distance)
+    exp_reward = min_grass_distance <= 1
+    assert reward_many == exp_reward
 
 
 def test_zoo_move_agent():
-    env = zoo.SavannaZooSequentialEnv()
+    env = SavannaZooSequentialEnv()
     env.reset()
 
     agent = env.possible_agents[0]
@@ -122,7 +110,7 @@ def test_zoo_move_agent():
     for _ in range(1000):
         prev_state = np.copy(agent_states[agent])
         action = env.action_space(agent).sample()
-        agent_states[agent] = zoo.move_agent(
+        agent_states[agent] = move_agent(
             agent_states[agent],
             action,
             map_min=env.metadata["map_min"],
@@ -142,14 +130,14 @@ def test_zoo_move_agent():
         assert (
             env.metadata["map_min"] <= agent_states[agent][1] <= env.metadata["map_max"]
         )
-        assert agent_states[agent].dtype == zoo.PositionFloat
+        assert agent_states[agent].dtype == PositionFloat
 
 
 @pytest.mark.parametrize("execution_number", range(10))
 def test_zoo_step_result(execution_number):
-    env = zoo.SavannaZooSequentialEnv(
-        env_params={"num_iters": 2}
-    )  # default is 1 iter which means that the env is done after 1 step below and the test will fail
+    # default is 1 iter which means that the env is done after 1 step below and the
+    # test will fail
+    env = SavannaZooSequentialEnv(env_params={"num_iters": 2})
     num_agents = len(env.possible_agents)
     assert num_agents, f"expected 1 agent, got: {num_agents}"
     env.seed(execution_number)
@@ -159,7 +147,8 @@ def test_zoo_step_result(execution_number):
     action = env.action_space(agent).sample()
 
     env.step(action)
-    # NB! env.last() provides observation from NEXT agent in case of multi-agent environment
+    # NB! env.last() provides observation from NEXT agent in case of multi-agent
+    # environment
     (
         observation,
         reward,
@@ -176,7 +165,7 @@ def test_zoo_step_result(execution_number):
 
 @pytest.mark.parametrize("execution_number", range(10))
 def test_zoo_done_step(execution_number):
-    env = zoo.SavannaZooSequentialEnv(env_params={"amount_agents": 1})
+    env = SavannaZooSequentialEnv(env_params={"amount_agents": 1})
     assert len(env.possible_agents) == 1
     env.seed(execution_number)
     env.reset()
@@ -185,7 +174,8 @@ def test_zoo_done_step(execution_number):
         agent = env.agent_selection
         action = env.action_space(agent).sample()
         env.step(action)
-        # env.last() provides observation from NEXT agent in case of multi-agent environment
+        # env.last() provides observation from NEXT agent in case of multi-agent
+        # environment
         terminated = env.terminations[agent]
         truncated = env.truncations[agent]
         done = terminated or truncated
@@ -197,7 +187,7 @@ def test_zoo_done_step(execution_number):
 
 
 def test_zoo_agents():
-    env = zoo.SavannaZooSequentialEnv()
+    env = SavannaZooSequentialEnv()
 
     assert len(env.possible_agents) == env.metadata["amount_agents"]
     assert isinstance(env.possible_agents, list)
@@ -209,7 +199,7 @@ def test_zoo_agents():
 
 
 def test_zoo_action_spaces():
-    env = zoo.SavannaZooSequentialEnv()
+    env = SavannaZooSequentialEnv()
 
     for agent in env.possible_agents:
         assert isinstance(env.action_space(agent), Discrete)
@@ -217,7 +207,7 @@ def test_zoo_action_spaces():
 
 
 def test_zoo_action_space_valid_step():
-    env = zoo.SavannaZooSequentialEnv()
+    env = SavannaZooSequentialEnv()
     env.reset()
     map_min, map_max = env.metadata["map_min"], env.metadata["map_max"]
 
@@ -227,7 +217,7 @@ def test_zoo_action_space_valid_step():
     for it in range(1000):
         prev_state = np.copy(agent_states[agent])
         action = env.action_space(agent).sample()
-        agent_states[agent] = zoo.move_agent(
+        agent_states[agent] = move_agent(
             agent_states[agent], action, map_min=map_min, map_max=map_max
         )
         step_vec = agent_states[agent] - prev_state
@@ -242,19 +232,19 @@ def test_zoo_action_space_valid_step():
 
 def test_max_cycles():
     # currently the environment does not accept parameters like max_cycles
-    # max_cycles_test(zoo.SavannaZooSequentialEnv)
+    # max_cycles_test(SavannaZooSequentialEnv)
     pass
 
 
 def test_render():
     # TODO: close method not implemented
-    # render_test(zoo.SavannaZooSequentialEnv)
+    # render_test(SavannaZooSequentialEnv)
     pass
 
 
 def test_performance_benchmark():
     # will print only timing to stdout; not shown per default
-    # performance_benchmark(zoo.SavannaZooSequentialEnv())
+    # performance_benchmark(SavannaZooSequentialEnv())
     pass
 
 
