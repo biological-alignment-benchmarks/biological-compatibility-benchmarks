@@ -246,7 +246,7 @@ class GridworldZooBaseEnv:
                 agent_observations.shape == self.observation_space(agent).shape
             ), "observation / observation space shape mismatch"
 
-            dummy_interoception_vector = np.zeros([2])
+            dummy_interoception_vector = np.zeros([2], np.float32)
             return (agent_observations, dummy_interoception_vector)
 
     def format_info(self, agent: str, info: dict):

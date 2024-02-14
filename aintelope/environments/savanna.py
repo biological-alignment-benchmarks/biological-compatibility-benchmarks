@@ -214,7 +214,7 @@ class SavannaEnv:
         self.infos = {
             agent: {} for agent in self.possible_agents
         }  # needed for Zoo sequential API
-        self.dummy_interoception_vector = np.zeros([2])
+        self.dummy_interoception_vector = np.zeros([2], np.float32)
 
     def seed(self, seed: Optional[int] = None) -> None:
         self.np_random, seed = seeding.np_random(seed)
