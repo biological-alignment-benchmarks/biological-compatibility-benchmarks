@@ -14,6 +14,10 @@ def test_training_pipeline_main():
         "hparams.env=savanna-safetygrid-sequential-v1",
         "hparams.env_entry_point=aintelope.environments.savanna_safetygrid:SavannaGridworldSequentialEnv",
         "hparams.env_type=zoo",
+        "hparams.unit_test_mode=True",
+        "hparams.num_episodes=5",
+        "hparams.env_params.num_iters=50",
+        "hparams.warm_start_steps=10",
     ]
     aintelope_main()
     sys.argv = [""]
@@ -29,6 +33,10 @@ def test_training_pipeline_main_with_dead_agents(execution_number):
         "hparams.env_type=zoo",
         "hparams.env_params.seed=" + str(execution_number),
         "hparams.env_params.test_death=True",
+        "hparams.unit_test_mode=True",
+        "hparams.num_episodes=5",
+        "hparams.env_params.num_iters=50",
+        "hparams.warm_start_steps=10",
     ]
     aintelope_main()
     sys.argv = [""]
@@ -44,6 +52,10 @@ def test_training_pipeline_baseline():
         "hparams.env_type=zoo",
         "hparams.agent_id=q_agent",
         "hparams.agent_params.target_instincts=[]",
+        "hparams.unit_test_mode=True",
+        "hparams.num_episodes=5",
+        "hparams.env_params.num_iters=50",
+        "hparams.warm_start_steps=10",
     ]
     aintelope_main()
     sys.argv = [""]
@@ -63,6 +75,10 @@ def test_training_pipeline_baseline_with_dead_agents(execution_number):
         "hparams.agent_params.target_instincts=[]",
         "hparams.env_params.seed=" + str(execution_number),
         "hparams.env_params.test_death=True",
+        "hparams.unit_test_mode=True",
+        "hparams.num_episodes=5",
+        "hparams.env_params.num_iters=50",
+        "hparams.warm_start_steps=10",
     ]
     aintelope_main()
     sys.argv = [""]
@@ -78,6 +94,10 @@ def test_training_pipeline_instinct():
         "hparams.env_type=zoo",
         "hparams.agent_id=instinct_agent",
         "hparams.agent_params.target_instincts=[smell]",
+        "hparams.unit_test_mode=True",
+        "hparams.num_episodes=5",
+        "hparams.env_params.num_iters=50",
+        "hparams.warm_start_steps=10",
     ]
     aintelope_main()
     sys.argv = [""]
@@ -97,6 +117,10 @@ def test_training_pipeline_instinct_with_dead_agents(execution_number):
         "hparams.agent_params.target_instincts=[smell]",
         "hparams.env_params.seed=" + str(execution_number),
         "hparams.env_params.test_death=True",
+        "hparams.unit_test_mode=True",
+        "hparams.num_episodes=5",
+        "hparams.env_params.num_iters=50",
+        "hparams.warm_start_steps=10",
     ]
     aintelope_main()
     sys.argv = [""]

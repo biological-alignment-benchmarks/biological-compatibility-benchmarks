@@ -17,6 +17,7 @@ hparams:
   env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
   env_type: zoo  
   model: dqn
+  unit_test_mode: False      # is set during tests in order to speed up DQN computations
   agent_id: q_agent
   gamma: 0.99
   sync_rate: 10
@@ -26,7 +27,7 @@ hparams:
   eps_end: 0.01
   tau: 0.05
   num_episodes: 10 # how long to train
-  episode_length: 1010
+  episode_length: 1010     # TODO: this parameter seems to be unused
   warm_start_steps: 100
   log_figures_every_n_epochs: 5
   every_n_episodes: 1 # how often save a model

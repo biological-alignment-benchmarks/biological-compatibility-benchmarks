@@ -49,6 +49,7 @@ class DQN(nn.Module):
         self,
         obs_size: tuple,
         n_actions: int,
+        unit_test_mode: bool,
         hidden_size: int = 128,
         hidden_size2: int = 512,
     ):
@@ -59,6 +60,13 @@ class DQN(nn.Module):
             hidden_size (int): size of hidden layers
         """
         super().__init__()
+        self.unit_test_mode = unit_test_mode
+        if (
+            unit_test_mode
+        ):  # constrain the size of networks during unit testing for performance purposes
+            hidden_size = min(8, hidden_size)
+            hidden_size2 = min(8, hidden_size2)
+
         (vision_size, interoception_size) = obs_size  # TODO: interoception
 
         if len(vision_size) == 1:  # old AIntelope environment
@@ -87,11 +95,16 @@ class DQN(nn.Module):
             )  # this layer with kernel_size=1 enables mixing of information across feature vector channels
             output_size = self.conv2d_shape(vision_xy, self.conv1)
 
-            self.conv2 = nn.Conv2d(hidden_size, hidden_size, kernel_size=3, stride=1)
-            output_size = self.conv2d_shape(output_size, self.conv2)
+            if not unit_test_mode:
+                self.conv2 = nn.Conv2d(
+                    hidden_size, hidden_size, kernel_size=3, stride=1
+                )
+                output_size = self.conv2d_shape(output_size, self.conv2)
 
-            self.conv3 = nn.Conv2d(hidden_size, hidden_size, kernel_size=3, stride=1)
-            output_size = self.conv2d_shape(output_size, self.conv3)
+                self.conv3 = nn.Conv2d(
+                    hidden_size, hidden_size, kernel_size=3, stride=1
+                )
+                output_size = self.conv2d_shape(output_size, self.conv3)
 
             self.fc4 = nn.Linear(
                 np.prod(output_size) * hidden_size, hidden_size2
@@ -123,8 +136,11 @@ class DQN(nn.Module):
         else:  # Gridworlds environment
             # 3D vision network
             x = F.relu(self.conv1(x))
-            x = F.relu(self.conv2(x))
-            x = F.relu(self.conv3(x))
+
+            if not self.unit_test_mode:
+                x = F.relu(self.conv2(x))
+                x = F.relu(self.conv3(x))
+
             x = x.view(
                 x.size(0), -1
             )  # keep batch size at dimension 0, flatten the remaining output dimensions of conv2 layer into 1D : (batch size, channels, height, width) -> (batch size, features)

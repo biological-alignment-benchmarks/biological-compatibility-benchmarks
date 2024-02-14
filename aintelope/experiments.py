@@ -50,6 +50,9 @@ def run_experiment(cfg: DictConfig) -> None:
 
     # Common trainer for each agent's models
     trainer = Trainer(cfg)
+    unit_test_mode = (
+        cfg.hparams.unit_test_mode
+    )  # is set during tests in order to speed up DQN computations
 
     # Agents
     agents = []
@@ -76,7 +79,10 @@ def run_experiment(cfg: DictConfig) -> None:
             observation, info
         )  # TODO: is this reset necessary here? In main loop below, there is also a reset call
         trainer.add_agent(
-            agent_id, (observation[0].shape, observation[1].shape), env.action_space
+            agent_id,
+            (observation[0].shape, observation[1].shape),
+            env.action_space,
+            unit_test_mode=unit_test_mode,
         )
         dones[agent_id] = False
 

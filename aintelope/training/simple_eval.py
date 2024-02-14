@@ -108,12 +108,21 @@ def run_episode(full_params: Dict) -> None:
     trainer = Trainer(full_params)
 
     model_spec = hparams["model"]
+    unit_test_mode = hparams[
+        "unit_test_mode"
+    ]  # is set during tests in order to speed up DQN computations
+
     # TODO: support for different observation shapes in different agents?
     # TODO: support for different action spaces in different agents?
     if isinstance(model_spec, list):
-        models = [MODEL_LOOKUP[net](obs_size, n_actions) for net in model_spec]
+        models = [
+            MODEL_LOOKUP[net](obs_size, n_actions, unit_test_mode=unit_test_mode)
+            for net in model_spec
+        ]
     else:
-        models = [MODEL_LOOKUP[model_spec](obs_size, n_actions)]
+        models = [
+            MODEL_LOOKUP[model_spec](obs_size, n_actions, unit_test_mode=unit_test_mode)
+        ]
 
     agent_spec = hparams["agent_id"]  # TODO: why is this value a list?
     if isinstance(agent_spec, list) and len(agent_spec) == 1:
@@ -157,7 +166,10 @@ def run_episode(full_params: Dict) -> None:
 
         agent.reset(observation, info)
         trainer.add_agent(
-            agent.id, (observation[0].shape, observation[1].shape), env.action_space
+            agent.id,
+            (observation[0].shape, observation[1].shape),
+            env.action_space,
+            unit_test_mode=unit_test_mode,
         )
 
     agents_dict = {agent.id: agent for agent in agents}

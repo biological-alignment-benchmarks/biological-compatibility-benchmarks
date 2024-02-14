@@ -33,7 +33,7 @@ def load_checkpoint(path, obs_size, action_space_size):
         model: torch.nn.Module
     """
 
-    model = DQN(obs_size, action_space_size)
+    model = DQN(obs_size, action_space_size, unit_test_mode=False)
     # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     checkpoint = torch.load(path)
@@ -65,7 +65,9 @@ class Trainer:
         self.hparams = params.hparams
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def add_agent(self, agent_id, observation_shape, action_space):
+    def add_agent(
+        self, agent_id, observation_shape, action_space, unit_test_mode: bool
+    ):
         """
         Register an agent.
 
@@ -81,10 +83,14 @@ class Trainer:
         self.action_spaces[agent_id] = action_space(agent_id)
         self.replay_memories[agent_id] = ReplayMemory(self.hparams.replay_size)
         self.policy_nets[agent_id] = DQN(
-            self.observation_shapes[agent_id], self.action_spaces[agent_id].n
+            self.observation_shapes[agent_id],
+            self.action_spaces[agent_id].n,
+            unit_test_mode=unit_test_mode,
         ).to(self.device)
         self.target_nets[agent_id] = DQN(
-            self.observation_shapes[agent_id], self.action_spaces[agent_id].n
+            self.observation_shapes[agent_id],
+            self.action_spaces[agent_id].n,
+            unit_test_mode=unit_test_mode,
         ).to(self.device)
         self.target_nets[agent_id].load_state_dict(
             self.policy_nets[agent_id].state_dict()
@@ -263,7 +269,7 @@ class Trainer:
             self.losses[agent_id] = loss
 
             self.optimizers[agent_id].zero_grad()
-            loss.backward()
+            loss.backward()  # TODO: disable this during unit_test_mode for speeding up the tests?
             torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
             self.optimizers[agent_id].step()
 
