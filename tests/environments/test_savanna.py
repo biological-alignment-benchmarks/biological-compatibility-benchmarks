@@ -36,10 +36,17 @@ def test_get_agent_pos_from_stats():
     env = sut.SavannaEnv()
     env.reset()
     assert isinstance(env.agent_states, dict)
-    for agent_state in env.agent_states:
+    for (
+        agent_name,
+        agent_state,
+    ) in (
+        env.agent_states.items()
+    ):  # TODO: currently old AIntelope agent_state does not contain interoception. This is not used anyway and is compatible with rest of the code though
         agent_state_env = agent_state
-        agent_state_func = sut.get_agent_pos_from_state(agent_state_env)
-        assert [agent_state_env[0], agent_state_env[1]] == agent_state_func
+        agent_state_func = sut.get_agent_pos_from_state(
+            agent_state_env, info={}, agent_name="agent_0"
+        )
+        assert agent_state_env[0] == agent_state_func[0]
 
 
 def test_observation_spaces():
