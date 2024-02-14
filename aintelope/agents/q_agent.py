@@ -1,6 +1,7 @@
 import csv
 import logging
 from typing import List, NamedTuple, Optional, Tuple
+import numpy.typing as npt
 
 from aintelope.agents import Agent, register_agent_class
 from aintelope.environments.savanna_gym import SavannaGymEnv  # TODO used for hack
