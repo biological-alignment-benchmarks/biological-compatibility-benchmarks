@@ -1,6 +1,7 @@
 from typing import Optional
 import logging
 from collections import namedtuple
+import datetime
 
 import numpy.typing as npt
 import numpy as np
@@ -65,7 +66,13 @@ class Trainer:
         self.hparams = params.hparams
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def add_agent(self, agent_id, observation_shape, action_space):
+    def add_agent(
+        self,
+        agent_id,
+        observation_shape,
+        action_space,
+        checkpoint: Optional[str] = None,
+    ):
         """
         Register an agent.
 
@@ -73,6 +80,7 @@ class Trainer:
             agent_id (str): same as elsewhere (f.ex. "agent_0")
             observation_shape (tuple): numpy shape of the observations
             action_space (Discrete): action_space from environment
+            checkpoint: Path (string) to checkpoint, None if not available
 
         Returns:
             None
@@ -80,9 +88,18 @@ class Trainer:
         self.observation_shapes[agent_id] = observation_shape
         self.action_spaces[agent_id] = action_space(agent_id)
         self.replay_memories[agent_id] = ReplayMemory(self.hparams.replay_size)
-        self.policy_nets[agent_id] = DQN(
-            self.observation_shapes[agent_id], self.action_spaces[agent_id].n
-        ).to(self.device)
+        if not checkpoint:
+            self.policy_nets[agent_id] = DQN(
+                self.observation_shapes[agent_id], self.action_spaces[agent_id].n
+            ).to(self.device)
+        else:
+            print("Loading from checkpoint...")
+            self.policy_nets[agent_id] = load_checkpoint(
+                checkpoint,
+                self.observation_shapes[agent_id],
+                self.action_spaces[agent_id].n,
+            ).to(self.device)
+
         self.target_nets[agent_id] = DQN(
             self.observation_shapes[agent_id], self.action_spaces[agent_id].n
         ).to(self.device)
@@ -268,5 +285,9 @@ class Trainer:
                     "optimizer_state_dict": optimizer.state_dict(),
                     "loss": loss,
                 },
-                path + agent_id + "_" + str(episode),
+                path
+                + agent_id
+                + "-"
+                + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
             )
+        print("done saving model")

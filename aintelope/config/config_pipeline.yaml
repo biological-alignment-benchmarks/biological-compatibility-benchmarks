@@ -1,0 +1,31 @@
+test1:
+  env: savanna-zoo-sequential-v2
+  env_entry_point: "aintelope.environments.savanna_zoo:SavannaZooSequentialEnv"
+  env_type: zoo
+  env_params:
+    num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
+    map_min: 0
+    map_max: 5
+    render_mode: null
+    render_map_max: 5
+    amount_agents: 1 
+    amount_grass_patches: 1
+    amount_water_holes: 0
+    test_death: False      # needed for trainer tests
+    seed: null      # needed for trainer tests
+
+test2: 
+  env: savanna-zoo-sequential-v2
+  env_entry_point: "aintelope.environments.savanna_zoo:SavannaZooSequentialEnv"
+  env_type: zoo   
+  env_params:
+    num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
+    map_min: 0
+    map_max: 5
+    render_mode: null
+    render_map_max: 5
+    amount_agents: 1 
+    amount_grass_patches: 1
+    amount_water_holes: 0
+    test_death: False      # needed for trainer tests
+    seed: null      # needed for trainer tests
