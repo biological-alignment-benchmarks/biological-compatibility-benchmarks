@@ -4,8 +4,8 @@ import sys
 
 import pytest
 
-from aintelope.__main__ import aintelope_main
 from aintelope.config.config_utils import register_resolvers
+from aintelope.nonpipeline import aintelope_main
 from tests.conftest import constants
 
 
