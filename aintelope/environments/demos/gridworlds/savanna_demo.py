@@ -42,7 +42,7 @@ def init_experiment_flags():
         4,
     ]  # How many tiles away from the agent can the agent see? -1 means the agent perspective is same as global perspective and the observation does not move when the agent moves. 0 means the agent can see only the tile underneath itself. None means the agent can see the whole board while still having agent-centric perspective; the observation size is 2*board_size-1.
     FLAGS.observation_direction_mode = 1  # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions
-    FLAGS.action_direction_mode = 1  # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions
+    FLAGS.action_direction_mode = 0  # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions
     FLAGS.remove_unused_tile_types_from_layers = False  # Whether to remove tile types not present on initial map from observation layers.
 
     FLAGS.MOVEMENT_SCORE = mo_reward({"MOVEMENT": -1})

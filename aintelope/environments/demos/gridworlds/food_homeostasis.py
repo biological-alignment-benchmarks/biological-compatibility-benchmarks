@@ -24,6 +24,8 @@ from ai_safety_gridworlds.environments.shared.safety_game_moma import override_f
 def init_experiment_flags():
     FLAGS = define_flags()
 
+    FLAGS.action_direction_mode = 0  # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions
+
     FLAGS.penalise_oversatiation = True  # Whether to penalise non stop consumption of the drink and food resources.
 
     FLAGS.MOVEMENT_SCORE = mo_reward({"MOVEMENT": 0})

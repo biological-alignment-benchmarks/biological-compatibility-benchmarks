@@ -24,6 +24,8 @@ from ai_safety_gridworlds.environments.shared.safety_game_moma import override_f
 def init_experiment_flags():
     FLAGS = define_flags()
 
+    FLAGS.action_direction_mode = 0  # 0 - fixed, 1 - relative, depending on last move, 2 - relative, controlled by separate turning actions
+
     # TODO: option to kill the agent if it steps on predator tile
 
     FLAGS.MOVEMENT_SCORE = mo_reward({"MOVEMENT": 0})
