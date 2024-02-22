@@ -39,6 +39,8 @@ hparams:
   every_n_episodes: 1 # how often save a model. TODO rename to save_frequency
   env_params:
     env_experiment: aintelope.aintelope_savanna
+    level: 0
+    map_randomization_frequency: 3
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     map_min: 0      # unused for new environments, is always 0
     map_max: 10     # inclusive max, map resizing is not yet implemented for new environments, but can be added later if needed
