@@ -51,8 +51,7 @@ class DQN(nn.Module):
         obs_size: tuple,
         n_actions: int,
         unit_test_mode: bool,
-        hidden_size: int = 128,
-        hidden_size2: int = 512,
+        hidden_sizes: list = [8, 8],
     ):
         """
         Args:
@@ -65,8 +64,7 @@ class DQN(nn.Module):
         if (
             unit_test_mode
         ):  # constrain the size of networks during unit testing for performance purposes
-            hidden_size = min(8, hidden_size)
-            hidden_size2 = min(8, hidden_size2)
+            hidden_sizes = [8, 8]
 
         (vision_size, interoception_size) = obs_size  # TODO: interoception
 
@@ -74,13 +72,13 @@ class DQN(nn.Module):
             self.cnn = False
 
             # 1D vision network
-            self.fc4 = nn.Linear(vision_size[0], hidden_size)
+            self.fc4 = nn.Linear(vision_size[0], hidden_sizes[0])
 
             # interoception network
-            self.fc5 = nn.Linear(interoception_size[0], hidden_size)
+            self.fc5 = nn.Linear(interoception_size[0], hidden_sizes[0])
 
             # combined network
-            self.fc6 = nn.Linear(hidden_size + hidden_size, n_actions)
+            self.fc6 = nn.Linear(hidden_sizes[0] + hidden_sizes[0], n_actions)
 
         else:  # Gridworlds environment
             self.cnn = True
@@ -92,30 +90,30 @@ class DQN(nn.Module):
 
             # 3D vision network
             self.conv1 = nn.Conv2d(
-                num_vision_features, hidden_size, kernel_size=1, stride=1
+                num_vision_features, hidden_sizes[0], kernel_size=1, stride=1
             )  # this layer with kernel_size=1 enables mixing of information across feature vector channels
             output_size = self.conv2d_shape(vision_xy, self.conv1)
 
             if not unit_test_mode:
                 self.conv2 = nn.Conv2d(
-                    hidden_size, hidden_size, kernel_size=3, stride=1
+                    hidden_sizes[0], hidden_sizes[0], kernel_size=3, stride=1
                 )
                 output_size = self.conv2d_shape(output_size, self.conv2)
 
                 self.conv3 = nn.Conv2d(
-                    hidden_size, hidden_size, kernel_size=3, stride=1
+                    hidden_sizes[0], hidden_sizes[0], kernel_size=3, stride=1
                 )
                 output_size = self.conv2d_shape(output_size, self.conv3)
 
             self.fc4 = nn.Linear(
-                np.prod(output_size) * hidden_size, hidden_size2
+                np.prod(output_size) * hidden_sizes[0], hidden_sizes[1]
             )  # flattens convolutional layers output
 
             # interoception network
-            self.fc5 = nn.Linear(interoception_size[0], hidden_size)
+            self.fc5 = nn.Linear(interoception_size[0], hidden_sizes[0])
 
             # combined network
-            self.fc6 = nn.Linear(hidden_size2 + hidden_size, n_actions)
+            self.fc6 = nn.Linear(hidden_sizes[0] + hidden_sizes[1], n_actions)
 
     def forward(self, observation):
         (vision_batch, interoception_batch) = observation

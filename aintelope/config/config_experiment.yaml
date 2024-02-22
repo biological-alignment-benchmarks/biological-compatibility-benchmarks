@@ -25,23 +25,24 @@ hparams:
   model: dqn
   unit_test_mode: False      # is set during tests in order to speed up DQN computations
   agent_id: q_agent
-  gamma: 0.99
-  sync_rate: 10
-  replay_size: 99
-  eps_last_frame: 1000
-  eps_start: 1.0
-  eps_end: 0.01
-  tau: 0.05
-  num_episodes: 5 # how long to train. TODO move num_iters onto same level as this
-  episode_length: 1010     # TODO: this parameter seems to be unused
+  num_episodes: 10 # how long to train.
   warm_start_steps: 100
-  log_figures_every_n_epochs: 5
-  every_n_episodes: 1 # how often save a model. TODO rename to save_frequency
+  save_frequency: 1 # how often save a model
+  agent_params:
+    target_instincts: []
+  model_params:
+    hidden_sizes: [16,16]
+    gamma: 0.99
+    tau: 0.05
+    eps_last_frame: 50
+    eps_start: 1.0
+    eps_end: 0.01
+    replay_size: 99
   env_params:
     env_experiment: aintelope.aintelope_savanna
     num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     map_min: 0      # unused for new environments, is always 0
-    map_max: 10     # inclusive max, map resizing is not yet implemented for new environments, but can be added later if needed
+    map_max: 5     # inclusive max, map resizing is not yet implemented for new environments, but can be added later if needed
     render_mode: null
     # render_map_max: 5     # this field is currently not used anywhere in code
     render_agent_radius: 10     # make whole map visible while still agent-centric
@@ -90,8 +91,6 @@ hparams:
     #
     test_death: False      # needed for trainer tests
     seed: null      # needed for trainer tests
-  agent_params:
-    target_instincts: []
 
 hydra:
   run:

@@ -251,7 +251,7 @@ def run_experiment(cfg: DictConfig) -> None:
         # Save models
         # https://pytorch.org/tutorials/recipes/recipes/
         # saving_and_loading_a_general_checkpoint.html
-        if i_episode % cfg.hparams.every_n_episodes == 0:
+        if i_episode % cfg.hparams.save_frequency == 0:
             os.makedirs(dir_cp, exist_ok=True)
             trainer.save_models(i_episode, dir_cp)
 
