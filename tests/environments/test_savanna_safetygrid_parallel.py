@@ -123,7 +123,7 @@ def test_gridworlds_step_result(execution_number):
         observations[agent][1], np.ndarray
     ), "observations[1] of agent is not an array"
     assert isinstance(rewards, dict), "rewards is not a dict"
-    assert isinstance(rewards[agent], np.float64), "reward of agent is not a float64"
+    assert isinstance(rewards[agent], dict), "reward of agent is not a dict"
 
 
 @pytest.mark.parametrize("execution_number", range(1))

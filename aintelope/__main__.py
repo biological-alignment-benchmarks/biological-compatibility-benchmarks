@@ -2,6 +2,7 @@ import logging
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
+import copy
 
 from aintelope.analytics import plotting, recording
 from aintelope.config.config_utils import register_resolvers
@@ -14,12 +15,18 @@ logger = logging.getLogger("aintelope.__main__")
 def aintelope_main(cfg: DictConfig) -> None:
     pipeline_config = OmegaConf.load("aintelope/config/config_pipeline.yaml")
     for env_conf in pipeline_config:
-        OmegaConf.update(cfg, "experiment_name", env_conf)
-        OmegaConf.update(cfg, "hparams", pipeline_config[env_conf], force_add=True)
+        experiment_cfg = copy.deepcopy(
+            cfg
+        )  # need to deepcopy in order to not accumulate keys that were present in previous experiment and are not present in next experiment
+        OmegaConf.update(experiment_cfg, "experiment_name", env_conf)
+        OmegaConf.update(
+            experiment_cfg, "hparams", pipeline_config[env_conf], force_add=True
+        )
         logger.info("Running training with the following configuration")
-        logger.info(OmegaConf.to_yaml(cfg))
-        run_experiment(cfg)
-    analytics(cfg)
+        logger.info(OmegaConf.to_yaml(experiment_cfg))
+        run_experiment(experiment_cfg)
+
+    analytics(experiment_cfg)
 
 
 def analytics(cfg):

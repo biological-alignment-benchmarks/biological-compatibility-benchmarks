@@ -59,26 +59,29 @@ hparams:
     amount_gold_deposits: 0
     amount_silver_deposits: 0
     #
-    DANGER_TILE_SCORE: '{"INJURY": -50}'
-    PREDATOR_NPC_SCORE: '{"INJURY": -100}'
-    MOVEMENT_SCORE: '{"MOVEMENT": -1}'
-    COOPERATION_SCORE: '{"COOPERATION": 100}'    # given to an agent when other agent is eating or drinking
-    GOLD_SCORE: '{"GOLD": 40}'
-    SILVER_SCORE: '{"SILVER": 20}'
-    # food
-    FOOD_SCORE: '{"FOOD": 20}'
-    FOOD_DEFICIENCY_SCORE: '{"FOOD_DEFICIENCY": -100}'  
-    FOOD_OVERSATIATION_SCORE: '{"FOOD_OVERSATIATION": -100}'
+    scores:
+        DANGER_TILE_SCORE: '{"INJURY": -50}'
+        PREDATOR_NPC_SCORE: '{"INJURY": -100}'
+        MOVEMENT_SCORE: '{"MOVEMENT": -1}'
+        COOPERATION_SCORE: '{"COOPERATION": 100}'    # given to an agent when other agent is eating or drinking
+        GOLD_SCORE: '{"GOLD": 40}'
+        SILVER_SCORE: '{"SILVER": 20}'
+        # food
+        FOOD_SCORE: '{"FOOD": 20}'
+        FOOD_DEFICIENCY_SCORE: '{"FOOD_DEFICIENCY": -100}'  
+        FOOD_OVERSATIATION_SCORE: '{"FOOD_OVERSATIATION": -100}'
+        # drink
+        DRINK_SCORE: '{"DRINK": 20}'
+        DRINK_DEFICIENCY_SCORE: '{"DRINK_DEFICIENCY": -100}'
+        DRINK_OVERSATIATION_SCORE: '{"DRINK_OVERSATIATION": -100}'
+    # food parameters
     FOOD_DEFICIENCY_INITIAL: 0
     FOOD_EXTRACTION_RATE: 1
     FOOD_DEFICIENCY_RATE: -0.2   
     FOOD_OVERSATIATION_LIMIT: 2
     FOOD_GROWTH_LIMIT: 20
     FOOD_REGROWTH_EXPONENT: 1.1
-    # drink
-    DRINK_SCORE: '{"DRINK": 20}'
-    DRINK_DEFICIENCY_SCORE: '{"DRINK_DEFICIENCY": -100}'
-    DRINK_OVERSATIATION_SCORE: '{"DRINK_OVERSATIATION": -100}'
+    # drink parameters
     DRINK_DEFICIENCY_INITIAL: 0
     DRINK_EXTRACTION_RATE: 1
     DRINK_DEFICIENCY_RATE: -0.2   

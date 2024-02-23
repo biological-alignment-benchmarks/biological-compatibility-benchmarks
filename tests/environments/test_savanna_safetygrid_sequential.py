@@ -34,6 +34,7 @@ def test_gridworlds_api_sequential(execution_number):
         "amount_agents": 1,  # for now only one agent
         "amount_grass_patches": 2,
         "amount_water_holes": 2,
+        "use_old_aintelope_rewards": True,  # Zoo does not handle dictionary rewards well in sequential env test
     }
     env = safetygrid.SavannaGridworldSequentialEnv(env_params=env_params)
     env.seed(execution_number)
@@ -61,6 +62,7 @@ def test_gridworlds_api_sequential_with_death(execution_number):
         "amount_water_holes": 2,
         "test_death": False,
         "seed": execution_number,
+        "use_old_aintelope_rewards": True,  # Zoo does not handle dictionary rewards well in sequential env test
     }
     env = safetygrid.SavannaGridworldSequentialEnv(env_params=env_params)
 
@@ -138,7 +140,7 @@ def test_gridworlds_step_result(execution_number):
     assert isinstance(
         observation[1], np.ndarray
     ), "observation[1] of agent is not an array"
-    assert isinstance(reward, np.float64), "reward of agent is not a float64"
+    assert isinstance(reward, dict), "reward of agent is not a dict"
 
 
 @pytest.mark.parametrize("execution_number", range(1))

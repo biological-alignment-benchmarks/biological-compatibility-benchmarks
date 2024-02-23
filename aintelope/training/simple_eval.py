@@ -146,6 +146,7 @@ def run_episode(full_params: Dict) -> None:
     # cannot use list since some of the agents may be terminated in the middle of
     # the episode
     episode_rewards = Counter({agent.id: 0.0 for agent in agents})
+    episode_rewards_upgraded_to_dict_rewards = False
     # cannot use list since some of the agents may be terminated in the middle of
     # the episode
     dones = {agent.id: False for agent in agents}
@@ -332,7 +333,7 @@ def run_episode(full_params: Dict) -> None:
                         ) = result
 
                         logger.debug((observation, reward, terminated, truncated, info))
-                        rewards[agent] = reward
+                        rewards[agent.id] = reward
 
                         # NB! any agent could die at any other agent's step
                         for agent_id in env.agents:
@@ -343,7 +344,23 @@ def run_episode(full_params: Dict) -> None:
             logger.warning("Simple_eval: non-zoo env, test not yet implemented!")
             pass
 
-        episode_rewards += rewards  # Counter class allows addition per dictionary keys
+        if isinstance(next(iter(rewards.values())), dict):
+            if (
+                not episode_rewards_upgraded_to_dict_rewards
+            ):  # each agent's reward is a dict, need to upgrade the episode_rewards counter  # TODO: detect this early, before the loops start
+                episode_rewards_upgraded_to_dict_rewards = True
+                episode_rewards = {agent.id: Counter() for agent in agents}
+
+            # unfortunately counter does not support nested addition, so we need to do it with a loop here
+            for agent, reward in rewards.items():
+                episode_rewards[agent].update(
+                    reward
+                )  # for some reason += does not work here, so need to use .update method, which does work
+        else:
+            episode_rewards += (
+                rewards  # Counter class allows addition per dictionary keys
+            )
+
         if render_mode is not None:
             env.render(render_mode)
 
