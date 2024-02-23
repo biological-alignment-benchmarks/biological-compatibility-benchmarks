@@ -14,7 +14,7 @@ from aintelope.training.dqn_training import Trainer
 from pettingzoo import AECEnv, ParallelEnv
 
 
-def run_experiment(cfg: DictConfig) -> None:
+def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
     logger = logging.getLogger("aintelope.experiment")
 
     # Environment
@@ -97,7 +97,7 @@ def run_experiment(cfg: DictConfig) -> None:
             "Done",
             "Next_state",
         ]
-        + ["Score"]
+        + score_dimensions
     )  # TODO: replace this with env.score_titles    # TODO: multidimensional and multi-agent score handling
 
     for i_episode in range(cfg.hparams.num_episodes):
@@ -261,4 +261,4 @@ def run_experiment(cfg: DictConfig) -> None:
 
 # @hydra.main(version_base=None, config_path="config", config_name="config_experiment")
 if __name__ == "__main__":
-    run_experiment()
+    run_experiment()  # TODO: cfg, score_dimensions

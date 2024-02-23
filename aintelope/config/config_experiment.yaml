@@ -65,7 +65,7 @@ hparams:
         MOVEMENT_SCORE: '{"MOVEMENT": -1}'
         COOPERATION_SCORE: '{"COOPERATION": 100}'    # given to an agent when other agent is eating or drinking
         GOLD_SCORE: '{"GOLD": 40}'
-        SILVER_SCORE: '{"SILVER": 20}'
+        # SILVER_SCORE: '{"SILVER": 20}'        # unused at the moment
         # food
         FOOD_SCORE: '{"FOOD": 20}'
         FOOD_DEFICIENCY_SCORE: '{"FOOD_DEFICIENCY": -100}'  

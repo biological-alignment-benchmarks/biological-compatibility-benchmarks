@@ -5,7 +5,10 @@ from omegaconf import DictConfig, OmegaConf
 import copy
 
 from aintelope.analytics import plotting, recording
-from aintelope.config.config_utils import register_resolvers
+from aintelope.config.config_utils import (
+    register_resolvers,
+    get_pipeline_score_dimensions,
+)
 from aintelope.experiments import run_experiment
 
 logger = logging.getLogger("aintelope.__main__")
@@ -14,6 +17,7 @@ logger = logging.getLogger("aintelope.__main__")
 @hydra.main(version_base=None, config_path="config", config_name="config_experiment")
 def aintelope_main(cfg: DictConfig) -> None:
     pipeline_config = OmegaConf.load("aintelope/config/config_pipeline.yaml")
+    score_dimensions = get_pipeline_score_dimensions(cfg, pipeline_config)
     for env_conf in pipeline_config:
         experiment_cfg = copy.deepcopy(
             cfg
@@ -24,7 +28,7 @@ def aintelope_main(cfg: DictConfig) -> None:
         )
         logger.info("Running training with the following configuration")
         logger.info(OmegaConf.to_yaml(experiment_cfg))
-        run_experiment(experiment_cfg)
+        run_experiment(experiment_cfg, score_dimensions)
 
     analytics(experiment_cfg)
 
