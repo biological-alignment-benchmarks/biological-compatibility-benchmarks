@@ -85,6 +85,7 @@ def run_experiment(cfg: DictConfig) -> None:
     #    agents.play_step(self.net, epsilon=1.0)
 
     # Main loop
+    score_titles = [title.keys()[0] for title in cfg.hparams.env_params.scores]
     events = pd.DataFrame(
         columns=[
             "Run_id",
@@ -97,8 +98,8 @@ def run_experiment(cfg: DictConfig) -> None:
             "Done",
             "Next_state",
         ]
-        + cfg.hparams.env_params.scores
-    )  
+        + score_titles
+    )
 
     for i_episode in range(cfg.hparams.num_episodes):
         # Reset
@@ -151,7 +152,9 @@ def run_experiment(cfg: DictConfig) -> None:
                         env,
                         observation,
                         info,
-                        sum(score.values()), # TODO: make a function to handle obs->rew in Q-agent too, remove this
+                        sum(
+                            score.values()
+                        ),  # TODO: make a function to handle obs->rew in Q-agent too, remove this
                         done,  # TODO: should it be "terminated" in place of "done" here?
                         done,  # TODO: should it be "terminated" in place of "done" here?
                     )
