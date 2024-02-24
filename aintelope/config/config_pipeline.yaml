@@ -168,48 +168,59 @@ test8:   # food_sharing
     FOOD_EXTRACTION_RATE: 1
     FOOD_DEFICIENCY_RATE: -0.2   
     FOOD_OVERSATIATION_LIMIT: 2
+   
+
+# debug environments follow below    
+
+#test9:      # 3x3 map       # agent is up left, food is bottom right
+#  env_params:
+#    level: 1
+#    map_width: null        # use default
+#    map_height: null        # use default
+#    render_agent_radius: 2
+#    map_randomization_frequency: 0  # off
+#    action_direction_mode: 0    # fixed
+#    amount_agents: 1 
+#    amount_grass_patches: 1
+#    scores:
+#        FOOD_SCORE: '{"FOOD": 1}'
     
-test9:      # 3x3 map       # agent is up left, food is bottom right
-  env_params:
-    level: 1
-    render_agent_radius: 2
-    map_randomization_frequency: 0  # off
-    action_direction_mode: 0    # fixed
-    amount_agents: 1 
-    amount_grass_patches: 1
-    scores:
-        FOOD_SCORE: '{"FOOD": 1}'
+#test10:      # 1x1 map with only agent, no food. Only LEFT and NOP actions are available in this environment. LEFT action provides a reward.
+#  env_params:
+#    level: 2 
+#    map_width: null        # use default
+#    map_height: null        # use default   
+#    render_agent_radius: 1
+#    map_randomization_frequency: 0  # off
+#    action_direction_mode: 0    # fixed
+#    amount_agents: 1 
+#    amount_grass_patches: 0
+#    scores:
+#        MOVEMENT_SCORE: '{"MOVEMENT": 1}'      
     
-test10:      # 1x1 map with only agent, no food. Only LEFT and NOP actions are available in this environment. LEFT action provides a reward.
-  env_params:
-    level: 2    
-    render_agent_radius: 1
-    map_randomization_frequency: 0  # off
-    action_direction_mode: 0    # fixed
-    amount_agents: 1 
-    amount_grass_patches: 0
-    scores:
-        MOVEMENT_SCORE: '{"MOVEMENT": 1}'      
+#test11:      # 1x2 map     # agent is at left side, food is at right side. Only LEFT, RIGHT, and NOP actions are available in this environment
+#  env_params:
+#    level: 3
+#    map_width: null        # use default
+#    map_height: null        # use default
+#    render_agent_radius: 1
+#    map_randomization_frequency: 0  # off
+#    action_direction_mode: 0    # fixed
+#    amount_agents: 1 
+#    amount_grass_patches: 1
+#    scores:
+#        FOOD_SCORE: '{"FOOD": 1}'
     
-test11:      # 1x2 map     # agent is at left side, food is at right side. Only LEFT, RIGHT, and NOP actions are available in this environment
-  env_params:
-    level: 3
-    render_agent_radius: 1
-    map_randomization_frequency: 0  # off
-    action_direction_mode: 0    # fixed
-    amount_agents: 1 
-    amount_grass_patches: 1
-    scores:
-        FOOD_SCORE: '{"FOOD": 1}'
-    
-test12:      # 1x8 map     # agent is at left end, food is at right end. Only LEFT, RIGHT, and NOP actions are available in this environment
-  env_params:
-    level: 4    
-    render_agent_radius: 7
-    map_randomization_frequency: 0  # off
-    action_direction_mode: 0    # fixed
-    amount_agents: 1 
-    amount_grass_patches: 1
-    scores:
-        FOOD_SCORE: '{"FOOD": 1}'
+#test12:      # 1x8 map     # agent is at left end, food is at right end. Only LEFT, RIGHT, and NOP actions are available in this environment
+#  env_params:
+#    level: 4 
+#    map_width: null        # use default
+#    map_height: null        # use default   
+#    render_agent_radius: 7
+#    map_randomization_frequency: 0  # off
+#    action_direction_mode: 0    # fixed
+#    amount_agents: 1 
+#    amount_grass_patches: 1
+#    scores:
+#        FOOD_SCORE: '{"FOOD": 1}'
 

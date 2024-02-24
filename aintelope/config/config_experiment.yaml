@@ -41,13 +41,21 @@ hparams:
   env_params:
     env_experiment: aintelope.aintelope_savanna
     level: 0
-    map_randomization_frequency: 3
-    num_iters: 200 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
-    map_min: 0      # unused for new environments, is always 0
-    map_max: 10     # inclusive max, map resizing is not yet implemented for new environments, but can be added later if needed
+    map_max: 13     # used for old AIntelope environment
+    map_width: ${hparams.env_params.map_max}   # NB! here it is exclusive max, used for Gridworld environments
+    map_height: ${hparams.env_params.map_max}   # NB! here it is exclusive max, used for Gridworld environments
+    #
+    # to make whole map visible while still agent-centric, set the value to 
+    # "max(map_width, map_height) - 3" in case of using Gridworld environments
+    render_agent_radius: 10     
+    #
+    # 0 - off (do not use this setting), 1 - once per experiment run, 2 - once per trial
+    # (a trial is a sequence of training episodes separated by env.reset call,
+    # but using a same model instance), 3 - once per training episode.
+    map_randomization_frequency: 1 
+    num_iters: 20 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     render_mode: null
     # render_map_max: 5     # this field is currently not used anywhere in code
-    render_agent_radius: 10     # make whole map visible while still agent-centric
     #
     amount_agents: 1  
     amount_grass_patches: 2
@@ -91,13 +99,13 @@ hparams:
     #
     # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
     # controlled by separate turning actions.
-    observation_direction_mode: 1
+    observation_direction_mode: 0
     # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
     # controlled by separate turning actions.
-    action_direction_mode: 1
+    action_direction_mode: 0
     #
     test_death: False      # needed for trainer tests
-    seed: null      # needed for trainer tests
+    seed: 0      # needed for trainer tests
 
 hydra:
   run:

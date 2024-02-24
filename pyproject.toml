@@ -26,7 +26,7 @@ line-length = 88
 
 [tool.flake8]
 max-line-length = 88
-extend-ignore = "E203"
+extend-ignore = "E121,E123,E126,E226,E24,E704,W503,W504,E203,E501,F401,W291,E266,F403,F405,F841,E265,F811"
 
 [tool.isort]
 profile = "black"
