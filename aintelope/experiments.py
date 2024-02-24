@@ -102,8 +102,11 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
         + score_dimensions
     )
 
-    assert cfg.hparams.num_episodes > 0
-    for i_episode in range(cfg.hparams.num_episodes):
+    num_episodes = cfg.hparams.train_episodes
+    if cfg.hparams.traintest_mode == "test":
+        num_episodes = cfg.hparams.test_episodes
+
+    for i_episode in range(num_episodes):
         # Reset
         if isinstance(env, ParallelEnv):
             (
@@ -247,7 +250,8 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                 raise NotImplementedError(f"Unknown environment type {type(env)}")
 
             # Perform one step of the optimization (on the policy network)
-            trainer.optimize_models()
+            if cfg.hparams.traintest_mode == "train":
+                trainer.optimize_models()
 
             # Break when all agents are done
             if all(dones.values()):
@@ -272,7 +276,7 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
     experiment_dir = os.path.normpath(cfg.experiment_dir)
     events_fname = os.path.normpath(cfg.events_fname)
 
-    record_path = Path(os.path.join(experiment_dir, events_dir))
+    record_path = Path(os.path.join(experiment_dir, events_fname))
     os.makedirs(experiment_dir, exist_ok=True)
     rec.record_events(
         record_path, events

@@ -14,8 +14,6 @@ trainer_params:
   verbose: false
 
 hparams:
-  batch_size: 16
-  lr: 0.001
   env: savanna-safetygrid-parallel-v1
   env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
   env_type: zoo  
@@ -25,13 +23,18 @@ hparams:
   model: dqn
   unit_test_mode: False      # is set during tests in order to speed up DQN computations
   agent_id: q_agent
-  num_episodes: 10 # how long to train.
+  num_episodes: 5   # TEMP for tests only atm
+  traintest_mode: train
+  train_episodes: 10 
+  test_episodes: 3
   warm_start_steps: 100
   save_frequency: 1 # how often save a model
   agent_params:
     target_instincts: []
   model_params:
     hidden_sizes: [16,16]
+    batch_size: 16
+    lr: 0.001
     gamma: 0.99
     tau: 0.05
     eps_last_frame: 50
