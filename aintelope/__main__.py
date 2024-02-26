@@ -29,6 +29,14 @@ def aintelope_main(cfg: DictConfig) -> None:
         )
         logger.info("Running training with the following configuration")
         logger.info(OmegaConf.to_yaml(experiment_cfg))
+
+        # Training
+        OmegaConf.update(experiment_cfg, "hparams.traintest_mode", "train")
+        run_experiment(experiment_cfg, score_dimensions)
+        analytics(experiment_cfg, score_dimensions)
+
+        # Testing
+        OmegaConf.update(experiment_cfg, "hparams.traintest_mode", "test")
         run_experiment(experiment_cfg, score_dimensions)
         analytics(experiment_cfg, score_dimensions)
 
@@ -38,7 +46,7 @@ def analytics(cfg, score_dimensions):
     experiment_dir = os.path.normpath(cfg.experiment_dir)
     events_fname = cfg.events_fname
 
-    savepath = os.path.join(experiment_dir, "plot.png")
+    savepath = os.path.join(experiment_dir, cfg.hparams.traintest_mode + "_plot.png")
     events = recording.read_events(experiment_dir, events_fname)
     plotting.plot_performance(events, score_dimensions, savepath)
 

@@ -102,8 +102,11 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
         + score_dimensions
     )
 
-    assert cfg.hparams.num_episodes > 0
-    for i_episode in range(cfg.hparams.num_episodes):
+    num_episodes = cfg.hparams.train_episodes
+    if cfg.hparams.traintest_mode == "test":
+        num_episodes = cfg.hparams.test_episodes
+
+    for i_episode in range(num_episodes):
         print(f"episode: {i_episode}")
 
         # Reset
@@ -251,7 +254,8 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
                 raise NotImplementedError(f"Unknown environment type {type(env)}")
 
             # Perform one step of the optimization (on the policy network)
-            trainer.optimize_models()
+            if cfg.hparams.traintest_mode == "train":
+                trainer.optimize_models()
 
             # Break when all agents are done
             if all(dones.values()):
