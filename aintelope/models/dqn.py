@@ -52,7 +52,7 @@ class DQN(nn.Module):
         n_actions: int,
         unit_test_mode: bool,
         hidden_sizes: list = [8, 8],
-        num_convolution_layers: int = 1,
+        num_conv_layers: int = 1,
     ):
         """
         Args:
@@ -62,10 +62,8 @@ class DQN(nn.Module):
         """
         super().__init__()
         self.unit_test_mode = unit_test_mode
-        self.num_convolution_layers = (
-            num_convolution_layers
-            if not unit_test_mode
-            else min(1, num_convolution_layers)
+        self.num_conv_layers = (
+            num_conv_layers if not unit_test_mode else min(1, num_conv_layers)
         )
 
         if (
@@ -90,7 +88,7 @@ class DQN(nn.Module):
         else:  # Gridworlds environment
             self.cnn = True
 
-            if self.num_convolution_layers == 0:
+            if self.num_conv_layers == 0:
                 output_size = vision_size
                 conv_output_hidden_size = 1
             else:
@@ -104,6 +102,7 @@ class DQN(nn.Module):
                     []
                 )  # without ModuleList, the layers would not be transferred to GPU
 
+                # NB! the first conv layer has different kernel size
                 self.conv.append(
                     nn.Conv2d(
                         num_vision_features, hidden_sizes[0], kernel_size=1, stride=1
@@ -111,7 +110,7 @@ class DQN(nn.Module):
                 )  # this layer with kernel_size=1 enables mixing of information across feature vector channels
                 output_size = self.conv2d_shape(output_size, self.conv[0])
 
-                for i in range(1, self.num_convolution_layers):
+                for i in range(1, self.num_conv_layers):
                     self.conv.append(
                         nn.Conv2d(
                             hidden_sizes[0], hidden_sizes[0], kernel_size=3, stride=1
@@ -150,7 +149,7 @@ class DQN(nn.Module):
 
         else:  # Gridworlds environment
             # 3D vision network
-            for i in range(0, self.num_convolution_layers):
+            for i in range(0, self.num_conv_layers):
                 x = F.relu(self.conv[i](x))
 
             x = x.view(
