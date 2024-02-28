@@ -172,7 +172,7 @@ def run_experiment(cfg: DictConfig) -> None:
                         else score,  # TODO: make a function to handle obs->rew in Q-agent too, remove this
                         done,  # TODO: should it be "terminated" in place of "done" here?
                     )
-                    
+
                     # Record what just happened
                     env_step_info = (
                         [score.get(dimension, 0) for dimension in score_dimensions]
@@ -271,7 +271,7 @@ def run_experiment(cfg: DictConfig) -> None:
             # Break when all agents are done
             if all(dones.values()):
                 break
-            
+
             # TESTING: resetting when reward found. NOT compatible with most envs
             if sum(score.values()) > 0:
                 break

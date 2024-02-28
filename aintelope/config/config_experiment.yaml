@@ -27,10 +27,8 @@ hparams:
   traintest_mode: train
   train_episodes: 200
   test_episodes: 3
-  #warm_start_steps: 100
-  save_frequency: 1000 # how often save a model TEMP offline
+  save_frequency: 1000 # how often save a model, TEMP offline
   warm_start_steps: 5       # not used at the moment, except for the unit tests
-  save_frequency: 1 # how often save a model
   agent_params:
     target_instincts: []
   model_params:
@@ -54,9 +52,7 @@ hparams:
     #
     # to make whole map visible while still agent-centric, set the value to 
     # "max(map_width, map_height) - 3" in case of using Gridworld environments. This is because the map width and height includes walls. The agent always sees its own tile, so the actual radius will be one bigger. Therefore in total 3 units can be substracted.
-    render_agent_radius: 10     
-    # "max(map_width, map_height) - 3" in case of using Gridworld environments
-    render_agent_radius: 3     
+    render_agent_radius: 10       
     #
     # 0 - off (do not use this setting), 1 - once per experiment run, 2 - once per trial
     # (a trial is a sequence of training episodes separated by env.reset call,
@@ -69,7 +65,6 @@ hparams:
     amount_agents: 1  
     amount_grass_patches: 1
     amount_water_holes: 0
-    amount_danger_tiles: 0
     amount_danger_tiles: 0
     amount_predators: 0
     enable_homeostasis: False
