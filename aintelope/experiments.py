@@ -65,6 +65,9 @@ def run_experiment(cfg: DictConfig, score_dimensions: list) -> None:
             observation = env.observe(agent_id)
             info = env.observe_info(agent_id)
 
+        observation_shape = (observation[0].shape, observation[1].shape)
+        print(f"Observation shape: {observation_shape}")
+
         # TODO: is this reset necessary here? In main loop below,
         # there is also a reset call
         agents[-1].reset(observation, info)
