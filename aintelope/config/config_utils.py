@@ -172,3 +172,41 @@ def select_gpu():
     device_name = torch.cuda.get_device_name(gpu_counter)
     print(f"Using CUDA GPU {gpu_counter} : {device_name}")
     return
+
+
+def archive_code(cfg):
+    """Archives the current version of the program to log folder"""
+
+    code_directory_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")   # archive only files under aintelope folder, no need to archive the tests folder
+    zip_path = os.path.join(os.path.normpath(cfg.log_dir), "aintelope_code_archive.zip")
+    archive_code_in_dir(code_directory_path, zip_path)
+  
+    code_directory_path = os.path.join(code_directory_path, "..", "ai_safety_gridworlds")
+    zip_path = os.path.join(os.path.normpath(cfg.log_dir), "gridworlds_code_archive.zip")
+    archive_code_in_dir(code_directory_path, zip_path)
+    
+
+def archive_code_in_dir(directory_path, zip_path):
+
+    with zipfile.ZipFile(zip_path, 'w') as ziph:
+        for root, dirs, files in os.walk(directory_path, topdown=True, followlinks=False):
+
+            # When topdown is True, the caller can modify the dirnames list in-place (perhaps using del or slice assignment), and walk() will only recurse into the subdirectories whose names remain in dirnames; this can be used to prune the search
+            # https://docs.python.org/3/library/os.html#os.walk
+            dirs_to_skip = []
+            for dir in dirs:
+                if dir[:1] == ".":   # ignore dirs that start with dot (.vshistory, etc)
+                    dirs_to_skip.append(dir)    # cannot remove dir directly from the list that is being iterated, else following dirs may be skipped from check
+            for dir in dirs_to_skip:
+                dirs.remove(dir)
+
+            for file in files:
+                extension = os.path.splitext(file)[1]
+                if extension == ".py":
+                    ziph.write(
+                        os.path.join(root, file), 
+                        os.path.relpath(
+                            os.path.join(root, file), 
+                            os.path.join(directory_path, '..')
+                        )
+                    )

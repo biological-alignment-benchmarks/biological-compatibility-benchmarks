@@ -17,6 +17,9 @@ logger = logging.getLogger("aintelope.__main__")
 
 @hydra.main(version_base=None, config_path="config", config_name="config_experiment")
 def aintelope_main(cfg: DictConfig) -> None:
+  
+    archive_code(cfg)
+
     pipeline_config = OmegaConf.load("aintelope/config/config_pipeline.yaml")
     score_dimensions = get_pipeline_score_dimensions(cfg, pipeline_config)
     for env_conf in pipeline_config:
