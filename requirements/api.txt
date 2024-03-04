@@ -4,6 +4,7 @@ hydra-core==1.3.0
 matplotlib==3.7.0
 pandas==1.5.3
 PettingZoo==1.24.1
+psutil==5.9.4
 pygame==2.4
 pytorch-lightning==1.6.4
 -e git+https://github.com/levitation-opensource/ai-safety-gridworlds@aintelope_new_benchmarks#egg=ai-safety-gridworlds

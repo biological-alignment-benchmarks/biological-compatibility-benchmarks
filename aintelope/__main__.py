@@ -54,4 +54,8 @@ def analytics(cfg, score_dimensions):
 
 if __name__ == "__main__":
     register_resolvers()
+
+    set_priorities()
+    set_memory_limits() 
+
     aintelope_main()
