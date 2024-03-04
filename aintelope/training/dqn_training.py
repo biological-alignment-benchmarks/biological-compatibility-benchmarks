@@ -178,23 +178,24 @@ class Trainer:
         Returns:
             None
         """
-        # if step > 0:
-        #    epsilon = max(
-        #        self.hparams.model_params.eps_end,
-        #        self.hparams.model_params.eps_start
-        #        - step * 1 / self.hparams.model_params.eps_last_frame,
-        #    )
-        # else:
-        #    epsilon = 0.0
 
-        # TODO: option to disable eps_end, eps_last_trial, eps_last_frame
-        epsilon = self.hparams.model_params.eps_end + (
-            self.hparams.model_params.eps_start - self.hparams.model_params.eps_end
-        ) * max(0, 1 - step / self.hparams.model_params.eps_last_frame) * max(
-            0, 1 - trial / self.hparams.model_params.eps_last_trial
-        ) * max(
-            0, 1 - episode / self.hparams.model_params.eps_last_episode
-        )
+        # TODO: warn if last_frame=0/1 or last_trial=0/1 or last_episode=0/1 in any of the below values: for disabling the epsilon counting for corresponding variable one should use -1
+        epsilon = self.hparams.model_params.eps_start - self.hparams.model_params.eps_end        
+        if self.hparams.model_params.eps_last_frame > 1:     
+            epsilon *= max(0, 1 - step / self.hparams.model_params.eps_last_frame)             
+        if self.hparams.model_params.eps_last_trial > 1:
+            epsilon *= max(
+                0, 1 - trial / self.hparams.model_params.eps_last_trial
+            ) 
+        if self.hparams.model_params.eps_last_episode > 1:  
+            epsilon *= max(
+                0, 1 - episode / self.hparams.model_params.eps_last_episode
+            )
+        if self.hparams.model_params.eps_last_pipeline_cycle > 1: 
+            epsilon *= max(
+                0, 1 - pipeline_cycle / self.hparams.model_params.eps_last_pipeline_cycle
+            )
+        epsilon += self.hparams.model_params.eps_end
 
         # print(f"Epsilon: {epsilon}")
 
@@ -301,7 +302,7 @@ class Trainer:
                 len(self.replay_memories[agent_id])
                 < self.hparams.model_params.batch_size
             ):
-                return
+                continue  # TODO: there was return, I guess continue is more correct here?
 
             transitions = self.replay_memories[agent_id].sample(
                 self.hparams.model_params.batch_size
@@ -379,6 +380,15 @@ class Trainer:
             loss = 1.0
             if agent_id in self.losses:
                 loss = self.losses[agent_id]
+
+            filename = os.path.join(
+                path,
+                agent_id
+                + "-"
+                + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
+            )
+
+            logger.info(f"Saving agent {agent_id} models to disk at {filename}")
             torch.save(
                 {
                     "epoch": episode,
@@ -386,10 +396,5 @@ class Trainer:
                     "optimizer_state_dict": optimizer.state_dict(),
                     "loss": loss,
                 },
-                os.path.join(
-                    path,
-                    agent_id
-                    + "-"
-                    + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
-                ),
+                filename,
             )
