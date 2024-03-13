@@ -227,3 +227,27 @@ def archive_code_in_dir(directory_path, zip_path):
                             os.path.join(directory_path, '..')
                         )
                     )
+
+
+# used for disabling context objects like multiprocessing pool or progressbar
+class DummyContext(object):
+
+  def __init__(self, *args, **kwargs):
+    pass
+
+  # context manager functionality requires this method to be explicitly implemented
+  def __enter__(self):
+    return self
+
+  # context manager functionality requires this method to be explicitly implemented
+  def __exit__(self, type, value, traceback):
+    return
+
+  def _blackHoleMethod(*args, **kwargs):
+    return
+
+  def __getattr__(self, attr):
+    return self._blackHoleMethod
+
+#/ class DummyContext(object):
+

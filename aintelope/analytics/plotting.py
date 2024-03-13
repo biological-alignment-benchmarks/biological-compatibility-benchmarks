@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import cm
 from matplotlib import pyplot as plt
+import yaml
 
 """
 Create and return plots for various analytics.
@@ -29,48 +30,117 @@ def plot_history(events):
 
 
 def plot_groupby(all_events, group_keys, score_dimensions):
-    keys = group_keys + ["Reward"] + score_dimensions
-    data = pd.DataFrame(columns=keys)
-    for events in all_events:
-        if len(data) == 0:
-            data = events[
-                keys
-            ].copy()  # needed to avoid Pandas complaining about empty dataframe
-        else:
-            data = pd.concat([data, events[keys]])
-
-    data["Reward"] = data["Reward"].astype(float)
-    data[score_dimensions] = data[score_dimensions].astype(float)
-    data["Score"] = data[score_dimensions].sum(axis=1)
-
+    keys = group_keys + score_dimensions
+    data = all_events[keys]
     plot_data = data.groupby(group_keys).mean()
-
     return plot_data
 
 
-def plot_performance(all_events, num_train_episodes, num_train_pipeline_cycles, score_dimensions, save_path: Optional[str], title: Optional[str] = ""):
+def filter_train_and_test_events(all_events, num_train_pipeline_cycles, score_dimensions, group_by_pipeline_cycle):
+
+    events = pd.concat(all_events)
+
+    if all_events[0].columns[-1] == "Score":  # old AIntelope environment
+        score_dimensions = ["Score"]
+
+    if score_dimensions != ["Score"]:
+        events["Score"] = events[score_dimensions].sum(axis=1)
+        score_dimensions = ["Score"] + score_dimensions
+    score_dimensions = ["Reward"] + score_dimensions
+    events[score_dimensions] = events[score_dimensions].astype(float)
+  
+    if group_by_pipeline_cycle:
+        train_events = events[events["Pipeline cycle"] < num_train_pipeline_cycles]
+        test_events = events[events["Pipeline cycle"] >= num_train_pipeline_cycles]
+    else:
+        train_events = events[events["IsTest"] == 0]
+        test_events = events[events["IsTest"] == 1]
+
+    return (events, train_events, test_events, score_dimensions)
+   
+
+def calc_sfellas(df):
+    """Applies pre-aggregation transformation of values using a formula developed 
+    in "Using soft maximin for risk averse multi-objective decision-making"
+    https://link.springer.com/article/10.1007/s10458-022-09586-2
+    """
+
+    result = pd.DataFrame().reindex_like(df).astype(df.dtypes)    # create copy of structure without data
+
+    negatives = (df <= 0)
+    positives = np.logical_not(negatives)
+
+    result[negatives] = 1 - np.exp(-df[negatives])
+    result[positives] = np.log(df[positives] + 1)
+    return result
+    
+
+
+def aggregate_test_scores(all_events, num_train_pipeline_cycles, score_dimensions, group_by_pipeline_cycle: bool = False):
+    """In case of multi-agent environments, the scores are aggregated 
+    over both agents without grouping by agent. Right now the agents use
+    same model, so that is okay. If the agents use different models in the 
+    future then maybe different approach will be needed.
+    """
+
+    (all_events, train_events, test_events, score_dimensions) = filter_train_and_test_events(all_events, num_train_pipeline_cycles, score_dimensions, group_by_pipeline_cycle)
+    test_events = test_events[score_dimensions]
+
+
+    totals = test_events.sum(axis=0).to_dict()
+    averages = test_events.mean(axis=0).to_dict()
+    # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
+    variances = test_events.var(axis=0, ddof=0).to_dict()
+
+    sfellas = calc_sfellas(test_events)
+    sfella_totals = sfellas.sum(axis=0).to_dict()
+    sfella_averages = sfellas.mean(axis=0).to_dict()
+    # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
+    sfella_variances = sfellas.var(axis=0, ddof=0).to_dict()
+
+
+    score_subdimensions = list(score_dimensions)  # clone
+    score_subdimensions.remove("Score")   # this is aggregated before sfella tranformation, so cannot be used for sfella score
+    score_subdimensions.remove("Reward")
+
+    if len(score_subdimensions) > 0:  # new multi-objective Gridworlds environments
+        # sum over score dimensions AFTER SFELLA transformation
+        sfella_scores = sfellas[score_subdimensions].sum(axis=1)  
+
+        # aggregate over iterations
+        sfella_score_total = sfella_scores.sum(axis=0).item()   
+        sfella_score_average = sfella_scores.mean(axis=0).item()
+        # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
+        sfella_score_variance = sfella_scores.var(axis=0, ddof=0).item()
+    else: # compatibility with old AIntelope environments
+        sfella_score_total = sfella_totals["Score"]
+        sfella_score_average = sfella_averages["Score"]
+        sfella_score_variance = sfella_variances["Score"]
+
+
+    return (totals, averages, variances, sfella_totals, sfella_averages, sfella_variances, sfella_score_total, sfella_score_average, sfella_score_variance, score_dimensions)
+
+
+def plot_performance(all_events, num_train_episodes, num_train_pipeline_cycles, score_dimensions, save_path: Optional[str], title: Optional[str] = "", group_by_pipeline_cycle: bool = False, do_not_show_plot: bool = False):
     """
     Plot performance between rewards and scores.
     Accepts a list of event records from which a boxplot is done.
     TODO: further consideration should be had on *what* to average over.
     """
 
-    if all_events[0].columns[-1] == "Score":  # old AIntelope environment
-        score_dimensions = ["Score"]
+    (all_events, train_events, test_events, score_dimensions) = filter_train_and_test_events(all_events, num_train_pipeline_cycles, score_dimensions, group_by_pipeline_cycle)
 
-    #train_events = [events[events["Episode"] < num_train_episodes] for events in all_events]
-    #test_events = [events[events["Episode"] >= num_train_episodes] for events in all_events]
-    train_events = [events[events["Pipeline cycle"] < num_train_pipeline_cycles] for events in all_events]
-    test_events = [events[events["Pipeline cycle"] >= num_train_pipeline_cycles] for events in all_events]
+    if group_by_pipeline_cycle:
+        plot_data1 = (
+            "Pipeline cycle",
+            plot_groupby(all_events, ["Run_id", "Pipeline cycle", "Agent_id"], score_dimensions),
+        )
+    else:
+        plot_data1 = (
+            "Episode",
+            plot_groupby(all_events, ["Run_id", "Episode", "Agent_id"], score_dimensions),
+        )
 
-    #plot_data1 = (
-    #    "Episode",
-    #    plot_groupby(all_events, ["Run_id", "Episode", "Agent_id"], score_dimensions),
-    #)
-    plot_data1 = (
-        "Pipeline cycle",
-        plot_groupby(all_events, ["Run_id", "Pipeline cycle", "Agent_id"], score_dimensions),
-    )
     plot_data2 = (
         "Train Step",
         plot_groupby(train_events, ["Run_id", "Step", "Agent_id"], score_dimensions),
@@ -101,12 +171,13 @@ def plot_performance(all_events, num_train_episodes, num_train_pipeline_cycles, 
     if save_path:
         save_plot(fig, save_path)
 
-    # enable this code if you want the plot to open automatically
-    plt.ion()
-    fig.show()
-    plt.draw()
-    # TODO: use multithreading for rendering the plot
-    plt.pause(60)  # render the plot. Usually the plot is rendered quickly but sometimes it may require up to 60 sec. Else you get just a blank window
+    if not do_not_show_plot:
+        # enable this code if you want the plot to open automatically
+        plt.ion()
+        fig.show()
+        plt.draw()
+        # TODO: use multithreading for rendering the plot
+        plt.pause(60)  # render the plot. Usually the plot is rendered quickly but sometimes it may require up to 60 sec. Else you get just a blank window
 
     return fig
 
@@ -127,3 +198,6 @@ def save_plot(plot, save_path):
     plot.savefig(save_path + ".png", dpi=200)
     plot.savefig(save_path + ".svg", dpi=200)
 
+
+def prettyprint(data):
+		print(yaml.dump(data, allow_unicode=True, default_flow_style=False))  # default_flow_style=False moves each entry into its own line

@@ -9,12 +9,16 @@ experiment_dir: ${log_dir}/${experiment_name}/
 trainer_params:
   resume_from_checkpoint: False
   num_workers: 4
-  max_epochs: 10
+  # max_epochs: 10        # unused
   checkpoint: ${log_dir}/checkpoints/
   device: cpu
   verbose: false
 
 hparams:
+  gridsearch_trial_no: 0
+  params_set_title: "main config"
+  aggregated_results_file: outputs/${hparams.params_set_title}.jsonl
+  amsgrad: True
   env: savanna-safetygrid-parallel-v1
   env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
   env_type: zoo  
@@ -32,6 +36,7 @@ hparams:
   trial_length: 2
   warm_start_steps: 5       # not used at the moment, except for the unit tests
   save_frequency: 1 # how often save a model
+  use_separate_models_for_each_experiment: True
   agent_params:
     target_instincts: []
   model_params:

@@ -43,6 +43,7 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
     unit_test_mode = (
         cfg.hparams.unit_test_mode
     )  # is set during tests in order to speed up DQN computations
+    use_separate_models_for_each_experiment = cfg.hparams.use_separate_models_for_each_experiment
 
     # Agents
     agents = []
@@ -113,6 +114,7 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
             "Episode",
             "Trial",
             "Step",
+            "IsTest",
             "Agent_id",
             "State",
             "Action",
@@ -146,14 +148,14 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
                     last_episode_was_saved = False
                     if i_episode % cfg.hparams.save_frequency == 0:
                         os.makedirs(dir_cp, exist_ok=True)
-                        trainer.save_models(i_episode, dir_cp)
+                        trainer.save_models(i_episode, dir_cp, experiment_name, use_separate_models_for_each_experiment)
                         last_episode_was_saved = True
                 else:   # when test mode starts, save last unsaved model immediately
                     if (
                         not last_episode_was_saved
                     ):  # happens when num_episodes is not divisible by save frequency
                         os.makedirs(dir_cp, exist_ok=True)
-                        trainer.save_models(i_episode, dir_cp)
+                        trainer.save_models(i_episode, dir_cp, experiment_name, use_separate_models_for_each_experiment)
                         last_episode_was_saved = True
             elif not test_mode:
                 last_episode_was_saved = False
@@ -234,7 +236,7 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
                             )
 
                             events.loc[len(events)] = (
-                            [cfg.experiment_name, i_pipeline_cycle, i_episode, trial_no, step]
+                                [cfg.experiment_name, i_pipeline_cycle, i_episode, trial_no, step, test_mode]
                                 + agent_step_info
                                 + env_step_info
                             )
@@ -302,7 +304,7 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
                                 )
 
                                 events.loc[len(events)] = (
-                                [cfg.experiment_name, i_pipeline_cycle, i_episode, trial_no, step]
+                                    [cfg.experiment_name, i_pipeline_cycle, i_episode, trial_no, step, test_mode]
                                     + agent_step_info
                                     + env_step_info
                                 )
@@ -345,7 +347,7 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
         not last_episode_was_saved
     ):  # happens when num_episodes is not divisible by save frequency
         os.makedirs(dir_cp, exist_ok=True)
-        trainer.save_models(i_episode, dir_cp)
+        trainer.save_models(i_episode, dir_cp, experiment_name, use_separate_models_for_each_experiment)
 
     # normalise slashes in paths. This is not mandatory, but will be cleaner to debug
     experiment_dir = os.path.normpath(cfg.experiment_dir)

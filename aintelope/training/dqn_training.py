@@ -143,7 +143,7 @@ class Trainer:
         self.optimizers[agent_id] = optim.AdamW(
             self.policy_nets[agent_id].parameters(),
             lr=self.hparams.model_params.lr,
-            amsgrad=True,
+            amsgrad=self.hparams.amsgrad,
         )
 
     def tiebreaking_argmax(self, arr):
@@ -363,7 +363,7 @@ class Trainer:
                 )
             target_net.load_state_dict(target_net_state_dict)
 
-    def save_models(self, episode, path):
+    def save_models(self, episode, path, experiment_name, use_separate_models_for_each_experiment):
         """
         Save model artifacts to 'path'.
 
@@ -381,9 +381,12 @@ class Trainer:
             if agent_id in self.losses:
                 loss = self.losses[agent_id]
 
+            checkpoint_filename = agent_id
+            if use_separate_models_for_each_experiment:
+                checkpoint_filename += "-" + experiment_name
             filename = os.path.join(
                 path,
-                agent_id
+                checkpoint_filename
                 + "-"
                 + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
             )
