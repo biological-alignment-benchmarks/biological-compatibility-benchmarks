@@ -17,7 +17,7 @@ logger = logging.getLogger("aintelope.analytics.recording")
 
 """
 Uses config_experiment.yaml's fields:
-experiment_dir: outputs/${experiment_name}_${timestamp}/
+experiment_dir: outputs/${timestamp}/${experiment_name}
 events_dir: events.csv
 checkpoint_dir: checkpoints/
 

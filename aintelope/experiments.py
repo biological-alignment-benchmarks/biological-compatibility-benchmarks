@@ -51,7 +51,7 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
     for i in range(env.max_num_agents):
         agent_id = f"agent_{i}"
         agents.append(
-            get_agent_class(cfg.hparams.agent_id)(
+            get_agent_class(cfg.hparams.agent_class)(
                 agent_id,
                 trainer,
                 **cfg.hparams.agent_params,
@@ -81,7 +81,10 @@ def run_experiment(cfg: DictConfig, experiment_name: str = "", score_dimensions:
         if prev_agent_checkpoint is not None:   # later experiments may have more agents    # TODO: configuration option for determining whether new agents can copy the checkpoints of earlier agents, and if so then specifically which agent's checkpoint to use
             checkpoint = prev_agent_checkpoint
         else:
-            checkpoints = glob.glob(os.path.join(dir_cp, agent_id + "-*"))    # NB! separate agent id from date explicitly in glob arguments using "-" since theoretically the agent id could be a two digit number and we do not want to match agent_10 while looking for agent_1
+            checkpoint_filename = agent_id
+            if use_separate_models_for_each_experiment:
+                checkpoint_filename += "-" + experiment_name
+            checkpoints = glob.glob(os.path.join(dir_cp, checkpoint_filename + "-*"))    # NB! separate agent id from date explicitly in glob arguments using "-" since theoretically the agent id could be a two digit number and we do not want to match agent_10 while looking for agent_1
             if len(checkpoints) > 0:
                 checkpoint = max(checkpoints, key=os.path.getctime)
                 prev_agent_checkpoint = checkpoint

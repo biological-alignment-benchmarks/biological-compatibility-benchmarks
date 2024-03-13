@@ -21,10 +21,15 @@ def append_pid_and_uuid(timestamp: str) -> str:
     return result
 
 
+def create_range(start, exclusive_end):
+    return list(range(start, exclusive_end))
+
+
 def register_resolvers() -> None:
     OmegaConf.register_new_resolver("abs_path", get_project_path)
-    OmegaConf.register_new_resolver("minus_3", lambda x: x - 3)
     OmegaConf.register_new_resolver("append_pid_and_uuid", append_pid_and_uuid, use_cache=True)   # NB! need to enable caching else the pid_and_uuid will change at random moments during execution, leading to errors
+    OmegaConf.register_new_resolver("minus_3", lambda x: x - 3)
+    OmegaConf.register_new_resolver("range", create_range)
 
 
 def get_score_dimensions(cfg: DictConfig):
@@ -214,7 +219,7 @@ def archive_code_in_dir(directory_path, zip_path):
 
             for file in files:
                 extension = os.path.splitext(file)[1]
-                if extension == ".py":
+                if extension in [".py", ".ipynb", ".yaml"]:
                     ziph.write(
                         os.path.join(root, file), 
                         os.path.relpath(

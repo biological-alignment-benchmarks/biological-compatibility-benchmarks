@@ -23,7 +23,7 @@ hparams:
   #env_type: zoo
   model: dqn
   unit_test_mode: False      # is set during tests in order to speed up DQN computations
-  agent_id: q_agent
+  agent_class: instinct_agent 
   num_pipeline_cycles: 300
   num_episodes: 1   # TEMP for tests only atm
   traintest_mode: train
