@@ -83,7 +83,7 @@ def run_experiment(
 
         # TODO: is this reset necessary here? In main loop below,
         # there is also a reset call
-        agents[-1].reset(observation, info)
+        agents[-1].reset(observation, info, type(env))
         # Get latest checkpoint if existing
 
         checkpoint = None
@@ -208,14 +208,16 @@ def run_experiment(
                     infos,
                 ) = env.reset(trial_no=trial_no)
                 for agent in agents:
-                    agent.reset(observations[agent.id], infos[agent.id])
+                    agent.reset(observations[agent.id], infos[agent.id], type(env))
                     # trainer.reset_agent(agent.id)	# TODO: configuration flag
                     dones[agent.id] = False
 
             elif isinstance(env, AECEnv):
                 env.reset(trial_no=trial_no)
                 for agent in agents:
-                    agent.reset(env.observe(agent.id), env.observe_info(agent.id))
+                    agent.reset(
+                        env.observe(agent.id), env.observe_info(agent.id), type(env)
+                    )
                     # trainer.reset_agent(agent.id)	# TODO: configuration flag
                     dones[agent.id] = False
 

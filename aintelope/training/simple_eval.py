@@ -133,7 +133,7 @@ def run_episode(full_params: Dict) -> None:
             observation = env.observe(agent.id)
             info = env.observe_info(agent.id)
 
-        agent.reset(observation, info)
+        agent.reset(observation, info, type(env))
         trainer.add_agent(
             agent.id,
             (observation[0].shape, observation[1].shape),

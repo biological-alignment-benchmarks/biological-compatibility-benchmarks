@@ -30,9 +30,9 @@ class InstinctAgent(QAgent):
             trainer=trainer,
         )
 
-    def reset(self, state, info) -> None:
+    def reset(self, state, info, env_class) -> None:
         """Resets self and updates the state."""
-        super().reset(state, info)
+        super().reset(state, info, env_class)
         self.init_instincts()
 
     def get_action(

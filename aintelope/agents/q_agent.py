@@ -37,12 +37,13 @@ class QAgent(Agent):
         self.done = False
         self.last_action = None
 
-    def reset(self, state, info) -> None:
+    def reset(self, state, info, env_class) -> None:
         """Resets self and updates the state."""
         self.done = False
         self.last_action = None
         self.state = state
         self.info = info
+        self.env_class = env_class
         # if isinstance(self.state, tuple):
         #    self.state = self.state[0]
 

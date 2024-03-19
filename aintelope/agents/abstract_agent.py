@@ -10,7 +10,7 @@ Environment = Union[AECEnv, ParallelEnv]
 
 class Agent(ABC):
     @abstractmethod
-    def reset(self, state, info) -> None:
+    def reset(self, state, info, env_class) -> None:
         ...
 
     @abstractmethod
