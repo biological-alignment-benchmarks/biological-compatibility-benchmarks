@@ -5,6 +5,7 @@ from typing import Optional
 import dateutil.parser as dparser
 import matplotlib.collections as mcoll
 import matplotlib.path as mpath
+import math
 import numpy as np
 import pandas as pd
 from matplotlib import cm
@@ -66,15 +67,37 @@ def calc_sfellas(df):
     """
 
     result = pd.DataFrame().reindex_like(df).astype(df.dtypes)    # create copy of structure without data
+    log_result = pd.DataFrame().reindex_like(df).astype(df.dtypes)    # create copy of structure without data
 
     negatives = (df <= 0)
     positives = np.logical_not(negatives)
 
-    result[negatives] = 1 - np.exp(-df[negatives])
-    result[positives] = np.log(df[positives] + 1)
-    return result
+    # use alternative exp and log base to avoid infinities
+    if False:
+        result[negatives] = 1 - np.exp(-df[negatives])
+        result[positives] = np.log(df[positives] + 1) 
     
+    else:
+        base = 1.05    # TODO: config
 
+        # for plotting the functions, use:
+        # negatives(x)=((1)/(ln(1.05)))-1.05^(-x-log(1.05,ln(1.05)))
+        # positives(x)=log(1.05,x+((1)/(ln(1.05))))+log(1.05,ln(1.05))
+
+        # Align zero point of x and y, and ensure that the derivative of both of the functions is 1 at that zero point.
+        # That way the ends of exp and log functions meet smoothly at 45 degree angle.
+        split_point = math.log(base)
+        log_split_point = math.log(base, split_point)   # yes, log of log here
+
+        result[negatives] = (1 / split_point) - np.power(base, -df[negatives] - log_split_point)
+        result[positives] = np.emath.logn(base, df[positives] + (1 / split_point)) + log_split_point
+
+
+    log_result[negatives] = df[negatives]   # NB! log(sfella(-x)) is offset by log(-1) # these values are always negative
+    log_result[positives] = np.log(np.log(df[positives] + 1) + 1)   # NB! log(sfella(+x)) is offset by log(+1)   # these values are always positive
+
+    return result, log_result
+    
 
 def aggregate_test_scores(all_events, num_train_pipeline_cycles, score_dimensions, group_by_pipeline_cycle: bool = False):
     """In case of multi-agent environments, the scores are aggregated 
@@ -88,15 +111,20 @@ def aggregate_test_scores(all_events, num_train_pipeline_cycles, score_dimension
 
 
     totals = test_events.sum(axis=0).to_dict()
-    averages = test_events.mean(axis=0).to_dict()
+    averages = test_events.mean(axis=0).to_dict()   # sum over rows 
     # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
     variances = test_events.var(axis=0, ddof=0).to_dict()
 
-    sfellas = calc_sfellas(test_events)
-    sfella_totals = sfellas.sum(axis=0).to_dict()
+    sfellas, log_sfellas = calc_sfellas(test_events)		# TODO: aggregation of log_sfellas using formula from https://www.mathworks.com/matlabcentral/fileexchange/25273-methods-for-calculating-precise-logarithm-of-a-sum-and-subtraction
+
+    # TODO: sum calculation for log_sfellas
+    sfella_totals = sfellas.sum(axis=0).to_dict()   # sum over rows 
     sfella_averages = sfellas.mean(axis=0).to_dict()
     # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
     sfella_variances = sfellas.var(axis=0, ddof=0).to_dict()
+    #for key, value in sfella_variances.items():
+    #    if np.isnan(value):
+    #        sfella_variances[key] = 0
 
 
     score_subdimensions = list(score_dimensions)  # clone
@@ -105,10 +133,10 @@ def aggregate_test_scores(all_events, num_train_pipeline_cycles, score_dimension
 
     if len(score_subdimensions) > 0:  # new multi-objective Gridworlds environments
         # sum over score dimensions AFTER SFELLA transformation
-        sfella_scores = sfellas[score_subdimensions].sum(axis=1)  
+        sfella_scores = sfellas[score_subdimensions].sum(axis=1)      # sum over cols
 
         # aggregate over iterations
-        sfella_score_total = sfella_scores.sum(axis=0).item()   
+        sfella_score_total = sfella_scores.sum(axis=0).item()   # sum over rows
         sfella_score_average = sfella_scores.mean(axis=0).item()
         # TODO: If, however, ddof is specified, the divisor N - ddof is used instead. In standard statistical practice, ddof=1 provides an unbiased estimator of the variance of a hypothetical infinite population. ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables.
         sfella_score_variance = sfella_scores.var(axis=0, ddof=0).item()
