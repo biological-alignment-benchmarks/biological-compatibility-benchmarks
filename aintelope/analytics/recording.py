@@ -44,16 +44,24 @@ def record_events(record_path, events):
     logger.info(f"Saving training records to disk at {record_path}")
     record_path.parent.mkdir(exist_ok=True, parents=True)
 
-    while True:   # TODO: refactor this loop to a shared helper function. Gridsearch_analytics.py uses a same pattern
+    while (
+        True
+    ):  # TODO: refactor this loop to a shared helper function. Gridsearch_analytics.py uses a same pattern
         try:
             events.to_csv(
-                record_path, index=False, mode="a", header=not os.path.exists(record_path)
+                record_path,
+                index=False,
+                mode="a",
+                header=not os.path.exists(record_path),
             )
             break
         except PermissionError:
             print(f"Cannot write to file {record_path} Is the file open by Excel?")
-            if os.name == "nt":   # TODO: this block to a shared helper function. Various files use a similar pattern (NB! the message may be different)
+            if (
+                os.name == "nt"
+            ):  # TODO: this block to a shared helper function. Various files use a similar pattern (NB! the message may be different)
                 import msvcrt
+
                 print("\nPress [enter] to retry.")
                 msvcrt.getch()  # uses less CPU on Windows than input() function.
             else:

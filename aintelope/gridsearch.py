@@ -45,8 +45,10 @@ def aintelope_main() -> None:
 async def run_gridsearch_experiments() -> None:
     use_multiprocessing = sys.gettrace() is None  # not debugging
     # use_multiprocessing = False
-    if num_workers == 1:    # no need for multiprocessing if only one experiment is run at a time
-        use_multiprocessing = False   
+    if (
+        num_workers == 1
+    ):  # no need for multiprocessing if only one experiment is run at a time
+        use_multiprocessing = False
 
     gridsearch_config_file = os.environ.get("GRIDSEARCH_CONFIG")
     # if gridsearch_config is None:
@@ -62,9 +64,15 @@ async def run_gridsearch_experiments() -> None:
     flattened_config = flatten(
         dict_config, reducer=make_reducer(delimiter=".")
     )  # convert to format {'a': 1, 'c.a': 2, 'c.b.x': 5, 'c.b.y': 10, 'd': [1, 2, 3]}
-    list_entries = OrderedDict(sorted({
-        key: value for key, value in flattened_config.items() if isinstance(value, list)
-    }.items()))  # select only entries of list type
+    list_entries = OrderedDict(
+        sorted(
+            {
+                key: value
+                for key, value in flattened_config.items()
+                if isinstance(value, list)
+            }.items()
+        )
+    )  # select only entries of list type
     list_entries[
         "hparams.gridsearch_trial_no"
     ] = (

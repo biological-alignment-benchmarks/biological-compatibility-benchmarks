@@ -34,7 +34,6 @@ def remove_trials_from_results(cfg: DictConfig) -> None:
 
     OmegaConf.update(cfg, "hparams", initial_config_gridsearch.hparams, force_add=True)
 
-
     lines_out = []
     if cfg.hparams.aggregated_results_file:
         aggregated_results_file = os.path.normpath(cfg.hparams.aggregated_results_file)
@@ -67,8 +66,10 @@ def remove_trials_from_results(cfg: DictConfig) -> None:
                         test_summary, reducer=make_reducer(delimiter=".")
                     )
 
-                    trial_no = flattened_test_summary["gridsearch_params.hparams.gridsearch_trial_no"]
-                    if trial_no < 4:   # TODO: function argument
+                    trial_no = flattened_test_summary[
+                        "gridsearch_params.hparams.gridsearch_trial_no"
+                    ]
+                    if trial_no < 4:  # TODO: function argument
                         lines_out.append(line)
 
                     bar.update(line_index + 1)
@@ -79,7 +80,6 @@ def remove_trials_from_results(cfg: DictConfig) -> None:
     else:
         raise Exception("Aggregated results file not configured")
 
-
     aggregated_results_file_lock = FileLock(aggregated_results_file + ".lock")
     with aggregated_results_file_lock:
         with open(aggregated_results_file, mode="w", encoding="utf-8") as fh:
@@ -88,7 +88,6 @@ def remove_trials_from_results(cfg: DictConfig) -> None:
                     line + "\n"
                 )  # \n : Prepare the file for appending new lines upon subsequent append. The last character in the JSONL file is allowed to be a line separator, and it will be treated the same as if there was no line separator present.
             fh.flush()
-
 
     wait_for_enter("\nTrials removal done. Press [enter] to continue.")
     qqq = True

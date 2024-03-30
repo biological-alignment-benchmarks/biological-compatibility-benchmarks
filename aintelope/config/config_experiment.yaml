@@ -8,14 +8,14 @@ experiment_dir: ${log_dir}/${experiment_name}/
 
 trainer_params:
   resume_from_checkpoint: False
-  num_workers: 4
+  num_workers: 4        # unused        # TODO
   # max_epochs: 10        # unused
   checkpoint: ${log_dir}/checkpoints/
   device: gpu
   verbose: false
 
 hparams:
-  gridsearch_trial_no: 0
+  gridsearch_trial_no: 0        # is set by gridsearch config file
   params_set_title: "main config"
   aggregated_results_file: outputs/${hparams.params_set_title}.jsonl
   batch_size: 16

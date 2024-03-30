@@ -64,10 +64,10 @@ def aintelope_main() -> None:
 
 # this method is used by grid search, but it needs to be in same file as run_pipeline, else sharing the gridsearch_params_global would not work
 # TODO: auto-detect need for cache update then pipeline has different configuration
-#@cache.memoize(    # TODO: disable this for the duration of evals since then the gridsearch parameters are nulls
+# @cache.memoize(    # TODO: disable this for the duration of evals since then the gridsearch parameters are nulls
 #    ignore={"gridsearch_params"},
 #    name="__main__.run_gridsearch_experiment_cache_helper"
-#)  # use only gridsearch_params_sorted_yaml argument
+# )  # use only gridsearch_params_sorted_yaml argument
 def run_gridsearch_experiment_cache_helper(
     gridsearch_params: DictConfig, gridsearch_params_sorted_yaml: str
 ) -> None:  # NB! do not rename this function, else cache will be invalidated
@@ -93,7 +93,7 @@ def run_pipeline(cfg: DictConfig) -> None:
     archive_code(cfg)
 
     # TODO: ensure to do not use special pipeline config when doing initial gridsearch
-    pipeline_config_file = os.environ.get("PIPELINE_CONFIG")    
+    pipeline_config_file = os.environ.get("PIPELINE_CONFIG")
     if pipeline_config_file is None:
         pipeline_config_file = "config_pipeline.yaml"
     pipeline_config = OmegaConf.load(
@@ -362,6 +362,7 @@ def run_pipeline(cfg: DictConfig) -> None:
     if not do_not_show_plot:
         if os.name == "nt":
             import msvcrt
+
             print("\nPipeline done. Press [enter] to continue.")
             msvcrt.getch()  # uses less CPU on Windows than input() function. Note that the graph window will be frozen, but will still show graphs
             # while True:
@@ -416,7 +417,7 @@ def analytics(
         "timestamp": cfg.timestamp,
         "timestamp_pid_uuid": cfg.timestamp_pid_uuid,
         "experiment_name": experiment_name,
-        "title": title,   # timestamp + " : " + params_set_title + " : " + env_conf_name
+        "title": title,  # timestamp + " : " + params_set_title + " : " + env_conf_name
         "params_set_title": cfg.hparams.params_set_title,
         "gridsearch_params": OmegaConf.to_container(gridsearch_params, resolve=True)
         if gridsearch_params is not None
