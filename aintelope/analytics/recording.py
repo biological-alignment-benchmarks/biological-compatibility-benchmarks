@@ -11,6 +11,9 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
+# this one is cross-platform
+from filelock import FileLock
+
 from aintelope.utils import try_df_to_csv_write
 
 # Library for handling saving to file
@@ -62,7 +65,10 @@ def read_events(record_path, events_filename):
     events = []
 
     for path in Path(record_path).rglob(events_filename):
-        events.append(pd.read_csv(path))
+        with FileLock(
+            str(path) + ".lock"
+        ):  # lock for better robustness against other processes writing to it concurrently
+            events.append(pd.read_csv(path))
 
     return events
 
