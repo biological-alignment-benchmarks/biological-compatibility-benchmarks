@@ -166,8 +166,8 @@ def run_experiment(
             trial_no = (
                 int(i_episode / cfg.hparams.trial_length)
                 if cfg.hparams.trial_length > 0
-                else 0
-            )  # TODO: ensure to use new trial_no when testin
+                else i_episode  # this ensures that trial_no based map randomization seed is different from training seeds even when using pipeline training. During pipeline training, the environment is re-constructed when testing starts. Without explicitly providing trial_no, the map randomization seed would be automatically reset to trial_no = 0, which would overlap with the training seeds.
+            )
 
             print(
                 f"\ni_pipeline_cycle: {i_pipeline_cycle} experiment: {experiment_name} episode: {i_episode} trial_no: {trial_no} test_mode: {test_mode}"
