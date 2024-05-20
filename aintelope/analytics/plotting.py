@@ -111,7 +111,7 @@ def calc_sfellas(df):
     return result, log_result
 
 
-def aggregate_test_scores(
+def aggregate_scores(
     all_events,
     num_train_pipeline_cycles,
     score_dimensions,

@@ -360,7 +360,7 @@ def analytics(
         sfella_score_average,
         sfella_score_variance,
         score_dimensions_out,
-    ) = plotting.aggregate_test_scores(
+    ) = plotting.aggregate_scores(
         events,
         num_train_pipeline_cycles,
         score_dimensions,

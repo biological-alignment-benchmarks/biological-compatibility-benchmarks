@@ -251,7 +251,7 @@ async def run_gridsearch_experiment_multiprocess(
         # env.pop("CUDA_MODULE_LOADING", None)    # main process does not have this environment variable set, but for some reason os.environ contains CUDA_MODULE_LOADING=LAZY
         env["GRIDSEARCH_PARAMS"] = gridsearch_params_json
         if use_gpu_index is not None:
-            env["GRIDSEARCH_GPU"] = str(use_gpu_index)
+            env["AINTELOPE_GPU"] = str(use_gpu_index)
         env["PYTHONUNBUFFERED"] = "1"  # disables console buffering in the subprocess
         # TODO: use multiprocessing and keep the subprocesses alive for all time? But for that to work you need to somehow ensure that the multiprocessing subprocesses start with 30 sec intervals, else there will be crashes under Windows.
         async with subprocess_exec_lock:

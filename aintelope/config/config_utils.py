@@ -144,7 +144,7 @@ def set_memory_limits():
 
 
 def select_gpu():
-    gridsearch_gpu = os.environ.get("GRIDSEARCH_GPU")
+    gridsearch_gpu = os.environ.get("AINTELOPE_GPU")
     if gridsearch_gpu is not None:
         gridsearch_gpu = int(gridsearch_gpu)
         torch.cuda.set_device(gridsearch_gpu)
