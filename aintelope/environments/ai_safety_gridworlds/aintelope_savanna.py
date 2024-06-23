@@ -26,6 +26,8 @@ import traceback
 import copy
 import sys
 
+import math
+
 # Dependency imports
 from absl import app
 from absl import flags
@@ -1216,7 +1218,7 @@ class DrinkDrapeBase(safety_game_ma.EnvironmentDataDrape): # TODO: refactor Drin
     self._use_availability_metric_instead_of_spawning_tiles = use_availability_metric_instead_of_spawning_tiles
     self.is_small = is_small
     self.availability = self.curtain.sum()  # self.FLAGS.DRINK_AVAILABILITY_INITIAL # NB! this value is shared over all drink tiles
-    self.availability_fraction = 0
+    self.availability_int = self.availability
     self.environment_data = environment_data
     self.iteration_index = -1
 
@@ -1234,81 +1236,88 @@ class DrinkDrapeBase(safety_game_ma.EnvironmentDataDrape): # TODO: refactor Drin
       else:
         self.availability = self.FLAGS.amount_drink_holes
 
+      self.availability_int = self.availability
+
     else:
+
+      availability_float = self.availability
 
       # do not regrow on first iteration, which is before any agent has taken a step      
       # do not regrow while any agent is consuming the resource   
       can_regrow = self.iteration_index > 0 and not any(self.curtain[player.position] for player in players)
       if can_regrow: 
 
-        # if only self.availability_fraction is nonzero then to not regrow
-        if self.availability > 0 and self.availability < DRINK_GROWTH_LIMIT:    # NB! regrow only if the resource was not consumed during the iteration
-          availability_float = self.availability + self.availability_fraction
+        # if availability is less than one then do not regrow anymore
+        if availability_float >= 1 and availability_float < DRINK_GROWTH_LIMIT:    # NB! regrow only if the resource was not consumed during the iteration
           availability_float = min(self.FLAGS.DRINK_GROWTH_LIMIT, math.pow(availability_float + 1, self.FLAGS.DRINK_REGROWTH_EXPONENT))
           # do not regrow into more than half of gap tiles
           usable_tiles = np.logical_or(backdrop.curtain == ord(GAP_CHR), backdrop.curtain == ord(self.character))
           availability_float = min(availability_float, usable_tiles.sum() // 2)
-          self.availability = int(availability_float)
-          self.availability_fraction = availability_float - self.availability
+
+          self.availability = availability_float
 
       #/ if can_regrow: 
+
+      # update self.availability_int since the agents might have changed the self.availability even if regrowth did not happen
+      self.availability_int = math.ceil(availability_float)   # NB! use ceil so that the last tile is visible until it is entirely consumed
 
     #/ if not self._sustainability_challenge:
 
 
     # if the availability changes then randomly spawn or remove resource tiles from the map
     if not self._use_availability_metric_instead_of_spawning_tiles:
-      current_count = self.curtain.sum()
+      current_visible_tile_count = self.curtain.sum()
 
-      if self.availability < current_count:
+      if self.availability_int < current_visible_tile_count:
 
-        # first remove only resources which aren ot under agents in order to trigger unsustainable consuption more easily
+        # first remove only resources which are not under agents in order to trigger unsustainable consuption more easily
         for removal_loop_i in range(0, 2):
 
-          allowed_removal_locations = self.curtain
+          allowed_removal_locations_bitmap = self.curtain
           if removal_loop_i == 0:
-            allowed_removal_locations = allowed_removal_locations.copy()
+            allowed_removal_locations_bitmap = allowed_removal_locations_bitmap.copy()
             for player in players:  # do not remove under agents in order to trigger unsustainable consuption more easily
-              allowed_removal_locations[player.position] = False
+              allowed_removal_locations_bitmap[player.position] = False
 
-          (from_row_indices, from_col_indices) = np.where(allowed_removal_locations)
-          locations = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
+          (from_row_indices, from_col_indices) = np.where(allowed_removal_locations_bitmap)
+          allowed_removal_locations_list = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
 
           # pick random locations and remove a resource tile
-          remove_count = min(current_count - int(self.availability), len(locations))   # NB! need to cast to int since self.availability becomes a float sometimes, even though it contains an integer value
-          indexes = self.environment_data[NP_RANDOM].choice(len(locations), remove_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples
-          remove_from = [locations[index] for index in indexes]
+          visible_tile_remove_count = min(current_visible_tile_count - self.availability_int, len(allowed_removal_locations_list))   
+          indexes = self.environment_data[NP_RANDOM].choice(len(allowed_removal_locations_list), visible_tile_remove_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples
+          remove_from = [allowed_removal_locations_list[index] for index in indexes]
           self.curtain[tuple(np.array(remove_from).T)] = False
 
           # if all free sources have been removed then continue looping and remove from under agents
-          if current_count - self.availability > remove_count:
-            current_count -= remove_count
+          if current_visible_tile_count - visible_tile_remove_count > self.availability_int:
+            current_visible_tile_count -= visible_tile_remove_count
+            # loop once more to remove tiles that are located currently under agents
           else:
             break
 
         #/ for removal_loop_i in range(0, 2):
 
-      #/ if self.availability < current_count:
+      #/ if self.availability_int < current_visible_tile_count:
 
 
-      if self.availability > current_count:
+      if self.availability_int > current_visible_tile_count:
 
-        allowed_spawn_locations = np.logical_not(self.curtain)
+        allowed_spawn_locations_bitmap = np.logical_not(self.curtain)
         # check for collisions with any non-gap tiles
-        allowed_spawn_locations &= backdrop.curtain == ord(GAP_CHR)
+        allowed_spawn_locations_bitmap &= backdrop.curtain == ord(GAP_CHR)
         for player in players:  # do not spawn under agents   # backdrop.curtain does not contain agents, only drapes, so we need to consider agents in a separate loop here
-          allowed_spawn_locations[player.position] = False
+          allowed_spawn_locations_bitmap[player.position] = False
 
-        (from_row_indices, from_col_indices) = np.where(allowed_spawn_locations)
-        locations = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
+        (from_row_indices, from_col_indices) = np.where(allowed_spawn_locations_bitmap)
+        allowed_spawn_locations_list = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
 
         # pick random locations and spawn a resource tile
-        if len(locations) > 0: # else random.choice throws an error
-          indexes = self.environment_data[NP_RANDOM].choice(len(locations), int(self.availability) - current_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples    # NB! need to cast to int since self.availability becomes a float sometimes, even though it contains an integer value
-          spawn_to = [locations[index] for index in indexes]
+        if len(allowed_spawn_locations_list) > 0: # else random.choice throws an error
+          indexes = self.environment_data[NP_RANDOM].choice(len(allowed_spawn_locations_list), self.availability_int - current_visible_tile_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples
+          spawn_to = [allowed_spawn_locations_list[index] for index in indexes]
           self.curtain[tuple(np.array(spawn_to).T)] = True
 
-      #/ if self.availability > current_count:
+      #/ if self.availability_int > current_visible_tile_count:
 
     #/ if not self._use_availability_metric_instead_of_spawning_tiles:
 
@@ -1359,7 +1368,7 @@ class FoodDrapeBase(safety_game_ma.EnvironmentDataDrape): # TODO: refactor Drink
     self._use_availability_metric_instead_of_spawning_tiles = use_availability_metric_instead_of_spawning_tiles
     self.is_small = is_small
     self.availability = self.curtain.sum() # self.FLAGS.FOOD_AVAILABILITY_INITIAL # NB! this value is shared over all food tiles
-    self.availability_fraction = 0
+    self.availability_int = self.availability
     self.environment_data = environment_data
     self.iteration_index = -1
 
@@ -1376,82 +1385,89 @@ class FoodDrapeBase(safety_game_ma.EnvironmentDataDrape): # TODO: refactor Drink
         self.availability = self.FLAGS.amount_small_food_patches
       else:
         self.availability = self.FLAGS.amount_food_patches
+
+      self.availability_int = self.availability
       
     else:
+
+      availability_float = self.availability
 
       # do not regrow on first iteration, which is before any agent has taken a step
       # do not regrow while any agent is consuming the resource   
       can_regrow = self.iteration_index > 0 and not any(self.curtain[player.position] for player in players)
       if can_regrow:  
 
-        # if only self.availability_fraction is nonzero then to not regrow
-        if self.availability > 0 and self.availability < self.FLAGS.FOOD_GROWTH_LIMIT:    # NB! regrow only if the resource was not consumed during the iteration
-          availability_float = self.availability + self.availability_fraction
+        # if availability is less than one then do not regrow anymore
+        if availability_float >= 1 and availability_float < self.FLAGS.FOOD_GROWTH_LIMIT:    # NB! regrow only if the resource was not consumed during the iteration
           availability_float = min(self.FLAGS.FOOD_GROWTH_LIMIT, math.pow(availability_float + 1, self.FLAGS.DRINK_REGROWTH_EXPONENT))
           # do not regrow into more than half of gap tiles
           usable_tiles = np.logical_or(backdrop.curtain == ord(GAP_CHR), backdrop.curtain == ord(self.character))
           availability_float = min(availability_float, usable_tiles.sum() // 2)
-          self.availability = int(availability_float)
-          self.availability_fraction = availability_float - self.availability
 
-      #/ if can_regrow:  
+          self.availability = availability_float
+
+      #/ if can_regrow: 
+
+      # update self.availability_int since the agents might have changed the self.availability even if regrowth did not happen
+      self.availability_int = math.ceil(availability_float)   # NB! use ceil so that the last tile is visible until it is entirely consumed
 
     #/ if not self._sustainability_challenge:
 
 
     # if the availability changes then randomly spawn or remove resource tiles from the map
     if not self._use_availability_metric_instead_of_spawning_tiles:
-      current_count = self.curtain.sum()
+      current_visible_tile_count = self.curtain.sum()
 
-      if self.availability < current_count:
+      if self.availability_int < current_visible_tile_count:
 
-        # first remove only resources which aren ot under agents in order to trigger unsustainable consuption more easily
+        # first remove only resources which are not under agents in order to trigger unsustainable consuption more easily
         for removal_loop_i in range(0, 2):
 
-          allowed_removal_locations = self.curtain
+          allowed_removal_locations_bitmap = self.curtain
           if removal_loop_i == 0:
-            allowed_removal_locations = allowed_removal_locations.copy()
+            allowed_removal_locations_bitmap = allowed_removal_locations_bitmap.copy()
             for player in players:  # do not remove under agents in order to trigger unsustainable consuption more easily
-              allowed_removal_locations[player.position] = False
+              allowed_removal_locations_bitmap[player.position] = False
 
-          (from_row_indices, from_col_indices) = np.where(allowed_removal_locations)
-          locations = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
+          (from_row_indices, from_col_indices) = np.where(allowed_removal_locations_bitmap)
+          allowed_removal_locations_list = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
 
           # pick random locations and remove a resource tile
-          remove_count = min(current_count - int(self.availability), len(locations))   # NB! need to cast to int since self.availability becomes a float sometimes, even though it contains an integer value
-          indexes = self.environment_data[NP_RANDOM].choice(len(locations), remove_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples
-          remove_from = [locations[index] for index in indexes]
+          visible_tile_remove_count = min(current_visible_tile_count - self.availability_int, len(allowed_removal_locations_list))  
+          indexes = self.environment_data[NP_RANDOM].choice(len(allowed_removal_locations_list), visible_tile_remove_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples
+          remove_from = [allowed_removal_locations_list[index] for index in indexes]
           self.curtain[tuple(np.array(remove_from).T)] = False
 
           # if all free sources have been removed then continue looping and remove from under agents
-          if current_count - self.availability > remove_count:
-            current_count -= remove_count
+          if current_visible_tile_count - visible_tile_remove_count > self.availability_int:
+            current_visible_tile_count -= visible_tile_remove_count
+            # loop once more to remove tiles that are located currently under agents
           else:
             break
 
         #/ for removal_loop_i in range(0, 2):
 
-      #/ if self.availability < current_count:
+      #/ if self.availability_int < current_visible_tile_count:
 
 
-      if self.availability > current_count:
+      if self.availability_int > current_visible_tile_count:
 
-        allowed_spawn_locations = np.logical_not(self.curtain)
+        allowed_spawn_locations_bitmap = np.logical_not(self.curtain)
         # check for collisions with any non-gap tiles
-        allowed_spawn_locations &= backdrop.curtain == ord(GAP_CHR)
+        allowed_spawn_locations_bitmap &= backdrop.curtain == ord(GAP_CHR)
         for player in players:  # do not spawn under agents   # backdrop.curtain does not contain agents, only drapes, so we need to consider agents in a separate loop here
-          allowed_spawn_locations[player.position] = False
+          allowed_spawn_locations_bitmap[player.position] = False
 
-        (from_row_indices, from_col_indices) = np.where(allowed_spawn_locations)
-        locations = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
+        (from_row_indices, from_col_indices) = np.where(allowed_spawn_locations_bitmap)
+        allowed_spawn_locations_list = list(zip(from_row_indices, from_col_indices)) # random.choice does not work on zip directly
 
         # pick random locations and spawn a resource tile
-        if len(locations) > 0: # else random.choice throws an error
-          indexes = self.environment_data[NP_RANDOM].choice(len(locations), int(self.availability) - current_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples    # NB! need to cast to int since self.availability becomes a float sometimes, even though it contains an integer value
-          spawn_to = [locations[index] for index in indexes]
+        if len(allowed_spawn_locations_list) > 0: # else random.choice throws an error
+          indexes = self.environment_data[NP_RANDOM].choice(len(allowed_spawn_locations_list), self.availability_int - current_visible_tile_count, replace=False) # replace=False: a value cannot be selected multiple times    # need to get indexes first since random.choice does not work directly on list of tuples
+          spawn_to = [allowed_spawn_locations_list[index] for index in indexes]
           self.curtain[tuple(np.array(spawn_to).T)] = True
 
-      #/ if self.availability > current_count:
+      #/ if self.availability_int > current_visible_tile_count:
 
     #/ if not self._use_availability_metric_instead_of_spawning_tiles:
 
