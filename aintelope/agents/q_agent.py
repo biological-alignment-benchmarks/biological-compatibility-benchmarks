@@ -12,14 +12,6 @@ from aintelope.training.dqn_training import Trainer
 logger = logging.getLogger("aintelope.agents.q_agent")
 
 
-class HistoryStep(NamedTuple):
-    state: Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]]
-    action: int
-    reward: float
-    done: bool
-    next_state: Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]]
-
-
 class QAgent(Agent):
     """QAgent class, functioning as a base class for agents"""
 
@@ -31,7 +23,6 @@ class QAgent(Agent):
         self.id = agent_id
         self.trainer = trainer
         self.hparams = trainer.hparams
-        # self.history: List[HistoryStep] = []    # this is actually unused
         self.done = False
         self.last_action = None
 
@@ -42,8 +33,6 @@ class QAgent(Agent):
         self.state = state
         self.info = info
         self.env_class = env_class
-        # if isinstance(self.state, tuple):
-        #    self.state = self.state[0]
 
     def get_action(
         self,
@@ -106,10 +95,6 @@ class QAgent(Agent):
                 self.trainer.tiebreaking_argmax(q_values) + min_action
             )  # when no axis is provided, argmax returns index into flattened array
 
-            # q_values = self.policy_nets[agent_id](observation)
-            # _, action = torch.max(q_values, dim=1)
-            # action = int(action.item()) + min_action
-
         self.last_action = action
         return action
 
@@ -146,20 +131,7 @@ class QAgent(Agent):
         assert self.last_action is not None
 
         next_state = observation
-
-        if next_state is not None:
-            next_s_hist = next_state
-        else:
-            next_s_hist = None
-        # self.history.append(
-        #    HistoryStep(
-        #        state=self.state,
-        #        action=self.last_action,
-        #        reward=score,
-        #        done=done,
-        #        next_state=next_s_hist,
-        #    )
-        # )
+        # TODO
 
         event = [self.id, self.state, self.last_action, score, done, next_state]
         if not test_mode:  # TODO: do we need to update replay memories during test?

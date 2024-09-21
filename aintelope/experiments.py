@@ -48,7 +48,7 @@ def run_experiment(
 
     unit_test_mode = (
         cfg.hparams.unit_test_mode
-    )  # is set during tests in order to speed up DQN computations
+    )  # is set during tests in order to speed up RL computations
     use_separate_models_for_each_experiment = (
         cfg.hparams.use_separate_models_for_each_experiment
     )

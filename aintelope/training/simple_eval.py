@@ -7,14 +7,15 @@ from omegaconf import DictConfig, OmegaConf
 from aintelope.agents import get_agent_class
 from aintelope.environments import get_env_class
 from aintelope.environments.savanna_safetygrid import GridworldZooBaseEnv
-from aintelope.models.dqn import DQN
 from aintelope.training.dqn_training import Trainer
 from pettingzoo import AECEnv, ParallelEnv
 
 logger = logging.getLogger("aintelope.training.simple_eval")
 
 
-MODEL_LOOKUP = {"dqn": DQN}
+MODEL_LOOKUP = {
+    # TODO
+  }
 
 
 def run_episode(full_params: Dict) -> None:

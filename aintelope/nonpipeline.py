@@ -25,11 +25,22 @@ def aintelope_main(cfg: DictConfig) -> None:
     logger.info("Running training with the following configuration")
     logger.info(OmegaConf.to_yaml(cfg))
     score_dimensions = get_score_dimensions(cfg)
+
+    # train
     run_experiment(
         cfg,
         experiment_name="Nonpipeline",
         score_dimensions=score_dimensions,
         test_mode=False,
+        i_pipeline_cycle=0,
+    )
+
+    # test
+    run_experiment(
+        cfg,
+        experiment_name="Nonpipeline",
+        score_dimensions=score_dimensions,
+        test_mode=True,
         i_pipeline_cycle=0,
     )
 
