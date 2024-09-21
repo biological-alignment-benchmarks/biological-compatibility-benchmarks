@@ -10,15 +10,15 @@ experiment_dir: ${log_dir}/${experiment_name}/
 
 trainer_params:
   resume_from_checkpoint: False
-  num_workers: 4        # unused        # TODO
+  num_workers: 4
   # max_epochs: 10        # unused
   checkpoint: ${log_dir}/checkpoints/
   device: gpu
   verbose: false
 
 hparams:
-  gridsearch_trial_no: 0        # is set by gridsearch config file
-  params_set_title: "main config"
+  gridsearch_trial_no: 0
+  params_set_title: "exampleagent"
   aggregated_results_file: outputs/${hparams.params_set_title}.jsonl
   batch_size: 16
   lr: 0.015
@@ -31,40 +31,40 @@ hparams:
   #env_type: zoo
   model: dqn
   unit_test_mode: False      # is set during tests in order to speed up DQN computations
-  agent_class: q_agent 
+  agent_class: example_agent
   warm_start_steps: 5       # not used at the moment, except for the unit tests
   save_frequency: 10 # how often to save a model
   use_separate_models_for_each_experiment: True
   agent_params: {}
-  model_params:  # TODO
+  model_params:
     hidden_sizes: [8,16,8]
     num_conv_layers: 3
     conv_size: 2
-    gamma: 0.7
+    gamma: 0.9
     tau: 0.05
-    eps_start: 0.66
+    eps_start: 0.0
     eps_end: 0.0
     replay_size: 99
-    eps_last_pipeline_cycle: 1
-    eps_last_episode: ${hparams.num_episodes}       # use -1 when episode counting for eps is disabled
+    eps_last_pipeline_cycle: -1
+    eps_last_episode: -1       # use -1 when episode counting for eps is disabled
     eps_last_trial: -1  # 10       # use -1 when trials counting for eps is disabled
     eps_last_frame: ${hparams.env_params.num_iters}       # use -1 when iteration counting for eps is disabled
   trial_length: -1 # 10
   num_pipeline_cycles: 0
-  num_episodes: 30 # how long to train. # TODO: move num_episodes to model_params
-  test_episodes: 10 # will be added to train episodes
+  num_episodes: 2 # how long to train. # TODO: move num_episodes to model_params
+  test_episodes: 2 # will be added to train episodes
   env_params:
     # TODO: move num_iters to model_params
-    num_iters: 300 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
+    num_iters: 400 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     env_experiment: ai_safety_gridworlds.aintelope_savanna
     level: 0
-    map_max: 7
+    map_max: 7     # used for old AIntelope environment
     map_width: ${hparams.env_params.map_max}   # NB! here it is exclusive max, used for Gridworld environments. Also, this width includes the walls at the border of the game, so 2 units of walls. Therefore, interior is map_width - 2.
     map_height: ${hparams.env_params.map_max}   # NB! here it is exclusive max, used for Gridworld environments. Also, this width includes the walls at the border of the game, so 2 units of walls. Therefore, interior is map_height - 2.
     #
     # to make whole map visible while still agent-centric, set the value to 
     # "max(map_width, map_height) - 3" in case of using Gridworld environments. This is because the map width and height includes walls. The agent always sees its own tile, so the actual radius will be one bigger. Therefore in total 3 units can be substracted.
-    render_agent_radius: ${minus_3:${hparams.env_params.map_max}}
+    render_agent_radius: ${minus_3:${hparams.env_params.map_max}}     
     #
     # 0 - off (do not use this setting), 1 - once per experiment run, 2 - once per trial
     # (a trial is a sequence of training episodes separated by env.reset call,
@@ -116,11 +116,6 @@ hparams:
     DRINK_DEFICIENCY_THRESHOLD: -3
     DRINK_GROWTH_LIMIT: 20
     DRINK_REGROWTH_EXPONENT: 1.1
-    # gold and silver diminishing returns parameters
-    GOLD_VISITS_LOG_BASE: 1.5
-    SILVER_VISITS_LOG_BASE: 1.5
-    # predator parameters
-    PREDATOR_MOVEMENT_PROBABILITY: 0.25  
     #
     # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
     # controlled by separate turning actions.

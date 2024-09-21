@@ -35,6 +35,7 @@ hparams:
   warm_start_steps: 5       # not used at the moment, except for the unit tests
   save_frequency: 10 # how often to save a model
   use_separate_models_for_each_experiment: True
+  agent_params: {}
   model_params:
     hidden_sizes: [8,16,8]  #
     num_conv_layers: 3      #
