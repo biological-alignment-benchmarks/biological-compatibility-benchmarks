@@ -1,8 +1,7 @@
 # Variables
 PROJECT = aintelope
 TESTS = tests
-SITE = site
-CODEBASE = ${PROJECT} ${TESTS} ${SITE}
+CODEBASE = ${PROJECT} ${TESTS}
 VENV = venv_$(PROJECT)
 
 run-training-baseline: ## run baseline experiment
