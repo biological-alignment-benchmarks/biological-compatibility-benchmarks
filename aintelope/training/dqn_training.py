@@ -29,6 +29,7 @@ def load_checkpoint(
     hidden_sizes,
     num_conv_layers,
     conv_size,
+    combine_interoception_and_vision,
 ):
     """
     https://pytorch.org/tutorials/recipes/recipes/saving_and_loading_a_general_checkpoint.html
@@ -50,6 +51,7 @@ def load_checkpoint(
         hidden_sizes=hidden_sizes,
         num_conv_layers=num_conv_layers,
         conv_size=conv_size,
+        combine_interoception_and_vision=combine_interoception_and_vision,
     )
 
     if not unit_test_mode:
@@ -81,6 +83,9 @@ class Trainer:
         self.action_spaces = {}
 
         self.hparams = params.hparams
+        self.combine_interoception_and_vision = (
+            params.hparams.env_params.combine_interoception_and_vision
+        )
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         print("Using GPU: " + str(self.device not in ["cpu"]))
@@ -124,6 +129,7 @@ class Trainer:
                 hidden_sizes=self.hparams.model_params.hidden_sizes,
                 num_conv_layers=self.hparams.model_params.num_conv_layers,
                 conv_size=self.hparams.model_params.conv_size,
+                combine_interoception_and_vision=self.combine_interoception_and_vision,
             ).to(self.device)
         else:
             self.policy_nets[agent_id] = load_checkpoint(
@@ -134,6 +140,7 @@ class Trainer:
                 hidden_sizes=self.hparams.model_params.hidden_sizes,
                 num_conv_layers=self.hparams.model_params.num_conv_layers,
                 conv_size=self.hparams.model_params.conv_size,
+                combine_interoception_and_vision=self.combine_interoception_and_vision,
             ).to(self.device)
 
         self.target_nets[agent_id] = DQN(
@@ -143,6 +150,7 @@ class Trainer:
             hidden_sizes=self.hparams.model_params.hidden_sizes,
             num_conv_layers=self.hparams.model_params.num_conv_layers,
             conv_size=self.hparams.model_params.conv_size,
+            combine_interoception_and_vision=self.combine_interoception_and_vision,
         ).to(self.device)
         self.target_nets[agent_id].load_state_dict(
             self.policy_nets[agent_id].state_dict()
@@ -187,25 +195,40 @@ class Trainer:
 
         logger.debug("debug observation", type(observation))
 
-        observation = (
-            torch.tensor(
-                np.expand_dims(
-                    observation[0], 0
-                ),  # vision     # call .flatten() in case you want to force 1D network even on 3D vision
-            ),
-            torch.tensor(np.expand_dims(observation[1], 0)),  # interoception
-        )
-        logger.debug(
-            "debug observation tensor",
-            (type(observation[0]), type(observation[1])),
-            (observation[0].shape, observation[1].shape),
-        )
-
-        if str(self.device) not in ["cpu"]:
+        if not self.combine_interoception_and_vision:
             observation = (
-                observation[0].cuda(self.device),
-                observation[1].cuda(self.device),
+                torch.tensor(
+                    np.expand_dims(
+                        observation[0], 0
+                    )  # vision     # call .flatten() in case you want to force 1D network even on 3D vision
+                ),
+                torch.tensor(np.expand_dims(observation[1], 0)),  # interoception
             )
+            logger.debug(
+                "debug observation tensor",
+                (type(observation[0]), type(observation[1])),
+                (observation[0].shape, observation[1].shape),
+            )
+
+            if str(self.device) not in ["cpu"]:
+                observation = (
+                    observation[0].cuda(self.device),
+                    observation[1].cuda(self.device),
+                )
+        else:
+            observation = torch.tensor(
+                np.expand_dims(
+                    observation, 0
+                )  # vision     # call .flatten() in case you want to force 1D network even on 3D vision
+            )
+            logger.debug(
+                "debug observation tensor",
+                type(observation),
+                observation.shape,
+            )
+
+            if str(self.device) not in ["cpu"]:
+                observation = observation.cuda(self.device)
 
         q_values = self.policy_nets[agent_id](observation).cpu().numpy()
         return q_values
@@ -237,14 +260,19 @@ class Trainer:
         if done:
             return
 
-        state = (
-            torch.tensor(state[0], dtype=torch.float32, device=self.device).unsqueeze(
-                0
-            ),
-            torch.tensor(state[1], dtype=torch.float32, device=self.device).unsqueeze(
-                0
-            ),
-        )
+        if not self.combine_interoception_and_vision:
+            state = (
+                torch.tensor(
+                    state[0], dtype=torch.float32, device=self.device
+                ).unsqueeze(0),
+                torch.tensor(
+                    state[1], dtype=torch.float32, device=self.device
+                ).unsqueeze(0),
+            )
+        else:
+            state = torch.tensor(
+                state, dtype=torch.float32, device=self.device
+            ).unsqueeze(0)
 
         action_space = self.action_spaces[agent_id]
         if isinstance(action_space, Discrete):
@@ -258,14 +286,19 @@ class Trainer:
             reward, dtype=torch.float32, device=self.device
         ).unsqueeze(0)
 
-        next_state = (
-            torch.tensor(
-                next_state[0], dtype=torch.float32, device=self.device
-            ).unsqueeze(0),
-            torch.tensor(
-                next_state[1], dtype=torch.float32, device=self.device
-            ).unsqueeze(0),
-        )
+        if not self.combine_interoception_and_vision:
+            next_state = (
+                torch.tensor(
+                    next_state[0], dtype=torch.float32, device=self.device
+                ).unsqueeze(0),
+                torch.tensor(
+                    next_state[1], dtype=torch.float32, device=self.device
+                ).unsqueeze(0),
+            )
+        else:
+            next_state = torch.tensor(
+                next_state, dtype=torch.float32, device=self.device
+            ).unsqueeze(0)
 
         self.replay_memories[agent_id].push(state, action, reward, done, next_state)
 
@@ -292,14 +325,21 @@ class Trainer:
                 device=self.device,
                 dtype=torch.bool,
             )
-            non_final_next_states = (
-                torch.cat([s[0] for s in batch.next_state if s is not None]),
-                torch.cat([s[1] for s in batch.next_state if s is not None]),
-            )
-            state_batch = (
-                torch.cat([s[0] for s in batch.state]),
-                torch.cat([s[1] for s in batch.state]),
-            )
+            if not self.combine_interoception_and_vision:
+                non_final_next_states = (
+                    torch.cat([s[0] for s in batch.next_state if s is not None]),
+                    torch.cat([s[1] for s in batch.next_state if s is not None]),
+                )
+                state_batch = (
+                    torch.cat([s[0] for s in batch.state]),
+                    torch.cat([s[1] for s in batch.state]),
+                )
+            else:
+                non_final_next_states = torch.cat(
+                    [s for s in batch.next_state if s is not None]
+                )
+                state_batch = torch.cat(batch.state)
+
             action_batch = torch.cat(batch.action)
             reward_batch = torch.cat(batch.reward)
 

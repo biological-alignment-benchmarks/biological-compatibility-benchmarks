@@ -77,7 +77,11 @@ def run_experiment(
             observation = env.observe(agent_id)
             info = env.observe_info(agent_id)
 
-        observation_shape = (observation[0].shape, observation[1].shape)
+        if not cfg.hparams.env_params.combine_interoception_and_vision:
+            observation_shape = (observation[0].shape, observation[1].shape)
+        else:
+            observation_shape = observation.shape
+
         print(f"\nAgent {agent_id} observation shape: {observation_shape}")
 
         # TODO: is this reset necessary here? In main loop below,
@@ -109,13 +113,22 @@ def run_experiment(
                 checkpoint = prev_agent_checkpoint
 
         # Add agent, with potential checkpoint
-        trainer.add_agent(
-            agent_id,
-            (observation[0].shape, observation[1].shape),
-            env.action_space,
-            unit_test_mode=unit_test_mode,
-            checkpoint=checkpoint,
-        )
+        if not cfg.hparams.env_params.combine_interoception_and_vision:
+            trainer.add_agent(
+                agent_id,
+                (observation[0].shape, observation[1].shape),
+                env.action_space,
+                unit_test_mode=unit_test_mode,
+                checkpoint=checkpoint,
+            )
+        else:
+            trainer.add_agent(
+                agent_id,
+                observation.shape,
+                env.action_space,
+                unit_test_mode=unit_test_mode,
+                checkpoint=checkpoint,
+            )
         dones[agent_id] = False
 
     # Warmup not yet implemented

@@ -134,12 +134,21 @@ def run_episode(full_params: Dict) -> None:
             info = env.observe_info(agent.id)
 
         agent.reset(observation, info, type(env))
-        trainer.add_agent(
-            agent.id,
-            (observation[0].shape, observation[1].shape),
-            env.action_space,
-            unit_test_mode=unit_test_mode,
-        )
+
+        if not env_params.combine_interoception_and_vision:
+            trainer.add_agent(
+                agent.id,
+                (observation[0].shape, observation[1].shape),
+                env.action_space,
+                unit_test_mode=unit_test_mode,
+            )
+        else:
+            trainer.add_agent(
+                agent.id,
+                observation.shape,
+                env.action_space,
+                unit_test_mode=unit_test_mode,
+            )
 
     agents_dict = {agent.id: agent for agent in agents}
 

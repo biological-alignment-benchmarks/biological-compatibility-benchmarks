@@ -58,6 +58,7 @@ hparams:
   num_episodes: 30 # how long to train. # TODO: move num_episodes to model_params
   test_episodes: 10 # will be added to train episodes
   env_params:
+    combine_interoception_and_vision: True
     # TODO: move num_iters to model_params
     num_iters: 300 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     env_experiment: ai_safety_gridworlds.aintelope_savanna

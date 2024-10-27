@@ -54,6 +54,7 @@ class DQN(nn.Module):
         hidden_sizes: list = [8, 16, 8],
         num_conv_layers: int = 1,
         conv_size: int = 3,
+        combine_interoception_and_vision: bool = False,
     ):
         """
         Args:
@@ -63,6 +64,7 @@ class DQN(nn.Module):
         """
         super().__init__()
         self.unit_test_mode = unit_test_mode
+        self.combine_interoception_and_vision = combine_interoception_and_vision
         self.num_conv_layers = (
             num_conv_layers if not unit_test_mode else min(1, num_conv_layers)
         )
@@ -72,7 +74,11 @@ class DQN(nn.Module):
         ):  # constrain the size of networks during unit testing for performance purposes
             hidden_sizes = [8, 8, 8]
 
-        (vision_size, interoception_size) = obs_size  # TODO: interoception
+        if not self.combine_interoception_and_vision:
+            (vision_size, interoception_size) = obs_size
+        else:
+            vision_size = obs_size
+            # interoception_size = 0
 
         if len(vision_size) == 1:  # old AIntelope environment
             self.cnn = False
@@ -80,11 +86,15 @@ class DQN(nn.Module):
             # 1D vision network
             self.fc4 = nn.Linear(vision_size[0], hidden_sizes[0])
 
-            # interoception network
-            self.fc5 = nn.Linear(interoception_size[0], hidden_sizes[0])
+            if not self.combine_interoception_and_vision:
+                # interoception network
+                self.fc5 = nn.Linear(interoception_size[0], hidden_sizes[0])
 
-            # combined network
-            self.fc6 = nn.Linear(hidden_sizes[0] + hidden_sizes[0], n_actions)
+                # combined network
+                self.fc6 = nn.Linear(hidden_sizes[0] + hidden_sizes[0], n_actions)
+
+            else:
+                self.fc6 = nn.Linear(hidden_sizes[0], n_actions)
 
         else:  # Gridworlds environment
             self.cnn = True
@@ -128,28 +138,38 @@ class DQN(nn.Module):
                 np.prod(output_size) * conv_output_hidden_size, hidden_sizes[1]
             )  # flattens convolutional layers output
 
-            # interoception network
-            self.fc5 = nn.Linear(interoception_size[0], hidden_sizes[2])
+            if not self.combine_interoception_and_vision:
+                # interoception network
+                self.fc5 = nn.Linear(interoception_size[0], hidden_sizes[2])
 
-            # combined network
-            self.fc6 = nn.Linear(hidden_sizes[1] + hidden_sizes[2], n_actions)
+                # combined network
+                self.fc6 = nn.Linear(hidden_sizes[1] + hidden_sizes[2], n_actions)
+            else:
+                self.fc6 = nn.Linear(hidden_sizes[1], n_actions)
 
     def forward(self, observation):
-        (vision_batch, interoception_batch) = observation
+        if not self.combine_interoception_and_vision:
+            (vision_batch, interoception_batch) = observation
+        else:
+            vision_batch = observation
 
         x = vision_batch.float()
-        y = interoception_batch.float()
+        if not self.combine_interoception_and_vision:
+            y = interoception_batch.float()
 
         if not self.cnn:  # old AIntelope environment
             # 1D vision network
             x = F.relu(self.fc4(x))
 
-            # interoception network
-            y = F.relu(self.fc5(y))
+            if not self.combine_interoception_and_vision:
+                # interoception network
+                y = F.relu(self.fc5(y))
 
-            # combined network
-            z = torch.cat([x, y], axis=1)
-            return self.fc6(z)
+                # combined network
+                z = torch.cat([x, y], axis=1)
+                return self.fc6(z)
+            else:
+                return self.fc6(x)
 
         else:  # Gridworlds environment
             # 3D vision network
@@ -161,9 +181,12 @@ class DQN(nn.Module):
             )  # keep batch size at dimension 0, flatten the remaining output dimensions of conv2 layer into 1D : (batch size, channels, height, width) -> (batch size, features)
             x = F.relu(self.fc4(x))
 
-            # interoception network
-            y = F.relu(self.fc5(y))
+            if not self.combine_interoception_and_vision:
+                # interoception network
+                y = F.relu(self.fc5(y))
 
-            # combined network
-            z = torch.cat([x, y], axis=1)
-            return self.fc6(z)
+                # combined network
+                z = torch.cat([x, y], axis=1)
+                return self.fc6(z)
+            else:
+                return self.fc6(x)

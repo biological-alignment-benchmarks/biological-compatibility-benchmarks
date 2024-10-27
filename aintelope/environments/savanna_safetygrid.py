@@ -121,11 +121,14 @@ class GridworldZooBaseEnv:
         "test_death_probability": 0.33,
         "scalarize_rewards": False,  # needed for Zoo sequential API unit tests
         "flatten_observations": False,  # this will not work with current code
+        "combine_interoception_and_vision": False,
     }
 
     def __init__(self, env_params: Optional[Dict] = None):
         if env_params is None:
             env_params = {}
+
+        self.render_mode = None  # Some libraries require this field to be present. The actual value seems to be unimportant.
 
         # NB! Need to clone in order to not modify the default dict.
         # Similar problem to mutable default arguments.
@@ -236,31 +239,59 @@ class GridworldZooBaseEnv:
         self._observe_bitmap_layers = self.metadata["observe_bitmap_layers"]
         self._override_infos = self.metadata["override_infos"]
         self._scalarize_rewards = self.metadata["scalarize_rewards"]
+        self._combine_interoception_and_vision = self.metadata[
+            "combine_interoception_and_vision"
+        ]
 
     def init_observation_spaces(self, parent_observation_spaces, infos):
         # for @zoo-api
         if self._observe_bitmap_layers:
-            self.transformed_observation_spaces = {
-                agent: gymnasium.spaces.Tuple(
-                    [
-                        Box(
-                            low=0,  # this is a boolean bitmap
-                            high=1,  # this is a boolean bitmap
-                            shape=(
-                                len(
-                                    infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER]
-                                ),  # this already includes all_agents layer,
-                                parent_observation_spaces[agent].shape[1],
-                                parent_observation_spaces[agent].shape[2],
+            if self._combine_interoception_and_vision:
+                self.transformed_observation_spaces = {
+                    agent: gymnasium.spaces.Tuple(
+                        [
+                            Box(
+                                low=0,  # this is a boolean bitmap
+                                high=1,  # this is a boolean bitmap
+                                shape=(
+                                    len(
+                                        infos[agent][
+                                            INFO_AGENT_OBSERVATION_LAYERS_ORDER
+                                        ]
+                                    )
+                                    + 2,  # this already includes all_agents layer + 2 for interoception
+                                    parent_observation_spaces[agent].shape[1],
+                                    parent_observation_spaces[agent].shape[2],
+                                ),
                             ),
-                        ),
-                        Box(
-                            low=-np.inf, high=np.inf, shape=(2,)
-                        ),  # interoception vector
-                    ]
-                )
-                for agent in self.possible_agents
-            }
+                        ]
+                    )
+                    for agent in self.possible_agents
+                }
+            else:
+                self.transformed_observation_spaces = {
+                    agent: gymnasium.spaces.Tuple(
+                        [
+                            Box(
+                                low=0,  # this is a boolean bitmap
+                                high=1,  # this is a boolean bitmap
+                                shape=(
+                                    len(
+                                        infos[agent][
+                                            INFO_AGENT_OBSERVATION_LAYERS_ORDER
+                                        ]
+                                    ),  # this already includes all_agents layer,
+                                    parent_observation_spaces[agent].shape[1],
+                                    parent_observation_spaces[agent].shape[2],
+                                ),
+                            ),
+                            Box(
+                                low=-np.inf, high=np.inf, shape=(2,)
+                            ),  # interoception vector
+                        ]
+                    )
+                    for agent in self.possible_agents
+                }
         else:
             self.transformed_observation_spaces = {
                 agent: gymnasium.spaces.Tuple(
@@ -311,15 +342,41 @@ class GridworldZooBaseEnv:
                         agent_chr
                     ]
 
-                observation = np.vstack(
-                    [observation, np.expand_dims(all_agents_layer, axis=0)]
-                )  # feature vector is the first dimension
+                if self._combine_interoception_and_vision:
+                    # TODO: Config for interoception scaling? Or use sigmoid transformation?
+                    # NB! use +0.5 so that interoception value of 0 is centered between min and max of 0 and 1.
+                    interoception_values = (
+                        info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32) / 1000
+                        + 0.5
+                    )
 
-                return (
-                    observation.astype(np.float32),
-                    # np.array(agent_interoception_vector).astype(np.float32)
-                    info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32),
-                )
+                    # Add two more layers to the vision observation, representing interoception measures. For both interoception measures, entire layer will have same value.
+                    interoception_layers = np.expand_dims(
+                        np.ones(
+                            [observation.shape[1], observation.shape[2]], np.float32
+                        ),
+                        axis=0,
+                    ) * np.expand_dims(interoception_values, axis=[1, 2])
+
+                    observation = np.vstack(
+                        [
+                            observation,
+                            np.expand_dims(all_agents_layer, axis=0),
+                            interoception_layers,
+                        ]
+                    )  # feature vector is the first dimension
+
+                    return observation
+                else:
+                    observation = np.vstack(
+                        [observation, np.expand_dims(all_agents_layer, axis=0)]
+                    )  # feature vector is the first dimension
+
+                    return (
+                        observation.astype(np.float32),
+                        # np.array(agent_interoception_vector).astype(np.float32)
+                        info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32),
+                    )
 
         else:
             """

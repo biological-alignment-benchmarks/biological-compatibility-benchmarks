@@ -28,7 +28,9 @@ class QAgent(Agent):
         self,
         agent_id: str,
         trainer: Trainer,
-        target_instincts: List[str] = [],
+        target_instincts: List[
+            str
+        ] = [],  # unused, argument present for compatibility with other agents
     ) -> None:
         self.id = agent_id
         self.trainer = trainer
@@ -115,7 +117,6 @@ class QAgent(Agent):
         self.last_action = action
         return action
 
-    # TODO hack, figure out if state_to_namedtuple can be static somewhere
     def update(
         self,
         env: PettingZooEnv = None,
