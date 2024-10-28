@@ -113,7 +113,6 @@ class GridworldZooBaseEnv:
         # Alternate observation format to current vector of absolute coordinates.
         # Bitmap representation enables representing objects which might be outside of
         # agent's observation zone for time being.
-        "observe_bitmap_layers": True,
         # Needed for tests. Zoo is unable to compare infos
         # unless they have simple structure.
         "override_infos": False,
@@ -236,7 +235,6 @@ class GridworldZooBaseEnv:
             if self.metadata.get(metadata_key, None) is not None:
                 self.super_initargs[super_initargs_key] = self.metadata[metadata_key]
 
-        self._observe_bitmap_layers = self.metadata["observe_bitmap_layers"]
         self._override_infos = self.metadata["override_infos"]
         self._scalarize_rewards = self.metadata["scalarize_rewards"]
         self._combine_interoception_and_vision = self.metadata[
@@ -245,66 +243,38 @@ class GridworldZooBaseEnv:
 
     def init_observation_spaces(self, parent_observation_spaces, infos):
         # for @zoo-api
-        if self._observe_bitmap_layers:
-            if self._combine_interoception_and_vision:
-                self.transformed_observation_spaces = {
-                    agent: Box(
-                        low=0,  # this is a boolean bitmap
-                        high=1,  # this is a boolean bitmap
-                        shape=(
-                            len(infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER])
-                            + 2,  # this already includes all_agents layer + 2 for interoception
-                            parent_observation_spaces[agent].shape[1],
-                            parent_observation_spaces[agent].shape[2],
-                        ),
-                    )
-                    for agent in self.possible_agents
-                }
-            else:
-                self.transformed_observation_spaces = {
-                    agent: gymnasium.spaces.Tuple(
-                        [
-                            Box(
-                                low=0,  # this is a boolean bitmap
-                                high=1,  # this is a boolean bitmap
-                                shape=(
-                                    len(
-                                        infos[agent][
-                                            INFO_AGENT_OBSERVATION_LAYERS_ORDER
-                                        ]
-                                    ),  # this already includes all_agents layer,
-                                    parent_observation_spaces[agent].shape[1],
-                                    parent_observation_spaces[agent].shape[2],
-                                ),
-                            ),
-                            Box(
-                                low=-np.inf, high=np.inf, shape=(2,)
-                            ),  # interoception vector
-                        ]
-                    )
-                    for agent in self.possible_agents
-                }
+        if self._combine_interoception_and_vision:
+            self.transformed_observation_spaces = {
+                agent: Box(
+                    low=0,  # this is a boolean bitmap
+                    high=1,  # this is a boolean bitmap
+                    shape=(
+                        len(infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER])
+                        + 2,  # this already includes all_agents layer + 2 for interoception
+                        parent_observation_spaces[agent].shape[1],
+                        parent_observation_spaces[agent].shape[2],
+                    ),
+                )
+                for agent in self.possible_agents
+            }
         else:
             self.transformed_observation_spaces = {
                 agent: gymnasium.spaces.Tuple(
                     [
                         Box(
-                            low=0,
-                            high=len(
-                                GAME_ART[0][0]
-                            ),  # TODO: consider height as well and read it from env object
+                            low=0,  # this is a boolean bitmap
+                            high=1,  # this is a boolean bitmap
                             shape=(
-                                2
-                                * (
-                                    self.metadata["amount_agents"]
-                                    + self.metadata["amount_grass_patches"]
-                                    + self.metadata["amount_water_holes"]
-                                ),
+                                len(
+                                    infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER]
+                                ),  # this already includes all_agents layer,
+                                parent_observation_spaces[agent].shape[1],
+                                parent_observation_spaces[agent].shape[2],
                             ),
                         ),
                         Box(
                             low=-np.inf, high=np.inf, shape=(2,)
-                        ),  # dummy interoception vector
+                        ),  # interoception vector
                     ]
                 )
                 for agent in self.possible_agents
@@ -316,92 +286,54 @@ class GridworldZooBaseEnv:
     def transform_observation(
         self, agent: str, info: dict
     ) -> npt.NDArray[ObservationFloat]:
-        if self._observe_bitmap_layers:
-            if agent is None:
-                return info[INFO_OBSERVATION_LAYERS_CUBE].astype(np.float32)
-            else:  # the info is already agent-specific, so no need to find agent subkey here
-                # agent_interoception_vector = [
-                #    info["metrics_dict"]["FoodSatiation_" + self.agent_name_mapping[agent]],
-                #    info["metrics_dict"]["DrinkSatiation_" + self.agent_name_mapping[agent]],
-                # ]
-                observation = info[INFO_AGENT_OBSERVATION_LAYERS_CUBE]
+        if agent is None:
+            return info[INFO_OBSERVATION_LAYERS_CUBE].astype(np.float32)
+        else:  # the info is already agent-specific, so no need to find agent subkey here
+            # agent_interoception_vector = [
+            #    info["metrics_dict"]["FoodSatiation_" + self.agent_name_mapping[agent]],
+            #    info["metrics_dict"]["DrinkSatiation_" + self.agent_name_mapping[agent]],
+            # ]
+            observation = info[INFO_AGENT_OBSERVATION_LAYERS_CUBE]
 
-                all_agents_layer = np.zeros(
-                    [observation.shape[1], observation.shape[2]], bool
-                )
-                for agent_name, agent_chr in self.agent_name_mapping.items():
-                    all_agents_layer |= info[INFO_AGENT_OBSERVATION_LAYERS_DICT][
-                        agent_chr
-                    ]
-
-                if self._combine_interoception_and_vision:
-                    # TODO: Config for interoception scaling? Or use sigmoid transformation?
-                    # NB! use +0.5 so that interoception value of 0 is centered between min and max of 0 and 1.
-                    interoception_values = (
-                        info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32) / 1000
-                        + 0.5
-                    )
-
-                    # Add two more layers to the vision observation, representing interoception measures. For both interoception measures, entire layer will have same value.
-                    interoception_layers = np.expand_dims(
-                        np.ones(
-                            [observation.shape[1], observation.shape[2]], np.float32
-                        ),
-                        axis=0,
-                    ) * np.expand_dims(interoception_values, axis=[1, 2])
-
-                    observation = np.vstack(
-                        [
-                            observation,
-                            np.expand_dims(all_agents_layer, axis=0),
-                            interoception_layers,
-                        ]
-                    )  # feature vector is the first dimension
-
-                    return observation
-                else:
-                    observation = np.vstack(
-                        [observation, np.expand_dims(all_agents_layer, axis=0)]
-                    )  # feature vector is the first dimension
-
-                    return (
-                        observation.astype(np.float32),
-                        # np.array(agent_interoception_vector).astype(np.float32)
-                        info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32),
-                    )
-
-        else:
-            """
-            NB! So far the savanna code has been using absolute coordinates, not
-            relative coordinates. In case of relative coordinates, sometimes an object
-            might be outside of agent's observation distance. If you want to return
-            object location as agent-centric boolean bitmap, then it is easy to set
-            all cells to False. But with coordinates you need either special values or
-            an additional boolean dimension which indicates whether the coordinate is
-            available or not.
-            """
-
-            # TODO: import agent char map from env instead
-            agent_observations = []
+            all_agents_layer = np.zeros(
+                [observation.shape[1], observation.shape[2]], bool
+            )
             for agent_name, agent_chr in self.agent_name_mapping.items():
-                agent_observations += list(
-                    info[INFO_OBSERVATION_COORDINATES][agent_chr][0]
-                )  # convert tuple to list
-            for x in info[INFO_OBSERVATION_COORDINATES].get(FOOD_CHR, []):
-                agent_observations += list(x)  # convert tuple to list
-            for x in info[INFO_OBSERVATION_COORDINATES].get(DRINK_CHR, []):
-                agent_observations += list(x)  # convert tuple to list
+                all_agents_layer |= info[INFO_AGENT_OBSERVATION_LAYERS_DICT][agent_chr]
 
-            agent_observations = np.array(
-                agent_observations, np.float32
-            )  # NB! Q-agent expects float32 observation type
+            if self._combine_interoception_and_vision:
+                # TODO: Config for interoception scaling? Or use sigmoid transformation?
+                # NB! use +0.5 so that interoception value of 0 is centered between min and max of 0 and 1.
+                interoception_values = (
+                    info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32) / 1000
+                    + 0.5
+                )
 
-            assert (
-                agent_observations.shape == self.observation_space(agent).shape
-            ), "observation / observation space shape mismatch"
+                # Add two more layers to the vision observation, representing interoception measures. For both interoception measures, entire layer will have same value.
+                interoception_layers = np.expand_dims(
+                    np.ones([observation.shape[1], observation.shape[2]], np.float32),
+                    axis=0,
+                ) * np.expand_dims(interoception_values, axis=[1, 2])
 
-            dummy_interoception_vector = np.zeros([2], np.float32)
-            return (agent_observations, dummy_interoception_vector)
+                observation = np.vstack(
+                    [
+                        observation,
+                        np.expand_dims(all_agents_layer, axis=0),
+                        interoception_layers,
+                    ]
+                )  # feature vector is the first dimension
+
+                return observation
+            else:
+                observation = np.vstack(
+                    [observation, np.expand_dims(all_agents_layer, axis=0)]
+                )  # feature vector is the first dimension
+
+                return (
+                    observation.astype(np.float32),
+                    # np.array(agent_interoception_vector).astype(np.float32)
+                    info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32),
+                )
 
     def format_info(self, agent: str, info: dict):
         # keep only necessary fields of infos
@@ -555,13 +487,12 @@ class GridworldZooBaseEnv:
 
     """
     This API is intended primarily as input for the neural network.
-    if observe_bitmap_layers == True then observe() method returns same value as
-    observe_relative_bitmaps()
+    Currently observe() method returns same value as observe_relative_bitmaps() though it 
+    might depend on configuration in future implementations (this has been the case in the
+    past with some currently removed implementations).
     Relative observation bitmap is agent centric and considers the agent's observation
     radius. Environments with different sizes will have same-shaped relative
     observation bitmaps as long as the agent's observation radius is same.
-    if observe_bitmap_layers == False then the agent currently returns vector of
-    coordinates compatible with the old Savanna agent implementation.
     """
 
     def observe(self, agent=None) -> Union[Dict[AgentId, Observation], Observation]:
@@ -599,8 +530,9 @@ class GridworldZooBaseEnv:
     observation bitmap is agent centric and considers the agent's observation
     radius. Environments with different sizes will have same-shaped relative
     observation bitmaps as long as the agent's observation radius is same.
-    if observe_bitmap_layers == True then observe() method returns same value
-    as observe_relative_bitmaps()
+    Currently, observe() method returns same value as observe_relative_bitmaps() though it 
+    might depend on configuration in future implementations (this has been the case in the
+    past with some currently removed implementations).
     """
 
     def observe_relative_bitmaps(
