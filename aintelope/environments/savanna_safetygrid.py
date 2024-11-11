@@ -127,6 +127,8 @@ class GridworldZooBaseEnv:
         if env_params is None:
             env_params = {}
 
+        self.render_mode = None   # Some libraries require this field to be present. The actual value seems to be unimportant.
+
         # NB! Need to clone in order to not modify the default dict.
         # Similar problem to mutable default arguments.
         self.metadata = dict(self.metadata)
