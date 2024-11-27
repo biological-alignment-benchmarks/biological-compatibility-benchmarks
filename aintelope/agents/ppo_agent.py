@@ -56,7 +56,7 @@ class PPOAgent:
         self.last_action = None
         env = ss.pettingzoo_env_to_vec_env_v1(env)
         # env = ss.concat_vec_envs_v1(env, 8, num_cpus=1, base_class="stable_baselines3")
-        self.model = PPO("CnnPolicy", env, verbose=1)
+        self.model = PPO("MlpPolicy", env, verbose=1)
 
     def reset(self, state, info, env_class) -> None:
         """Resets self and updates the state."""

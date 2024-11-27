@@ -13,7 +13,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_random"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -25,7 +26,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_instinct"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -37,7 +39,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_mixed"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -49,7 +52,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_reward"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -61,7 +65,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_score"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -74,7 +79,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_ppo"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -86,7 +92,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_dqn"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -98,7 +105,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_td3"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -110,7 +118,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_ddpg"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -122,7 +131,8 @@
             "request": "launch",
             "program": "aintelope/nonpipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_sac"],
             "env": {
                 "PYTHONPATH": "/home/joel/project/aintelope/"
@@ -137,7 +147,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_random"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -150,7 +161,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_instinct"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -163,7 +175,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_mixed"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -177,7 +190,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_reward"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -191,7 +205,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_score"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -207,7 +222,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_mixed"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline_mixed10.yaml",
@@ -221,7 +237,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_reward"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline_reward10.yaml",
@@ -235,7 +252,8 @@
             "request": "launch",
             "program": "aintelope/pipeline.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_score"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline_score10.yaml",
@@ -251,7 +269,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_random"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -265,7 +284,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_instinct"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -279,7 +299,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_mixed"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -293,7 +314,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_reward"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -307,7 +329,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_score"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -324,7 +347,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_mixed"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline_mixed10.yaml",
@@ -339,7 +363,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_reward"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline_reward10.yaml",
@@ -354,7 +379,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_score"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline_score10.yaml",
@@ -371,7 +397,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_mixed"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -385,7 +412,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_reward"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -399,7 +427,8 @@
             "request": "launch",
             "program": "aintelope/gridsearch.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": ["--config-name=config_experiment_score"],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -416,7 +445,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/food_unbounded.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -429,7 +459,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/danger_tiles.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -442,7 +473,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/predators.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -455,7 +487,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/homeostasis.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -468,7 +501,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/sustainability.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -481,7 +515,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/food_unbounded.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -494,7 +529,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/food_drink_homeostasis.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -507,7 +543,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/food_drink_homeostasis_gold.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",
@@ -520,7 +557,8 @@
             "request": "launch",
             "program": "aintelope/environments/demos/gridworlds/food_drink_homeostasis_gold_silver.py",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
+			"showUncaughtExceptions": true,
             "args": [],
             "env": {
                 "PIPELINE_CONFIG": "config_pipeline.yaml",

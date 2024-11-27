@@ -47,6 +47,7 @@ class InstinctAgent(QAgent):
         super().__init__(
             agent_id=agent_id,
             trainer=trainer,
+            env=env,
         )
 
     def reset(self, state, info, env_class) -> None:

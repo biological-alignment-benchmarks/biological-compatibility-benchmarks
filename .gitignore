@@ -156,7 +156,7 @@ tags
 /gymnasium
 
 # VScode
-# .vscode/
+.vscode/launch.json
 
 # backup files
 *.*~
