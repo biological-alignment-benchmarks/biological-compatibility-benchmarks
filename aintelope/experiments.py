@@ -499,7 +499,7 @@ def run_baseline_training(cfg: DictConfig):
 
     # Train
     for i_episode in range(cfg.hparams.num_episodes):
-        env.reset()    # TODO: trial_no in case multiple episodes use SAME seed
+        env.reset()  # TODO: trial_no in case multiple episodes use SAME seed
         for agent in agents:
             # WORKS ONLY FOR ONE AGENT ATM! Cutoff here to synchronize the run
             agent.train(cfg.hparams.env_params.num_iters)

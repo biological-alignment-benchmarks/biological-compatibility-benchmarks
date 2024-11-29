@@ -124,7 +124,7 @@ class GridworldZooBaseEnv:
         "override_infos": False,
         "test_death": False,
         "test_death_probability": 0.33,
-        "scalarize_rewards": False,  # needs to be set True for Zoo sequential API unit tests and for OpenAI baselines learning 
+        "scalarize_rewards": False,  # needs to be set True for Zoo sequential API unit tests and for OpenAI baselines learning
         "flatten_observations": False,  # this will not work with current code
         "combine_interoception_and_vision": False,  # needs to be set to True for OpenAI baselines learning algorithms
     }
