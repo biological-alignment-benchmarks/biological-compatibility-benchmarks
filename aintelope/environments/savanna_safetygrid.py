@@ -1,9 +1,3 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#
-# Repository: https://github.com/aintelope/biological-compatibility-benchmarks
-
 import sys
 import logging
 from collections import OrderedDict, namedtuple
@@ -129,9 +123,11 @@ class GridworldZooBaseEnv:
         "combine_interoception_and_vision": False,  # needs to be set to True for OpenAI baselines learning algorithms
     }
 
-    def __init__(self, env_params: Optional[Dict] = None):
+    def __init__(self, env_params: Optional[Dict] = None, **kwargs):
         if env_params is None:
             env_params = {}
+        env_params = dict(env_params)  # NB! make a copy before updating with kwargs
+        env_params.update(kwargs)
 
         self.render_mode = None  # Some libraries require this field to be present. The actual value seems to be unimportant.
 
@@ -234,6 +230,7 @@ class GridworldZooBaseEnv:
             "amount_agents": "amount_agents",
             "flatten_observations": "flatten_observations",
             # "scalarise": "scalarize_rewards",     # NB! not passing scalarise/scalarize_rewards to the environment. Instead, if needed, we do our own scalarization in this wrapper here.
+            "max_iterations": "max_iterations",
         }
 
         self.super_initargs = {"env_name": "ai_safety_gridworlds.aintelope_savanna"}
@@ -605,10 +602,10 @@ class GridworldZooBaseEnv:
 
 
 class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
-    def __init__(self, env_params: Optional[Dict] = None):
+    def __init__(self, env_params: Optional[Dict] = None, **kwargs):
         if env_params is None:
             env_params = {}
-        GridworldZooBaseEnv.__init__(self, env_params)
+        GridworldZooBaseEnv.__init__(self, env_params, **kwargs)
         GridworldZooParallelEnv.__init__(self, **self.super_initargs)
         parent_observation_spaces = GridworldZooParallelEnv.observation_spaces.fget(
             self
@@ -725,14 +722,14 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
 
 
 class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
-    def __init__(self, env_params: Optional[Dict] = None):
+    def __init__(self, env_params: Optional[Dict] = None, **kwargs):
         if env_params is None:
             env_params = {}
         self.observe_immediately_after_agent_action = env_params.get(
             "observe_immediately_after_agent_action", False
         )  # TODO: configure
 
-        GridworldZooBaseEnv.__init__(self, env_params)
+        GridworldZooBaseEnv.__init__(self, env_params, **kwargs)
         GridworldZooAecEnv.__init__(self, **self.super_initargs)
         parent_observation_spaces = GridworldZooAecEnv.observation_spaces.fget(self)
 

@@ -483,7 +483,10 @@ def run_baseline_training(cfg: DictConfig):
     to accommodate stable_baselines agents' training.
     """
 
-    env = get_env_class(cfg.hparams.env)(env_params=cfg.hparams.env_params)
+    env = get_env_class(cfg.hparams.env)(
+        env_params=cfg.hparams.env_params,
+        max_iterations=cfg.hparams.env_params.num_iters,
+    )
 
     # Add agents
     agents = []
@@ -500,11 +503,17 @@ def run_baseline_training(cfg: DictConfig):
         )
 
     # Train
-    for i_episode in range(cfg.hparams.num_episodes):
-        env.reset()  # TODO: trial_no in case multiple episodes use SAME seed
-        for agent in agents:
-            # WORKS ONLY FOR ONE AGENT ATM! Cutoff here to synchronize the run
-            agent.train(cfg.hparams.env_params.num_iters)
+    # for i_episode in range(cfg.hparams.num_episodes):
+    #    seed = i_episode
+    #    # env = get_env_class(cfg.hparams.env)(env_params=cfg.hparams.env_params)
+    #    # TODO: If the environments are cloned then this reset does nothing. And because of that there is also a question should we then have the episodes loop at all.
+    #    env.reset(trial_no=seed)    # TODO: trial_no in case multiple episodes use SAME seed
+
+    #    # for agent in agents:  # TODO: I do not think we can train the agents separately. When agents share the environment, they can only be trained at the same time. Otherwise it would be trained in a situation where only one agent moves and the other agent is always at the same location.
+    #    # agent.set_env(env)
+    #    # WORKS ONLY FOR ONE AGENT ATM! Cutoff here to synchronize the run
+    #    agents[0].train(cfg.hparams.env_params.num_iters)
+    agents[0].train(cfg.hparams.env_params.num_iters * cfg.hparams.num_episodes)
 
     # Save models
     for agent in agents:
