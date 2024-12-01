@@ -38,7 +38,7 @@ class ExampleAgent(QAgent):
         self,
         agent_id: str,
         trainer: Trainer,
-        env: Environment,
+        env: Environment = None,
         cfg: DictConfig = None,
     ) -> None:
         super().__init__(

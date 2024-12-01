@@ -34,7 +34,7 @@ class QAgent(Agent):
         self,
         agent_id: str,
         trainer: Trainer,
-        env: Environment,
+        env: Environment = None,
         cfg: DictConfig = None,
     ) -> None:
         self.id = agent_id
