@@ -12,7 +12,7 @@ import numpy.typing as npt
 import os
 import datetime
 
-from aintelope.agents import Agent
+from aintelope.agents.sb3_base_agent import SB3BaseAgent
 from aintelope.aintelope_typing import ObservationFloat, PettingZooEnv
 from aintelope.training.dqn_training import Trainer
 
@@ -30,7 +30,7 @@ Environment = Union[gym.Env, PettingZooEnv]
 logger = logging.getLogger("aintelope.agents.sac_agent")
 
 
-class SACAgent:
+class SACAgent(SB3BaseAgent):
     """SACAgent class from stable baselines
     https://stable-baselines3.readthedocs.io/en/master/modules/sac.html
 
@@ -38,86 +38,34 @@ class SACAgent:
 
     def __init__(
         self,
-        agent_id: str,
-        trainer: Trainer,
-        env: Environment,
-        cfg: DictConfig,
-        i_pipeline_cycle: int = 0,
-        events: pd.DataFrame = None,
-        score_dimensions: list = [],
-        progressbar: RobustProgressBar = None,
+        env: PettingZooEnv = None,
         **kwargs,
     ) -> None:
-        self.id = agent_id
-        self.env = env
-        self.cfg = cfg
-        self.done = False
-        self.last_action = None
+        super().__init__(env=env, **kwargs)
+
         env = ss.pettingzoo_env_to_vec_env_v1(env)
+        env = ss.concat_vec_envs_v1(
+            env, num_vec_envs=1, num_cpus=1, base_class="stable_baselines3"
+        )  # NB! num_vec_envs=1 is important here so that we can use identity function instead of cloning in vec_env_args
 
         self.model = SAC("CnnPolicy", env, verbose=1)
 
+    # this method is currently called only in test mode
     def reset(self, state, info, env_class) -> None:
         """Resets self and updates the state."""
-        self.done = False
-        self.last_action = None
-        self.state = state
-        self.info = info
-        self.env_class = env_class
-        # if isinstance(self.state, tuple):
-        #    self.state = self.state[0]
+        super().reset(state, info, env_class)
 
-    def get_action(
-        self,
-        observation: Tuple[
-            npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
-        ] = None,
-        info: dict = {},
-        step: int = 0,
-        trial: int = 0,
-        episode: int = 0,
-        pipeline_cycle: int = 0,
-    ) -> Optional[int]:
+    def get_action(self, **kwargs) -> Optional[int]:
         """Given an observation, ask your net what to do. State is needed to be
         given here as other agents have changed the state!
-
-        Args:
-            net: pytorch Module instance, the model
-            epsilon: value to determine likelihood of taking a random action
-            device: current device
 
         Returns:
             action (Optional[int]): index of action
         """
-        if self.done:
-            return None
+        action = super().get_action(**kwargs)
+        return action
 
-        # action_space = self.env.action_space(self.id)
-
-        action, _states = self.model.predict(observation, deterministic=False)
-        # if isinstance(action_space, Discrete):
-        #    min_action = action_space.start
-        # else:
-        #    min_action = action_space.min_action
-        # action = action + min_action
-
-        self.state = observation
-
-        self.last_action = action
-        return action[0]
-
-    def update(
-        self,
-        env: PettingZooEnv = None,
-        observation: Tuple[
-            npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]
-        ] = None,
-        info: dict = {},
-        score: float = 0.0,
-        done: bool = False,
-        test_mode: bool = False,
-        save_path: Optional[str] = None,
-    ) -> list:
+    def update(self, **kwargs) -> list:
         """
         Takes observations and updates trainer on perceived experiences.
         Needed here to catch instincts.
@@ -136,42 +84,14 @@ class SACAgent:
             done (bool): if agent is done
             next_state (npt.NDArray[ObservationFloat]): input for the net
         """
-
-        assert self.last_action is not None
-
-        next_state = observation
-
-        # if next_state is not None:
-        #    next_s_hist = next_state
-        # else:
-        #    next_s_hist = None
-
-        event = [self.id, self.state, self.last_action, score, done, next_state]
-        self.state = next_state
-        self.info = info
+        event = super().update(**kwargs)
         return event
 
     def train(self, steps):
-        self.model.learn(total_timesteps=steps)
-
-    # def set_env(self, env):
-    #    self.model.set_env(env)
+        super().train(steps)
 
     def save_model(self):
-        dir_out = os.path.normpath(self.cfg.log_dir)
-        checkpoint_dir = os.path.normpath(self.cfg.checkpoint_dir)
-        path = os.path.join(dir_out, checkpoint_dir)
-        os.makedirs(path, exist_ok=True)
-        checkpoint_filename = self.cfg.experiment_name + "_" + self.id
-        filename = os.path.join(
-            path,
-            checkpoint_filename
-            + "-"
-            + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
-        )
-
-        self.model.save(filename)
+        super().save_model()
 
     def load_model(self, checkpoint):
-        if checkpoint:
-            self.model.load(checkpoint)
+        super().load_model(checkpoint)

@@ -79,11 +79,6 @@ class InstinctAgent(QAgent):
         """Given an observation, ask your net what to do. State is needed to be
         given here as other agents have changed the state!
 
-        Args:
-            net: pytorch Module instance, the model
-            epsilon: value to determine likelihood of taking a random action
-            device: current device
-
         Returns:
             action (Optional[int]): index of action
         """
@@ -182,7 +177,7 @@ class InstinctAgent(QAgent):
         else:
             instinct_q_values = None
 
-        # action = super().get_action(observation, info, step, trial, episode, pipeline_cycle, instinct_q_values)
+        # action = super().get_action(observation=observation, info=info, step=step, trial=trial, episode=episode, pipeline_cycle=pipeline_cycle, q_values=instinct_q_values)
 
         apply_instinct_eps_before_random_eps = (
             self.hparams.model_params.apply_instinct_eps_before_random_eps
@@ -253,18 +248,16 @@ class InstinctAgent(QAgent):
         score: float = 0.0,
         done: bool = False,
         test_mode: bool = False,
-        save_path: Optional[str] = None,  # TODO: this is unused right now
     ) -> list:
         """
         Takes observations and updates trainer on perceived experiences.
-        Needed here to catch instincts.
+        Needed here to calculate instinctual rewards.
 
         Args:
             env: Environment
             observation: Tuple[ObservationArray, ObservationArray]
             score: Only baseline uses score as a reward
             done: boolean whether run is done
-            save_path: str
         Returns:
             agent_id (str): same as elsewhere ("agent_0" among them)
             state (Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]]): input for the net

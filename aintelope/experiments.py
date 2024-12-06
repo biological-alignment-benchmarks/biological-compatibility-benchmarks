@@ -103,10 +103,10 @@ def run_experiment(
         agent_id = f"agent_{i}"
         agents.append(
             get_agent_class(cfg.hparams.agent_class)(
-                agent_id,
-                trainer,
-                env,
-                cfg,
+                agent_id=agent_id,
+                trainer=trainer,
+                env=env,
+                cfg=cfg,
                 **cfg.hparams.agent_params,
             )
         )
@@ -302,12 +302,12 @@ def run_experiment(
                                 observation = observations[agent.id]
                                 info = infos[agent.id]
                                 actions[agent.id] = agent.get_action(
-                                    observation,
-                                    info,
-                                    step,
-                                    trial_no,
-                                    i_episode,
-                                    i_pipeline_cycle,
+                                    observation=observation,
+                                    info=info,
+                                    step=step,
+                                    trial=trial_no,
+                                    episode=i_episode,
+                                    pipeline_cycle=i_pipeline_cycle,
                                 )
 
                             # print(f"actions: {actions}")
@@ -339,14 +339,14 @@ def run_experiment(
                                 if terminated:
                                     observation = None
                                 agent_step_info = agent.update(
-                                    env,
-                                    observation,
-                                    info,
-                                    sum(score.values())
+                                    env=env,
+                                    observation=observation,
+                                    info=info,
+                                    score=sum(score.values())
                                     if isinstance(score, dict)
                                     else score,  # TODO: make a function to handle obs->rew in Q-agent too, remove this
-                                    done,  # TODO: should it be "terminated" in place of "done" here?
-                                    test_mode,
+                                    done=done,  # TODO: should it be "terminated" in place of "done" here?
+                                    test_mode=test_mode,
                                 )
 
                                 # Record what just happened
@@ -392,12 +392,12 @@ def run_experiment(
                                     observation = env.observe(agent.id)
                                     info = env.observe_info(agent.id)
                                     action = agent.get_action(
-                                        observation,
-                                        info,
-                                        step,
-                                        trial_no,
-                                        i_episode,
-                                        i_pipeline_cycle,
+                                        observation=observation,
+                                        info=info,
+                                        step=step,
+                                        trial=trial_no,
+                                        episode=i_episode,
+                                        pipeline_cycle=i_pipeline_cycle,
                                     )
 
                                 # Env step
@@ -429,14 +429,14 @@ def run_experiment(
                                         observation = None  # TODO: why is this here?
 
                                     agent_step_info = agent.update(
-                                        env,
-                                        observation,
-                                        info,
-                                        sum(score.values())
+                                        env=env,
+                                        observation=observation,
+                                        info=info,
+                                        score=sum(score.values())
                                         if isinstance(score, dict)
                                         else score,
-                                        done,  # TODO: should it be "terminated" in place of "done" here?
-                                        test_mode,
+                                        done=done,  # TODO: should it be "terminated" in place of "done" here?
+                                        test_mode=test_mode,
                                     )  # note that score is used ONLY by baseline
 
                                     # Record what just happened
@@ -521,7 +521,7 @@ def run_experiment(
         record_path, events
     )  # TODO: flush the events log every once a while and later append new rows
 
-    return num_actual_train_episodes
+    return num_actual_train_episodes  # TODO!!! add num_actual_train_episodes logic to pipeline and gridsearch as well
 
 
 def run_baseline_training(

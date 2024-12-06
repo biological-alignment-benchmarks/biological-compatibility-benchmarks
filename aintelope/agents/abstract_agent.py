@@ -44,6 +44,5 @@ class Agent(ABC):
         score: float = 0.0,
         done: bool = False,
         test_mode: bool = False,
-        save_path: Optional[str] = None,  # TODO: this is unused right now
     ) -> list:
         ...
