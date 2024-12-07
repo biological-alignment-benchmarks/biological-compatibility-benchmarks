@@ -27,15 +27,6 @@ Environment = Union[gym.Env, PettingZooEnv]
 logger = logging.getLogger("aintelope.agents.q_agent")
 
 
-class HistoryStep(NamedTuple):
-    state: Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]]
-    action: int
-    reward: float
-    done: bool
-    instinct_events: List[Tuple[str, int]]
-    next_state: Tuple[npt.NDArray[ObservationFloat], npt.NDArray[ObservationFloat]]
-
-
 class QAgent(Agent):
     """QAgent class, functioning as a base class for agents"""
 
@@ -50,7 +41,6 @@ class QAgent(Agent):
         self.id = agent_id
         self.trainer = trainer
         self.hparams = trainer.hparams
-        # self.history: List[HistoryStep] = []    # this is actually unused
         self.done = False
         self.last_action = None
 
@@ -159,20 +149,6 @@ class QAgent(Agent):
 
         next_state = observation
 
-        # if next_state is not None:
-        #    next_s_hist = next_state
-        # else:
-        #    next_s_hist = None
-        # self.history.append(
-        #    HistoryStep(
-        #        state=self.state,
-        #        action=self.last_action,
-        #        reward=score,
-        #        done=done,
-        #        instinct_events=[],
-        #        next_state=next_s_hist,
-        #    )
-        # )
 
         event = [self.id, self.state, self.last_action, score, done, next_state]
         if not test_mode:  # TODO: do we need to update replay memories during test?

@@ -93,26 +93,6 @@ def read_checkpoints(checkpoint_dir):
 
 ### Old stuff, not in use, but should belong here:
 
-
-def process_events(
-    events_df: pd.DataFrame,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Function to convert the agent events dataframe into individual dataframe for
-    agent position, grass and water locations. Instinct events are currently not
-    processed.
-    """
-    state_df = pd.DataFrame(events_df.state.to_list())
-    agent_df = pd.DataFrame(columns=["x", "y"], data=state_df.agent_coords.to_list())
-    grass_columns = [c for c in list(state_df) if c.startswith("grass")]
-    grass_df = state_df[grass_columns].applymap(lambda x: tuple(x))
-    grass_df = pd.DataFrame(columns=["x", "y"], data=set(grass_df.stack().to_list()))
-    water_columns = [c for c in list(state_df) if c.startswith("water")]
-    water_df = state_df[water_columns].applymap(lambda x: tuple(x))
-    water_df = pd.DataFrame(columns=["x", "y"], data=set(water_df.stack().to_list()))
-
-    return agent_df, grass_df, water_df
-
-
 def plot_events(agent, style: str = "thickness", color: str = "viridis") -> Figure:
     """
     Docstring missing, these are old functions I'm unsure are in use atm.
