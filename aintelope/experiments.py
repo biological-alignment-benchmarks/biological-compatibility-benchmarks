@@ -15,7 +15,7 @@ from omegaconf import DictConfig
 from aintelope.utils import RobustProgressBar
 
 from aintelope.agents import get_agent_class
-from aintelope.analytics import recording as rec
+from aintelope.analytics import recording
 from aintelope.environments import get_env_class
 from aintelope.environments.savanna_safetygrid import GridworldZooBaseEnv
 from aintelope.training.dqn_training import Trainer
@@ -38,6 +38,7 @@ def run_experiment(
         ignore_num_iters=True,  # NB! this file implements its own iterations bookkeeping in order to allow the agent to learn from the last step
     )
 
+    # This reset here does not increment episode number since no steps are played before one more reset in the main episode loop takes place
     if isinstance(env, ParallelEnv):
         (
             observations,
@@ -48,23 +49,24 @@ def run_experiment(
     else:
         raise NotImplementedError(f"Unknown environment type {type(env)}")
 
-    events = pd.DataFrame(
-        columns=[
-            "Run_id",
-            "Pipeline cycle",
-            "Episode",
-            "Trial",
-            "Step",
-            "IsTest",
-            "Agent_id",
-            "State",
-            "Action",
-            "Reward",
-            "Done",
-            "Next_state",
-        ]
-        + (score_dimensions if isinstance(env, GridworldZooBaseEnv) else ["Score"])
-    )
+    events_columns = [
+        "Run_id",
+        "Pipeline cycle",
+        "Episode",
+        "Trial",
+        "Step",
+        "IsTest",
+        "Agent_id",
+        "State",
+        "Action",
+        "Reward",
+        "Done",
+        "Next_state",
+    ] + (score_dimensions if isinstance(env, GridworldZooBaseEnv) else ["Score"])
+
+    experiment_dir = os.path.normpath(cfg.experiment_dir)
+    events_fname = cfg.events_fname
+    events = recording.EventLog(experiment_dir, events_fname, events_columns)
 
     # Common trainer for each agent's models
     trainer = Trainer(cfg)
@@ -89,10 +91,10 @@ def run_experiment(
         agent_id = f"agent_{i}"
         agents.append(
             get_agent_class(cfg.hparams.agent_class)(
-                agent_id,
-                trainer,
-                env,
-                cfg,
+                agent_id=agent_id,
+                trainer=trainer,
+                env=env,
+                cfg=cfg,
                 **cfg.hparams.agent_params,
             )
         )
@@ -186,8 +188,12 @@ def run_experiment(
         max_value=len(r), disable=unit_test_mode
     ) as episode_bar:  # this is a slow task so lets use a progress bar    # note that ProgressBar crashes under unit test mode, so it will be disabled if unit_test_mode is on   # TODO: create a custom extended ProgressBar class that automatically turns itself off during unit test mode
         for i_episode in r:
+            events.flush()
+
             trial_no = (
-                int(i_episode / cfg.hparams.trial_length)
+                int(
+                    i_episode / cfg.hparams.trial_length
+                )  # TODO ensure different trial no during test when num_actual_train_episodes is not divisible by trial_length
                 if cfg.hparams.trial_length > 0
                 else i_episode  # this ensures that during test episodes, trial_no based map randomization seed is different from training seeds. The environment is re-constructed when testing starts. Without explicitly providing trial_no, the map randomization seed would be automatically reset to trial_no = 0, which would overlap with the training seeds.
             )
@@ -255,20 +261,24 @@ def run_experiment(
                             observation = observations[agent.id]
                             info = infos[agent.id]
                             actions[agent.id] = agent.get_action(
-                                observation,
-                                info,
-                                step,
-                                trial_no,
-                                i_episode,
-                                i_pipeline_cycle,
+                                observation=observation,
+                                info=info,
+                                step=step,
+                                trial=trial_no,
+                                episode=i_episode,
+                                pipeline_cycle=i_pipeline_cycle,
                             )
 
                         # print(f"actions: {actions}")
 
                         # call: send actions and get observations
-                        observations, scores, terminateds, truncateds, infos = env.step(
-                            actions
-                        )
+                        (
+                            observations,
+                            scores,
+                            terminateds,
+                            truncateds,
+                            infos,
+                        ) = env.step(actions)
                         # call update since the list of terminateds will become smaller on
                         # second step after agents have died
                         dones.update(
@@ -288,14 +298,14 @@ def run_experiment(
                             if terminated:
                                 observation = None
                             agent_step_info = agent.update(
-                                env,
-                                observation,
-                                info,
-                                sum(score.values())
+                                env=env,
+                                observation=observation,
+                                info=info,
+                                score=sum(score.values())
                                 if isinstance(score, dict)
                                 else score,  # TODO: make a function to handle obs->rew in Q-agent too, remove this
-                                done,  # TODO: should it be "terminated" in place of "done" here?
-                                test_mode,
+                                done=done,  # TODO: should it be "terminated" in place of "done" here?
+                                test_mode=test_mode,
                             )
 
                             # Record what just happened
@@ -308,7 +318,7 @@ def run_experiment(
                                 else [score]
                             )
 
-                            events.loc[len(events)] = (
+                            events.log_event(
                                 [
                                     cfg.experiment_name,
                                     i_pipeline_cycle,
@@ -338,12 +348,12 @@ def run_experiment(
                                 observation = env.observe(agent.id)
                                 info = env.observe_info(agent.id)
                                 action = agent.get_action(
-                                    observation,
-                                    info,
-                                    step,
-                                    trial_no,
-                                    i_episode,
-                                    i_pipeline_cycle,
+                                    observation=observation,
+                                    info=info,
+                                    step=step,
+                                    trial=trial_no,
+                                    episode=i_episode,
+                                    pipeline_cycle=i_pipeline_cycle,
                                 )
 
                             # Env step
@@ -375,14 +385,14 @@ def run_experiment(
                                     observation = None  # TODO: why is this here?
 
                                 agent_step_info = agent.update(
-                                    env,
-                                    observation,
-                                    info,
-                                    sum(score.values())
+                                    env=env,
+                                    observation=observation,
+                                    info=info,
+                                    score=sum(score.values())
                                     if isinstance(score, dict)
                                     else score,
-                                    done,  # TODO: should it be "terminated" in place of "done" here?
-                                    test_mode,
+                                    done=done,  # TODO: should it be "terminated" in place of "done" here?
+                                    test_mode=test_mode,
                                 )  # note that score is used ONLY by baseline
 
                                 # Record what just happened
@@ -395,7 +405,7 @@ def run_experiment(
                                     else [score]
                                 )
 
-                                events.loc[len(events)] = (
+                                events.log_event(
                                     [
                                         cfg.experiment_name,
                                         i_pipeline_cycle,
@@ -453,14 +463,16 @@ def run_experiment(
         )
 
     # normalise slashes in paths. This is not mandatory, but will be cleaner to debug
-    experiment_dir = os.path.normpath(cfg.experiment_dir)
-    events_fname = cfg.events_fname
+    # experiment_dir = os.path.normpath(cfg.experiment_dir)
+    # events_fname = cfg.events_fname
+    #
+    # record_path = Path(os.path.join(experiment_dir, events_fname))
+    # os.makedirs(experiment_dir, exist_ok=True)
+    # rec.record_events(
+    #    record_path, events
+    # )  # TODO: flush the events log every once a while and later append new rows
 
-    record_path = Path(os.path.join(experiment_dir, events_fname))
-    os.makedirs(experiment_dir, exist_ok=True)
-    rec.record_events(
-        record_path, events
-    )  # TODO: flush the events log every once a while and later append new rows
+    events.close()
 
 
 # @hydra.main(version_base=None, config_path="config", config_name="config_experiment")

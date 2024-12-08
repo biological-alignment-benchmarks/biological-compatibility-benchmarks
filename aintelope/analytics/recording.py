@@ -5,6 +5,7 @@
 # Repository: https://github.com/aintelope/biological-compatibility-benchmarks
 
 import csv
+import gzip
 import logging
 import os
 import sys
@@ -34,34 +35,109 @@ checkpoint_dir: checkpoints/
 
 HOWTO:
 One test_conf will form one folder in outputs, that contains 
-1..n same runs for significance
 1..n different runs for pipeline
-1 agent.
+n agents.
 You need to change the agent params in the main config_experiment
 and run the same again in order to have a comparison point.
 """
 
 
-def record_events(record_path, events):
-    """
-    Record events of the training to given path.
-    """
+class EventLog(object):
+    default_gzip_compresslevel = 6  # 6 is default level for gzip: https://linux.die.net/man/1/gzip and https://github.com/ebiggers/libdeflate
 
-    # speed up CSV generation by not saving arrays
-    # TODO: save arrays to separate pickle files
-    del events["State"]
-    del events["Next_state"]
+    def __init__(
+        self,
+        experiment_dir,
+        events_fname,
+        headers,
+        gzip_log=False,
+        gzip_compresslevel=None,
+    ):
+        record_path = Path(os.path.join(experiment_dir, events_fname))
+        logger.info(f"Saving training records to disk at {record_path}")
+        record_path.parent.mkdir(exist_ok=True, parents=True)
 
-    logger.info(f"Saving training records to disk at {record_path}")
-    record_path.parent.mkdir(exist_ok=True, parents=True)
+        # speed up CSV generation by not saving arrays
+        # TODO: save arrays to separate pickle files
+        self.state_col_index = headers.index("State")
+        self.next_state_col_index = headers.index("Next_state")
+        headers = [x for x in headers if x != "State" and x != "Next_state"]
 
-    try_df_to_csv_write(
-        events,
-        record_path,
-        index=False,
-        mode="a",
-        header=not os.path.exists(record_path),
-    )
+        if gzip_log:
+            if gzip_compresslevel is None:
+                gzip_compresslevel = self.default_gzip_compresslevel
+            write_header = not os.path.exists(record_path + ".gz")
+            self.file = gzip.open(
+                record_path + ".gz",
+                mode="at",
+                newline="",
+                encoding="utf-8",
+                compresslevel=gzip_compresslevel,
+            )  # csv writer creates its own newlines therefore need to set newline to empty string here     # TODO: buffering for gzip
+        else:
+            write_header = not os.path.exists(record_path)
+            self.file = open(
+                record_path,
+                mode="at",
+                buffering=1024 * 1024,
+                newline="",
+                encoding="utf-8",
+            )  # csv writer creates its own newlines therefore need to set newline to empty string here
+
+        self.writer = csv.writer(self.file, quoting=csv.QUOTE_MINIMAL, delimiter=",")
+
+        if (
+            write_header
+        ):  # TODO: if the file already exists then assert that the header is same
+            self.writer.writerow(headers)
+            # self.file.flush()
+
+    def log_event(self, event):
+        transformed_cols = []
+        for index, col in enumerate(event):
+            # speed up CSV generation by not saving arrays
+            # TODO: save arrays to separate pickle files
+            if index == self.state_col_index or index == self.next_state_col_index:
+                continue
+
+            # if type(col) == datetime.datetime:
+            #    col = datetime.datetime.strftime(col, '%Y.%m.%d-%H.%M.%S')
+            transformed_cols.append(col)
+
+        self.writer.writerow(transformed_cols)
+        # self.file.flush()
+
+    def flush(self):
+        self.file.flush()
+
+    def close(self):
+        self.file.flush()
+        self.file.close()
+
+
+# / class EventLog(object):
+
+
+# def record_events(record_path, events):
+#    """
+#    Record events of the training to given path.
+#    """
+
+#    # speed up CSV generation by not saving arrays
+#    # TODO: save arrays to separate pickle files
+#    del events["State"]
+#    del events["Next_state"]
+
+#    logger.info(f"Saving training records to disk at {record_path}")
+#    record_path.parent.mkdir(exist_ok=True, parents=True)
+
+#    try_df_to_csv_write(
+#        events,
+#        record_path,
+#        index=False,
+#        mode="a",
+#        header=not os.path.exists(record_path),
+#    )
 
 
 def read_events(record_path, events_filename):
