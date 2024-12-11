@@ -1,18 +1,19 @@
-Total commits: 854
-Total ctimes: 3081
-Total files: 154
-Total loc: 11915
-| Author                    |   loc |   coms |   fils |  distribution   |
-|:--------------------------|------:|-------:|-------:|:----------------|
-| Roland Pihlakas           | 10181 |    348 |     67 | 85.4/40.7/43.5  |
-| Joel Pyykkö               |   432 |    128 |     12 | 3.6/15.0/ 7.8   |
-| derdre                    |   412 |     62 |     24 | 3.5/ 7.3/15.6   |
-| a.kochanke                |   338 |    145 |     23 | 2.8/17.0/14.9   |
-| U-SKETCHER\Gunnar Zarncke |   255 |     12 |      9 | 2.1/ 1.4/ 5.8   |
-| Gunnar Zarncke            |   127 |      1 |      1 | 1.1/ 0.1/ 0.6   |
-| Nathan Helm-Burger        |   101 |     63 |      9 | 0.8/ 7.4/ 5.8   |
-| Hauke Rehfeld             |    51 |     57 |      3 | 0.4/ 6.7/ 1.9   |
-| Orpheus Lummis            |    11 |      2 |      3 | 0.1/ 0.2/ 1.9   |
-| ak                        |     6 |      1 |      2 | 0.1/ 0.1/ 1.3   |
-| postuur                   |     1 |     33 |      1 | 0.0/ 3.9/ 0.6   |
-| NathanNeuro               |     0 |      2 |      0 | 0.0/ 0.2/ 0.0   |
+Total commits: 894
+Total ctimes: 3173
+Total files: 151
+Total loc: 12233
+| Author                              |   loc |   coms |   fils |  distribution   |
+|:------------------------------------|------:|-------:|-------:|:----------------|
+| Roland Pihlakas                     | 10899 |    387 |     73 | 89.1/43.3/48.3  |
+| Joel Pyykkö                         |   387 |    128 |     12 | 3.2/14.3/ 7.9   |
+| derdre                              |   385 |     62 |     23 | 3.1/ 6.9/15.2   |
+| a.kochanke                          |   260 |    145 |     20 | 2.1/16.2/13.2   |
+| Gunnar Zarncke                      |   127 |      1 |      1 | 1.0/ 0.1/ 0.7   |
+| Nathan Helm-Burger                  |   101 |     63 |      9 | 0.8/ 7.0/ 6.0   |
+| Hauke Rehfeld                       |    51 |     57 |      3 | 0.4/ 6.4/ 2.0   |
+| Orpheus Lummis                      |     9 |      2 |      3 | 0.1/ 0.2/ 2.0   |
+| U-SKETCHER\Gunnar Zarncke           |     6 |     12 |      3 | 0.0/ 1.3/ 2.0   |
+| ak                                  |     6 |      1 |      2 | 0.0/ 0.1/ 1.3   |
+| postuur                             |     1 |     33 |      1 | 0.0/ 3.7/ 0.7   |
+| Biological Compatibility Benchmarks |     1 |      1 |      1 | 0.0/ 0.1/ 0.7   |
+| NathanNeuro                         |     0 |      2 |      0 | 0.0/ 0.2/ 0.0   |
