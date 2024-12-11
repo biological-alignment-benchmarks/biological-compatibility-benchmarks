@@ -35,7 +35,7 @@ Under Linux, run the following commands:
 2. Get the code from repo:
 
 `sudo apt install git-all`
-<br>`git clone https://github.com/aintelope/biological-compatibility-benchmarks.git`
+<br>`git clone https://github.com/GunnarZarncke/aintelope.git`
 
 3. Create a virtual python environment:
 
@@ -77,7 +77,7 @@ You can download the latest installer from https://www.python.org/downloads/rele
 2. Get the code from repo:
 * Install Git from https://gitforwindows.org/
 * Open command prompt and navigate top the folder you want to use for repo
-* Run `git clone https://github.com/aintelope/biological-compatibility-benchmarks.git`
+* Run `git clone https://github.com/GunnarZarncke/aintelope.git`
 * Run `cd biological-compatibility-benchmarks`
 
 3. Create a virtual python environment by running: 
