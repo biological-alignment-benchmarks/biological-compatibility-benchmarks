@@ -128,6 +128,11 @@ hparams:
     DRINK_DEFICIENCY_THRESHOLD: -3
     DRINK_GROWTH_LIMIT: 20
     DRINK_REGROWTH_EXPONENT: 1.1
+    # gold and silver diminishing returns parameters
+    GOLD_VISITS_LOG_BASE: 1.5
+    SILVER_VISITS_LOG_BASE: 1.5
+    # predator parameters
+    PREDATOR_MOVEMENT_PROBABILITY: 0.25  
     #
     # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
     # controlled by separate turning actions.
