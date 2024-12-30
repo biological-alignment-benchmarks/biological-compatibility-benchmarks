@@ -5,6 +5,7 @@
 # Repository: https://github.com/aintelope/biological-compatibility-benchmarks
 
 import logging
+import traceback
 from typing import List, NamedTuple, Optional, Tuple
 from gymnasium.spaces import Discrete
 
@@ -16,14 +17,21 @@ from aintelope.utils import RobustProgressBar
 import numpy as np
 import numpy.typing as npt
 import os
+import sys
 import datetime
+
+from aintelope.config.config_utils import select_gpu, set_priorities, set_memory_limits
 
 from aintelope.agents import Agent
 from aintelope.aintelope_typing import ObservationFloat, PettingZooEnv
 from aintelope.training.dqn_training import Trainer
 
-from ai_safety_gridworlds.helpers.gridworld_zoo_parallel_env import (
+from aintelope.environments.savanna_safetygrid import (
     INFO_REWARD_DICT,
+)
+from aintelope.environments.multiagent_zoo_to_gym_wrapper import (
+    MultiAgentZooToGymWrapperGymSide,
+    MultiAgentZooToGymWrapperZooSide,
 )
 
 import stable_baselines3
@@ -62,26 +70,41 @@ def is_json_serializable(item: Any) -> bool:
 
 # TODO: move to a separate file
 class CustomCNN(BaseFeaturesExtractor):
-    def __init__(self, observation_space, features_dim=256):
+    def __init__(self, observation_space, features_dim=256, num_conv_layers=2):
         super().__init__(observation_space, features_dim)
 
         # TODO: make this architecture configurable
 
         # Current observation_space is (15, 9, 9) - channels=15, height=9, width=9
         # Let's build a small CNN with two conv layers:
-        #   Conv1: kernel_size=3, stride=1, padding=1 - keeps spatial dims from 9x9 -> 9x9
+        #   Conv1: kernel_size=3, stride=1, padding=1 - keeps spatial dims at 9x9 -> 9x9
         #   Conv2: kernel_size=3, stride=2, padding=1 - downsamples from 9x9 -> 5x5
+        #   Conv3: kernel_size=3, stride=2, padding=1 - downsamples from 5x5 -> 3x3
         #   Flatten into a linear layer
-        self.cnn = nn.Sequential(
-            nn.Conv2d(15, 32, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(),
-            # TODO: test whether adding this third layer helps. It would make the output shape to 3x3.
-            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
-            nn.ReLU(),
-            nn.Flatten(),
-        )
+
+        print("num_conv_layers: " + str(num_conv_layers))
+
+        if num_conv_layers == 2:
+            self.cnn = nn.Sequential(
+                nn.Conv2d(15, 32, kernel_size=3, stride=1, padding=1),
+                nn.ReLU(),
+                nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+                nn.ReLU(),
+                nn.Flatten(),
+            )
+        elif num_conv_layers == 3:
+            self.cnn = nn.Sequential(
+                nn.Conv2d(15, 32, kernel_size=3, stride=1, padding=1),
+                nn.ReLU(),
+                nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+                nn.ReLU(),
+                # TODO: test whether adding this third layer helps. It would make the output shape to 3x3.
+                nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
+                nn.ReLU(),
+                nn.Flatten(),
+            )
+        else:
+            raise ValueError("num_conv_layers")
 
         # TODO, experiment with:
         # * BatchNorm / LayerNorm: Try adding normalization layers if training stability is an issue.
@@ -91,6 +114,7 @@ class CustomCNN(BaseFeaturesExtractor):
         # 1) With the above, input: (batch_size, 15, 9, 9)
         # 2) After Conv1: (batch_size, 32, 9, 9)
         # 3) After Conv2: (batch_size, 64, 5, 5) => 64*5*5=1600
+        # 4) After Conv3: (batch_size, 128, 3, 3) => 128*3*3=1152
         # We feed that into a linear layer to get features_dim=256
         with torch.no_grad():
             sample_input = torch.zeros(1, 15, 9, 9)
@@ -100,6 +124,47 @@ class CustomCNN(BaseFeaturesExtractor):
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
         return self.linear(self.cnn(observations))
+
+
+def sb3_agent_train_thread_entry_point(
+    pipe,
+    gpu_index,
+    num_total_steps,
+    model_constructor,
+    agent_id,
+    cfg,
+    observation_space,
+    action_space,
+):
+    if (
+        sys.gettrace() is None
+    ):  # do not set low priority while debugging. Note that unit tests also set sys.gettrace() to not-None
+        set_priorities()
+
+    if (
+        os.name != "nt"
+    ):  # Under Windows, the memory limit is shared with parent process as a job object
+        set_memory_limits()
+
+    # activate selected GPU
+    select_gpu(gpu_index)
+
+    env_wrapper = MultiAgentZooToGymWrapperGymSide(
+        pipe, agent_id, observation_space, action_space
+    )
+    try:
+        model = model_constructor(env_wrapper, cfg)
+        model.learn(total_timesteps=num_total_steps)
+    except (
+        Exception
+    ) as ex:  # NB! need to catch exception so that the env wrapper can signal the training ended
+        info = str(ex) + os.linesep + traceback.format_exc()
+        env_wrapper.terminate_with_exception(info)
+        print(info)
+        return
+
+    env_wrapper.return_model(model)
+    return
 
 
 class SB3BaseAgent(Agent):
@@ -136,6 +201,10 @@ class SB3BaseAgent(Agent):
         self.state = None
         self.infos = {}
         self.states = {}
+        self.model = None  # for single-model scenario
+        self.models = None  # for multi-model scenario
+        self.exceptions = None  # for multi-model scenario
+        self.model_constructor = None  # for multi-model scenario
 
         ss.vector.vector_constructors.vec_env_args = vec_env_args  # The original function tries to do environment cloning, but absl flags currently do not support it. Since we need only one environment, there is no reason for cloning, so lets replace the cloning function with identity function.
         stable_baselines3.common.save_util.is_json_serializable = is_json_serializable  # The original function throws many "Pythonic" exceptions which make debugging in Visual Studio too noisy since VS does not have capacity to filter out handled exceptions
@@ -262,7 +331,9 @@ class SB3BaseAgent(Agent):
 
         for agent, next_state in next_states.items():
             state = self.states[agent]
-            action = actions[agent]
+            action = actions.get(
+                agent, None
+            )  # may be None in case of multi-agent scenarios
             action = np.asarray(
                 action
             ).item()  # SB3 sends actions in wrapped into an one-item array for some reason. np.asarray is also able to handle lists. Gridworlds is able to handle such wrapped actions ok.
@@ -412,17 +483,12 @@ class SB3BaseAgent(Agent):
 
         next_state = observation
 
-        # if next_state is not None:
-        #    next_s_hist = next_state
-        # else:
-        #    next_s_hist = None
-
         event = [self.id, self.state, self.last_action, score, done, next_state]
         self.state = next_state
         self.info = info
         return event
 
-    def train(self, steps):
+    def train(self, num_total_steps):
         self.env._pre_reset_callback2 = (
             self.env_pre_reset_callback
         )  # pre-reset callback is same for both parallel and sequential environment
@@ -434,29 +500,41 @@ class SB3BaseAgent(Agent):
         else:
             self.env._post_step_callback2 = self.sequential_env_post_step_callback
 
-        self.model.learn(total_timesteps=steps)
+        if self.model is not None:  # single-model scenario
+            self.model.learn(total_timesteps=num_total_steps)
+        else:
+            env_wrapper = MultiAgentZooToGymWrapperZooSide(self.env, self.cfg)
+            self.models, self.exceptions = env_wrapper.train(
+                num_total_steps=num_total_steps,
+                agent_thread_entry_point=sb3_agent_train_thread_entry_point,
+                model_constructor=self.model_constructor,
+                terminate_all_agents_when_one_excepts=True,
+            )
 
         self.env._pre_reset_callback2 = None
         self.env._post_reset_callback2 = None
         self.env._post_step_callback2 = None
 
-    # def set_env(self, env):
-    #    self.model.set_env(env)
+        if self.exceptions:
+            raise Exception(str(self.exceptions))
 
     def save_model(self):
         dir_out = os.path.normpath(self.cfg.log_dir)
         checkpoint_dir = os.path.normpath(self.cfg.checkpoint_dir)
         path = os.path.join(dir_out, checkpoint_dir)
         os.makedirs(path, exist_ok=True)
-        checkpoint_filename = self.cfg.experiment_name + "_" + self.id
-        filename = os.path.join(
-            path,
-            checkpoint_filename
-            + "-"
-            + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
-        )
 
-        self.model.save(filename)
+        models = [self.model] if self.model is not None else self.models
+
+        for model, agent_id in zip(models, self.env.possible_agents):
+            checkpoint_filename = self.cfg.experiment_name + "_" + agent_id
+            filename = os.path.join(
+                path,
+                checkpoint_filename
+                + "-"
+                + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f"),
+            )
+            model.save(filename)
 
     def load_model(self, checkpoint):
         if checkpoint:

@@ -8,7 +8,7 @@ import gymnasium as gym
 from pettingzoo import AECEnv, ParallelEnv
 
 
-class ZooToGymWrapper(gym.Env):
+class SingleAgentZooToGymWrapper(gym.Env):
     """
     A wrapper that transforms a PettingZoo environment with exactly one agent
     into a single-agent Gymnasium environment.
@@ -18,9 +18,9 @@ class ZooToGymWrapper(gym.Env):
     def __init__(self, zoo_env):
         super().__init__()
 
-        assert zoo_env.max_num_agents == 1
+        assert zoo_env.num_agents == 1
 
-        single_agent_name = zoo_env.possible_agents[0]
+        single_agent_name = zoo_env.agents[0]
 
         self.env = zoo_env
         self.agent_name = single_agent_name
@@ -30,7 +30,8 @@ class ZooToGymWrapper(gym.Env):
 
     def reset(self, seed=None, options=None, *args, **kwargs):
         """
-        Reset the environment. Return initial observation and an info dict.
+        Reset the environment.
+        Return: initial observation and an info dict
         """
 
         # Normally AEC env reset() method does not provide observations and infos as a return value, but the savanna_safetygrid wrapper adds this capability
@@ -71,18 +72,18 @@ class ZooToGymWrapper(gym.Env):
                 terminated,
                 truncated,
                 info,
-            ) = self.env.step_single_agent(actions)
+            ) = self.env.step_single_agent(action)
 
         return observation, reward, terminated, truncated, info
 
-    # def render(self):
-    #    """
-    #    Render the environment if supported by the underlying environment.
-    #    """
-    #    return self.env.render()
+    def render(self, mode="human"):
+        """
+        Render the environment if supported by the underlying environment.
+        """
+        return self.env.render(mode=mode)
 
-    # def close(self):
-    #    """
-    #    Close the environment.
-    #    """
-    #    self.env.close()
+    def close(self):
+        """
+        Close the environment.
+        """
+        self.env.close()

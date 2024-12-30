@@ -44,6 +44,7 @@ hparams:
   agent_params:
     target_instincts: [food,drink,gold,silver,danger,predator,collision,antimovement]    
   model_params:  # TODO
+    use_weight_sharing: True
     hidden_sizes: [8,16,8]
     num_conv_layers: 3
     conv_size: 2

@@ -24,7 +24,9 @@ from aintelope.agents.sb3_base_agent import (
 )
 from aintelope.aintelope_typing import ObservationFloat, PettingZooEnv
 from aintelope.training.dqn_training import Trainer
-from aintelope.environments.zoo_to_gym_wrapper import ZooToGymWrapper
+from aintelope.environments.singleagent_zoo_to_gym_wrapper import (
+    SingleAgentZooToGymWrapper,
+)
 
 from stable_baselines3 import TD3
 from stable_baselines3.common.noise import NormalActionNoise
@@ -41,6 +43,37 @@ Environment = Union[gym.Env, PettingZooEnv]
 logger = logging.getLogger("aintelope.agents.td3_agent")
 
 
+def td3_model_constructor(env, cfg):
+    n_actions = (
+        env.action_space.n
+    )  # Use self.env to get access to original Zoo env API. In contrast, the env variable contains a Gym env with a different API.
+    action_noise = NormalActionNoise(
+        mean=np.zeros(n_actions),
+        sigma=0.1 * np.ones(n_actions),  # TODO: config parameter for sigma
+    )
+
+    # policy_kwarg:
+    # if you want to use CnnPolicy or MultiInputPolicy with image-like observation (3D tensor) that are already normalized, you must pass normalize_images=False
+    # see the following links:
+    # https://stable-baselines3.readthedocs.io/en/master/guide/custom_env.html
+    # https://github.com/DLR-RM/stable-baselines3/issues/1863
+    # Also: make sure your image is in the channel-first format.
+    return TD3(
+        "CnnPolicy",
+        env,
+        action_noise=action_noise,
+        verbose=1,
+        policy_kwargs={
+            "normalize_images": False,
+            "features_extractor_class": CustomCNN,  # need custom CNN in order to handle observation shape 9x9
+            "features_extractor_kwargs": {
+                "features_dim": 256,  # TODO: config parameter. Note this is not related to the number of features in the original observation (15), this parameter here is model's internal feature dimensionality
+                "num_conv_layers": cfg.hparams.model_params.num_conv_layers,
+            },
+        },
+    )
+
+
 class TD3Agent(SB3BaseAgent):
     """TD3Agent class from stable baselines
     https://stable-baselines3.readthedocs.io/en/master/modules/td3.html
@@ -50,44 +83,16 @@ class TD3Agent(SB3BaseAgent):
     def __init__(
         self,
         env: PettingZooEnv = None,
+        cfg: DictConfig = None,
         **kwargs,
     ) -> None:
-        super().__init__(env=env, **kwargs)
+        super().__init__(env=env, cfg=cfg, **kwargs)
 
-        # comment-out: DDPG does not support vectorised environment
-        # env = ss.pettingzoo_env_to_vec_env_v1(env)
-        # env = ss.concat_vec_envs_v1(
-        #    env, num_vec_envs=1, num_cpus=1, base_class="stable_baselines3"
-        # )  # NB! num_vec_envs=1 is important here so that we can use identity function instead of cloning in vec_env_args
-        env = ZooToGymWrapper(env)
+        self.model_constructor = td3_model_constructor
 
-        n_actions = self.env.action_space(
-            self.id
-        ).n  # Use self.env to get access to original Zoo env API. In contrast, the env variable contains a Gym env with a different API.
-        action_noise = NormalActionNoise(
-            mean=np.zeros(n_actions),
-            sigma=0.1 * np.ones(n_actions),  # TODO: config parameter for sigma
-        )
-
-        # policy_kwarg:
-        # if you want to use CnnPolicy or MultiInputPolicy with image-like observation (3D tensor) that are already normalized, you must pass normalize_images=False
-        # see the following links:
-        # https://stable-baselines3.readthedocs.io/en/master/guide/custom_env.html
-        # https://github.com/DLR-RM/stable-baselines3/issues/1863
-        # Also: make sure your image is in the channel-first format.
-        self.model = TD3(
-            "CnnPolicy",
-            env,
-            action_noise=action_noise,
-            verbose=1,
-            policy_kwargs={
-                "normalize_images": False,
-                "features_extractor_class": CustomCNN,  # need custom CNN in order to handle observation shape 9x9
-                "features_extractor_kwargs": {
-                    "features_dim": 256
-                },  # TODO: config parameter. Note this is not related to the number of features in the original observation (15), this parameter here is model's internal feature dimensionality
-            },
-        )
+        if self.env.num_agents == 1:
+            env = SingleAgentZooToGymWrapper(env)
+            self.model = self.model_constructor(env, cfg)
 
     # this method is currently called only in test mode
     def reset(self, state, info, env_class) -> None:

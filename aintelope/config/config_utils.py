@@ -137,7 +137,7 @@ def set_memory_limits():
 
     # TODO: read limits from config
     if os.name == "nt":
-        mem_limit = 20 * 1024 * 1024 * 1024
+        mem_limit = 40 * 1024 * 1024 * 1024
         min_free_swap = 5 * 1024 * 1024 * 1024
 
         from aintelope.config.windows_jobobject import set_mem_commit_limit
@@ -147,7 +147,7 @@ def set_memory_limits():
         except Exception as msg:
             print("run pip install psutil")
     else:  # / if os.name == 'nt':
-        data_size_limit = 20 * 1024 * 1024 * 1024
+        data_size_limit = 40 * 1024 * 1024 * 1024
         address_space_size_limit = 400 * 1024 * 1024 * 1024
 
         from aintelope.config.linux_rlimit import set_mem_limits

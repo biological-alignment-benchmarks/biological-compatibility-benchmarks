@@ -44,6 +44,7 @@ hparams:
   agent_params:
     target_instincts: [food,drink,gold,silver,danger,predator,collision,antimovement]    
   model_params:  # TODO
+    use_weight_sharing: False
     hidden_sizes: [8,16,8]
     num_conv_layers: 3
     conv_size: 2
@@ -67,7 +68,7 @@ hparams:
     combine_interoception_and_vision: True  # needs to be set to True for OpenAI baselines learning algorithms
     scalarize_rewards: False     # needs to be set to True for OpenAI baselines learning algorithms
     # TODO: move num_iters to model_params
-    num_iters: 300 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
+    num_iters: 400 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     env_experiment: ai_safety_gridworlds.aintelope_savanna
     level: 0
     map_max: 7     
