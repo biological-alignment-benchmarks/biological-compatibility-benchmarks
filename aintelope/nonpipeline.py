@@ -35,7 +35,7 @@ def aintelope_main(cfg: DictConfig) -> None:
     # train
     run_experiment(
         cfg,
-        experiment_name="Nonpipeline",
+        experiment_name=cfg.experiment_name,
         score_dimensions=score_dimensions,
         test_mode=False,
         i_pipeline_cycle=0,
@@ -44,19 +44,19 @@ def aintelope_main(cfg: DictConfig) -> None:
     # test
     run_experiment(
         cfg,
-        experiment_name="Nonpipeline",
+        experiment_name=cfg.experiment_name,
         score_dimensions=score_dimensions,
         test_mode=True,
         i_pipeline_cycle=0,
     )
 
-    title = timestamp + " : Nonpipeline"
+    title = timestamp + " : " + cfg.experiment_name
     do_not_show_plot = cfg.hparams.unit_test_mode
     analytics(
         cfg,
         score_dimensions,
         title=title,
-        experiment_name="Nonpipeline",
+        experiment_name=cfg.experiment_name,
         do_not_show_plot=do_not_show_plot,
     )
 
