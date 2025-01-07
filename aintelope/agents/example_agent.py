@@ -145,7 +145,7 @@ class ExampleAgent(Agent):
         **kwargs,
     ):
         self.trainer.add_agent(
-            self.id, 
+            self.id,
             observation_shape,
             action_space,
             unit_test_mode,

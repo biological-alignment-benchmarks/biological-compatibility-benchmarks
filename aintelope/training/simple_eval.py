@@ -119,6 +119,9 @@ def run_episode(full_params: Dict) -> None:
                 get_agent_class(agent)(
                     agent_id=f"agent_{i}",
                     trainer=trainer,
+                    env=env,
+                    cfg=full_params,
+                    test_mode=False,  # this parameter refers to RL test mode, not unit test mode
                 )
                 for agent in agent_spec
             ]
@@ -129,6 +132,9 @@ def run_episode(full_params: Dict) -> None:
             get_agent_class(agent_spec)(
                 agent_id=f"agent_{i}",
                 trainer=trainer,
+                env=env,
+                cfg=full_params,
+                test_mode=False,  # this parameter refers to RL test mode, not unit test mode
             )
             for i in range(env_params["amount_agents"])
         ]
