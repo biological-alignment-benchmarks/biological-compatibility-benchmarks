@@ -15,6 +15,7 @@ psutil==5.9.4
 pygame==2.4
 seaborn==0.12.2
 semaphore-win-ctypes==0.1.2; platform_system == "Windows"
+tensorboard==2.18.0
 torch==2.1.0
 stable-baselines3==2.3.2
 supersuit==3.9.3

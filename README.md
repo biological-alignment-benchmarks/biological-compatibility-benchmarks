@@ -154,6 +154,14 @@ Run the following:
   `make run-training-instinct`
 
 
+To see the Tensorboard, run
+`tensorboard --log_dir outputs/TIMESTAMP/EXPERIMENT/tensorboard/`
+then go to http://localhost:6006/ in the browser.
+
+## Logging
+
+TODO
+
 ## Windows
 
 Aintelope code base is compatible with Windows. No extra steps needed. GPU computation works fine as well. WSL is not needed.
