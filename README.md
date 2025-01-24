@@ -17,6 +17,7 @@ https://docs.google.com/document/d/1qc6a3MY2_guCZH8XJjutpaASNE7Zy6O5z1gblrfPemk/
 
 ## Project setup
 
+This readme contains instructions for both Linux and Windows installation. Windows installation instructions are located after Linux installation instructions.
 
 ### Installation under Linux
 
@@ -82,8 +83,11 @@ You can download the latest installer from https://www.python.org/downloads/rele
 * Run `cd aintelope`
 
 3. Create a virtual python environment by running: 
-<br>`python -m venv venv_aintelope`
-<br>`venv_aintelope\scripts\activate`
+<br>3.1. To activate VirtualEnv with Python 3.10:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`virtualenv -p python3.10 venv_aintelope` 
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(or if you want to use your default Python version: 
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`python -m venv venv_aintelope`)
+<br>3.2. `venv_aintelope\scripts\activate`
 
 4. Install dependencies by running:
 <br>`pip uninstall -y ai_safety_gridworlds >nul 2>&1`
@@ -161,6 +165,10 @@ compared during analysis.
 # Papers
 
 * A working paper related to this repo: Pihlakas, R & Pyykkö, J. "From homeostasis to resource sharing: Biologically and economically compatible multi-objective multi-agent AI safety benchmarks". Arxiv (2024). https://arxiv.org/abs/2410.00081
+
+# Blog posts
+
+* Why modelling multi-objective homeostasis is essential for AI alignment (and how it helps with AI safety as well) (2025) https://www.lesswrong.com/posts/vGeuBKQ7nzPnn5f7A/why-modelling-multi-objective-homeostasis-is-essential-for
 
 # Presentations
 
