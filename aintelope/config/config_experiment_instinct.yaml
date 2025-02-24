@@ -23,11 +23,8 @@ trainer_params:
 hparams:
   gridsearch_trial_no: 0
   params_set_title: "instinct"
-  do_not_enforce_checkpoint_file_existence_during_test: False
+  do_not_enforce_checkpoint_file_existence_during_test: True
   aggregated_results_file: outputs/${hparams.params_set_title}.jsonl
-  batch_size: 16
-  lr: 0.015
-  amsgrad: True
   env: savanna-safetygrid-parallel-v1
   env_entry_point: "aintelope.environments.savanna_safetygrid:SavannaGridworldParallelEnv"
   env_type: zoo  
@@ -42,17 +39,8 @@ hparams:
     target_instincts: [food,drink,gold,silver,danger,predator,collision,antimovement]    
   model_params:
     use_weight_sharing: False
-    hidden_sizes: [8,16,8]
-    num_conv_layers: 3
-    conv_size: 2
-    gamma: 0.9
-    tau: 0.05
     eps_start: 0.0
     eps_end: 0.0
-    instinct_bias_epsilon_start: 1.0
-    instinct_bias_epsilon_end: 1.0
-    apply_instinct_eps_before_random_eps: True
-    replay_size: 99
     eps_last_pipeline_cycle: -1
     eps_last_episode: -1       # use -1 when episode counting for eps is disabled
     eps_last_trial: -1  # 10       # use -1 when trials counting for eps is disabled
@@ -60,10 +48,11 @@ hparams:
   trial_length: -1 # 10
   num_pipeline_cycles: 0
   num_episodes: 0 # how long to train. # TODO: move num_episodes to model_params
-  test_episodes: 10 # will be added to train episodes
+  test_episodes: 100 # will be added to train episodes
   env_params:
-    combine_interoception_and_vision: True  # needs to be set to True for OpenAI baselines learning algorithms
+    combine_interoception_and_vision: False  # needs to be set to True for OpenAI baselines learning algorithms
     scalarize_rewards: False     # needs to be set to True for OpenAI baselines learning algorithms
+    # TODO: move num_iters to model_params
     num_iters: 400 # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     env_experiment: ai_safety_gridworlds.aintelope_savanna
     level: 0

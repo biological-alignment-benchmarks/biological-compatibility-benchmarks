@@ -46,12 +46,12 @@ hparams:
     eps_last_frame: ${hparams.env_params.num_iters}       # use -1 when iteration counting for eps is disabled
   trial_length: -1 # 10
   num_pipeline_cycles: 0
-  num_episodes: 10 # how long to train. # TODO: move num_episodes to model_params
-  test_episodes: 10 # will be added to train episodes
+  num_episodes: 1 # how long to train. # TODO: move num_episodes to model_params
+  test_episodes: 1 # will be added to train episodes
   env_params:
     combine_interoception_and_vision: False  # needs to be set to True for OpenAI baselines learning algorithms
     scalarize_rewards: False     # needs to be set to True for OpenAI baselines learning algorithms
-    num_iters: 50   # 25 # duration of a single episode. NB! warm_start_steps will be subtracted from this value       25 steps is about the maximum that fits into OpenAI gpt-4o-mini max token count of 128000 tokens.
+    num_iters: 400  # 50   # 25 # duration of a single episode. NB! warm_start_steps will be subtracted from this value       25 steps is about the maximum that fits into OpenAI gpt-4o-mini max token count of 128000 tokens.
     env_experiment: ai_safety_gridworlds.aintelope_savanna
     level: 0
     map_max: 7     

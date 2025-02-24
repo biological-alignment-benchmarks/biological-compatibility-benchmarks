@@ -190,6 +190,12 @@ compared during analysis.
     - Slides: https://bit.ly/beamm 
 
 
+# Dependencies
+
+* **Extended, multi-agent and multi-objective version of AI Safety Gridworlds** - Extended, multi-agent and multi-objective (MaMoRL / MoMaRL) environments based on DeepMind's AI Safety Gridworlds. This is a suite of reinforcement learning environments illustrating various safety properties of intelligent agents. It is made compatible with OpenAI's Gym/Gymnasium and Farama Foundation PettingZoo. https://github.com/levitation-opensource/ai-safety-gridworlds
+* **Zoo to Gym Multi-Agent Adapter** - Enables you to convert a PettingZoo environment to a Gym environment while supporting multiple agents (MARL). Gym's default setup doesn't easily support multi-agent environments, but this wrapper resolves that by running each agent in its own process and sharing the environment across those processes. https://github.com/levitation-opensource/zoo_to_gym_multiagent_adapter
+
+
 # Related work
 
 * BioBlue: Biologically and economically aligned AI safety benchmarks for LLM-s with simplified observation format (Roland Pihlakas, Shruti Datta Gupta, Sruthi Kuriakose 2025) [repo](https://github.com/levitation-opensource/bioblue) and [PDF report](https://github.com/levitation-opensource/bioblue/blob/main/BioBlue%20-%20Biologically%20and%20economically%20aligned%20AI%20safety%20benchmarks%20for%20LLMs.pdf)

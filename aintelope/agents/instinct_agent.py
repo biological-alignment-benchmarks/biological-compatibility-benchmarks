@@ -51,18 +51,24 @@ class InstinctAgent(QAgent):
         target_instincts: List[str] = [],
         **kwargs,
     ) -> None:
+        self.id = agent_id
+        self.trainer = trainer
+        self.hparams = trainer.hparams
+        self.env = env
+        self.cfg = cfg
+        self.done = False
+        self.last_action = None
+
         self.target_instincts = target_instincts
         self.instincts = {}
-
-        super().__init__(
-            agent_id=agent_id,
-            trainer=trainer,
-            env=env,
-        )
-
     def reset(self, state, info, env_class) -> None:
         """Resets self and updates the state."""
-        super().reset(state, info, env_class)
+        self.done = False
+        self.last_action = None
+        self.state = state
+        self.info = info
+        self.env_class = env_class
+
         self.init_instincts()
 
     def get_action(
@@ -317,3 +323,33 @@ class InstinctAgent(QAgent):
         }
         for instinct in self.instincts.values():
             instinct.reset()
+
+    def init_model(
+        self,
+        observation_shape,
+        action_space,
+        unit_test_mode: bool,
+        checkpoint: Optional[str] = None,
+        *args,
+        **kwargs,
+    ):
+        self.trainer.add_agent(
+            self.id,
+            observation_shape,
+            action_space,
+            unit_test_mode,
+            checkpoint,
+            *args,
+            **kwargs,
+        )
+
+    def save_model(
+        self,
+        i_episode,
+        path,
+        experiment_name,
+        use_separate_models_for_each_experiment,
+        *args,
+        **kwargs,
+    ):
+        pass

@@ -326,6 +326,8 @@ class LLMAgent(Agent):
         if self.done:
             return None
 
+        print(f"test_mode: {self.test_mode} episode: {episode} step: {step}")
+
         is_a_new_episode = self.is_a_new_episode
         self.is_a_new_episode = False
 
@@ -383,6 +385,7 @@ class LLMAgent(Agent):
         max_output_tokens = 100
 
         while True:
+            # TODO: implement local caching of prompt response pairs so that if same input is executed again then the response is taken from the local cache
             response_content, output_message = run_llm_completion_uncached(
                 self.model_name,
                 gpt_timeout,
