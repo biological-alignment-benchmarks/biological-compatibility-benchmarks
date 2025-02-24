@@ -351,7 +351,7 @@ class LLMAgent(Agent):
                     "content": self.system_prompt,
                 }
             )
-            num_tokens = num_tokens_from_messages(self.messages)
+            num_tokens = num_tokens_from_messages(self.messages, self.model_name)
             num_oldest_observations_dropped += 1
 
         if num_oldest_observations_dropped > 0:

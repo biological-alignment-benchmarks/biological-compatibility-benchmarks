@@ -61,6 +61,7 @@ class InstinctAgent(QAgent):
 
         self.target_instincts = target_instincts
         self.instincts = {}
+
     def reset(self, state, info, env_class) -> None:
         """Resets self and updates the state."""
         self.done = False
