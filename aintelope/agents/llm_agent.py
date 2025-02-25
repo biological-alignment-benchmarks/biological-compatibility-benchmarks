@@ -336,12 +336,16 @@ class LLMAgent(Agent):
 
         self.messages.append({"role": "user", "content": prompt})
 
+        max_output_tokens = 100  # TODO: config
+
         num_tokens = num_tokens_from_messages(self.messages, self.model_name)
 
         num_oldest_observations_dropped = (
             0  # TODO!!! keep half of the context filled with training data
         )
-        while num_tokens > self.max_tokens:  # TODO!!! store full message log elsewhere
+        while (
+            num_tokens + max_output_tokens > self.max_tokens
+        ):  # TODO!!! store full message log elsewhere
             self.messages.popleft()  # system prompt
             self.messages.popleft()  # first observation
             self.messages.popleft()  # first action
@@ -382,7 +386,6 @@ class LLMAgent(Agent):
 
         # TODO: config
         gpt_timeout = 60
-        max_output_tokens = 100
 
         while True:
             # TODO: implement local caching of prompt response pairs so that if same input is executed again then the response is taken from the local cache

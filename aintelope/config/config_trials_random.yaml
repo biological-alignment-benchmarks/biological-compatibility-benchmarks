@@ -30,7 +30,7 @@ hparams:
   trial_length: -1 # 10
   num_pipeline_cycles: 0
   num_episodes: 0  # how long to train. # TODO: move num_episodes to model_params
-  test_episodes: 1  # will be added to train episodes
+  test_episodes: 100  # will be added to train episodes
   env_params:
     num_iters: 400 # [300, 400] # duration of a single episode. NB! warm_start_steps will be subtracted from this value
     map_max: 7 # [7, 9]     
