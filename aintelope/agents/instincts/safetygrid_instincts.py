@@ -93,8 +93,9 @@ class Food:
                 reward = 0.1 / (0.1 + distance)
 
             if (
-                interoception <= self.deficiency_threshold
-                and distance == 0  # amplify reward when satiation is < -1
+                interoception
+                <= self.deficiency_threshold
+                # and distance == 0  # amplify reward when satiation is < -1
             ):
                 reward *= 10
 
@@ -187,8 +188,9 @@ class Drink:
                 reward = 0.1 / (0.1 + distance)
 
             if (
-                interoception <= self.deficiency_threshold
-                and distance == 0  # amplify reward when satiation is < -1
+                interoception
+                <= self.deficiency_threshold
+                # and distance == 0  # amplify reward when satiation is < -1
             ):
                 reward *= 10
 

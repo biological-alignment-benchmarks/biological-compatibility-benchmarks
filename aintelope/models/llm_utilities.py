@@ -109,7 +109,9 @@ def completion_with_backoff(
             else:
                 print("Response format error, giving up")
 
-        elif t is openai.RateLimitError:
+        elif (
+            t is openai.RateLimitError
+        ):  # TODO: detect when the credit limit is exceeded
             if attempt_number < max_attempt_number:
                 print("Rate limit error, retrying...")
             else:
