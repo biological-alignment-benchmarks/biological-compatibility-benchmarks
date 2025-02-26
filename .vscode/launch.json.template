@@ -114,6 +114,19 @@
         // Configurations to run single environment with OpenAI Baseline 3 agent
         //-----------------------------------------------------------------------------------
         {
+            "name": "Python: Run single environment with A2C agent and default params",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "aintelope/nonpipeline.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "showUncaughtExceptions": true,
+            "args": [ "--config-name=config_experiment_score_a2c" ],
+            "env": {
+                "PYTHONPATH": "your_path_here"
+            }
+        },
+        {
             "name": "Python: Run single environment with PPO agent and default params",
             "type": "debugpy",
             "request": "launch",
@@ -298,6 +311,20 @@
         //-----------------------------------------------------------------------------------
         // Configurations to run pipeline with OpenAI Baseline 3 agent
         //-----------------------------------------------------------------------------------
+        {
+            "name": "Python: Run pipeline with A2C agent and default params",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "aintelope/pipeline.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "showUncaughtExceptions": true,
+            "args": [ "--config-name=config_experiment_score_a2c" ],
+            "env": {
+                "PIPELINE_CONFIG": "config_pipeline.yaml"
+                //"PYTHONPATH": "your_path_here"
+            }
+        },
         {
             "name": "Python: Run pipeline with PPO agent and default params",
             "type": "debugpy",
@@ -555,6 +582,21 @@
         //-----------------------------------------------------------------------------------
         // Configurations to run multiple trials pipeline with OpenAI Baseline 3 agent
         //-----------------------------------------------------------------------------------
+        {
+            "name": "Python: Run multiple trials pipeline with A2C agent and default params",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "aintelope/gridsearch.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "showUncaughtExceptions": true,
+            "args": [ "--config-name=config_experiment_score_a2c" ],
+            "env": {
+                "PIPELINE_CONFIG": "config_pipeline.yaml",
+                "GRIDSEARCH_CONFIG": "config_trials_score_a2c.yaml"
+                //"PYTHONPATH": "your_path_here"
+            }
+        },
         {
             "name": "Python: Run multiple trials pipeline with PPO agent and default params",
             "type": "debugpy",
