@@ -13,6 +13,7 @@ from omegaconf import OmegaConf
 
 from aintelope.training.simple_eval import run_episode
 
+
 @pytest.mark.parametrize("execution_number", range(1))
 def test_qagent_in_savanna_gridworlds_sequential(
     tparams_hparams: Dict, execution_number
