@@ -500,7 +500,7 @@ class AntiMovement:
         return rewards, event_signal
 
 
-available_instincts_dict = {
+savanna_safetygrid_available_instincts_dict = {
     "food": Food,  # TODO: split into sub-instincts
     "drink": Drink,  # TODO: split into sub-instincts
     "gold": Gold,

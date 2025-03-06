@@ -20,8 +20,8 @@ from aintelope.environments.savanna_safetygrid import (
     ACTION_RELATIVE_COORDINATE_MAP,
 )
 
-from aintelope.agents.instincts.safetygrid_instincts import (
-    available_instincts_dict,
+from aintelope.agents.instincts.savanna_safetygrid_instincts import (
+    savanna_safetygrid_available_instincts_dict,
     format_float,
 )
 
@@ -306,7 +306,7 @@ class InstinctAgent(QAgent):
         if issubclass(
             self.env_class, GridworldZooBaseEnv
         ):  # radically different types of environments may need different instincts
-            available_instincts_dict_local = available_instincts_dict
+            available_instincts_dict_local = savanna_safetygrid_available_instincts_dict
 
         logger.debug(f"target_instincts: {self.target_instincts}")
         for instinct_name in self.target_instincts:
