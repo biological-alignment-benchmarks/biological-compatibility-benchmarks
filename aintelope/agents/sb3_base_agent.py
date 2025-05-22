@@ -11,7 +11,7 @@ from typing import List, NamedTuple, Optional, Tuple
 from gymnasium.spaces import Discrete
 
 import pandas as pd
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from aintelope.utils import RobustProgressBar
 
@@ -545,6 +545,11 @@ class SB3BaseAgent(Agent):
             checkpoint_filenames = self.get_checkpoint_filenames(
                 include_timestamp=False
             )
+
+            OmegaConf.resolve(
+                self.cfg
+            )  # need to resolve the conf before passing to subprocesses since OmegaConf resolvers do not seem to work well in subprocesses (at least under Windows)
+
             env_wrapper = MultiAgentZooToGymAdapterZooSide(self.env, self.cfg)
             self.models, self.exceptions = env_wrapper.train(
                 num_total_steps=num_total_steps,
