@@ -13,6 +13,7 @@ hydra_logs_root: hydra_logs
 log_dir_root: outputs
 log_dir: ${log_dir_root}/${timestamp_pid_uuid}/
 experiment_dir: ${log_dir}/${experiment_name}/
+tensorboard_dir: ${experiment_dir}/tensorboard/
 
 trainer_params:
   num_workers: 4        # unused        # TODO

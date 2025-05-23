@@ -68,6 +68,7 @@ def ppo_model_constructor(env, cfg):
         device=torch.device(
             "cuda" if torch.cuda.is_available() else "cpu"
         ),  # Note, CUDA-based CPU performance is much better than Torch-CPU mode.
+        tensorboard_log=cfg.tensorboard_dir,
     )
 
 

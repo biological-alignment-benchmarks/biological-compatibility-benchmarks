@@ -13,6 +13,7 @@ hydra_logs_root: hydra_logs
 log_dir_root: outputs
 log_dir: ${log_dir_root}/${timestamp_pid_uuid}/
 experiment_dir: ${log_dir}/${experiment_name}/
+tensorboard_dir: ${experiment_dir}/tensorboard/
 
 trainer_params:
   num_workers: 4        # unused        # TODO
@@ -34,7 +35,7 @@ hparams:
   unit_test_mode: False      # is set during tests in order to speed up DQN computations
   agent_class: example_agent 
   warm_start_steps: 0       # not used at the moment, except for the unit tests
-  save_frequency: 10 # how often to save a model
+  save_frequency: ${muldiv:${hparams.num_episodes},${hparams.env_params.num_iters},10} # how often to save a model
   use_separate_models_for_each_experiment: True
   agent_params: {}
   model_params:

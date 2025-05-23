@@ -164,8 +164,9 @@ def sb3_agent_train_thread_entry_point(
             checkpoint_filename + "-" + filename_timestamp_sufix_str
         )
 
-        # resulting filename looks like checkpointfilename_timestamp_200000_steps.zip next checkpointfilename_timestamp_400000_steps.zip etc
-        # note that steps count in the checkpoint filename is multiplied by the number of agents in multi-agent scenarios
+        # resulting filename looks usually like checkpointfilename_timestamp_100000_steps.zip next checkpointfilename_timestamp_200000_steps.zip etc
+        # note that in case PPO weight sharing is on in multi-agent scenarios, SB3 multiplies the steps count in the checkpoint filename by the number of agents
+        # with weight sharing, the resulting filename looks like checkpointfilename_timestamp_200000_steps.zip next checkpointfilename_timestamp_400000_steps.zip etc
         checkpoint_callback = (
             CheckpointCallback(
                 save_freq=cfg.hparams.save_frequency,  # save frequency in timesteps
@@ -548,7 +549,7 @@ class SB3BaseAgent(Agent):
 
             OmegaConf.resolve(
                 self.cfg
-            )  # need to resolve the conf before passing to subprocesses since OmegaConf resolvers do not seem to work well in subprocesses (at least under Windows)
+            )  # need to resolve the conf before passing to subprocesses since OmegaConf resolvers do not seem to work well in subprocesses
 
             env_wrapper = MultiAgentZooToGymAdapterZooSide(self.env, self.cfg)
             self.models, self.exceptions = env_wrapper.train(
