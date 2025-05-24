@@ -108,8 +108,11 @@ async def run_gridsearch_experiments_async() -> None:
 
     # create outer product of all list entries stored in the dictionary values
     # http://stephantul.github.io/python/2019/07/20/product-dict/
+    list_entries = reversed(
+        list(list_entries.items())
+    )  # NB! reverse the list since itertools.product seems to iterate over last dimension first, but we want it to iterate over last dimension last
     keys, values = zip(
-        *list_entries.items()
+        *list_entries
     )  # this performs unzip - split dictionary in to list of keys and list of values
     values_combinations = list(itertools.product(*values))
     with RobustProgressBar(
