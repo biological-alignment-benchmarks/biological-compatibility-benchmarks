@@ -8,6 +8,7 @@ import glob
 import logging
 import os
 from pathlib import Path
+import gc
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -517,6 +518,8 @@ def run_experiment(
     # / if is_sb3 and not test_mode:
 
     events.close()
+
+    gc.collect()
 
     return num_actual_train_episodes
 
