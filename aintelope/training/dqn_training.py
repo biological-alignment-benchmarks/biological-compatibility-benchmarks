@@ -108,9 +108,16 @@ class Trainer:
     def tiebreaking_argmax(self, arr):
         max_values_bitmap = np.isclose(arr, arr.max())
         max_values_indexes = np.flatnonzero(max_values_bitmap)
-        result = np.random.choice(
-            max_values_indexes
-        )  # TODO: seed for this random generator
+
+        if (
+            len(max_values_indexes) == 0
+        ):  # Happens when all values are infinities or nans. This would cause np.random.choice to throw.
+            result = np.random.randint(0, len(arr))
+        else:
+            result = np.random.choice(
+                max_values_indexes
+            )  # TODO: seed for this random generator
+
         return result
 
     @torch.no_grad()
