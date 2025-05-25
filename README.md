@@ -4,7 +4,7 @@ We operationalize conjectures from Steven Byrnes’
 [“Reverse-engineer human social instincts”](https://www.lesswrong.com/s/HzcM2dkCq7fwXBej8/p/tj8AC3vhTnBywdZoA)
 research program and extend existing research into brain-like AI. We simulate
 agents with reinforcement learning over selected cue-response patterns in
-environments that could give rise to humanl-iike complex behaviors. To do so we
+environments that could give rise to human-like complex behaviors. To do so we
 select cue-responses from a pre-existing list of more than 60 candidates for
 human affects and instincts from affective neuroscience and other sources
 including original patterns. Cue-responses are conjectured to form hierarchies
@@ -82,7 +82,7 @@ You can download the latest installer from https://www.python.org/downloads/rele
 * Run `git clone https://github.com/GunnarZarncke/aintelope.git`
 * Run `cd aintelope`
 
-3. Create a virtual python environment: 
+3. Create a virtual python environment by running: 
 <br>3.1. To activate VirtualEnv with Python 3.10:
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`virtualenv -p python3.10 venv_aintelope` 
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(or if you want to use your default Python version: 
@@ -166,9 +166,58 @@ To see the Tensorboard, run
 `tensorboard --log_dir outputs/TIMESTAMP/EXPERIMENT/tensorboard/`
 then go to http://localhost:6006/ in the browser.
 
+
+## Actions map
+
+The actions the agents can take have the following mapping:
+```
+  NOOP = 0
+  LEFT = 1
+  RIGHT = 2
+  UP = 3
+  DOWN = 4
+```
+
+Eating and drinking are not separate actions. Eating and drinking occurs always when an action ends with the agent being on top of a food or water tile, correspondingly. If the agent continues to stay on that tile then eating and drinking continues until the agent leaves. Likewise with collecting gold and silver. The agent is harmed by danger tile or predator, when the agent action ends up on a danger tile or predator tile.
+
+Additionally, when `observation_direction_mode` = 2 or `action_direction_mode` = 2 then the following actions become available:
+```
+  TURN_LEFT_90 = 5
+  TURN_RIGHT_90 = 6
+  TURN_LEFT_180 = 7
+  TURN_RIGHT_180 = 8
+```
+By default, the separate turning actions are turned off.
+
+
+## Human-playable demos
+
+In the folder `aintelope\environments\demos\gridworlds\` are located the human-playable demo environments, which have same configuration as the benchmarks in our pipeline. Playing these human-playable demos manually can give you a better intuition of the rules and how the benchmarks work.
+
+You can launch these Python files without additional arguments. 
+
+You can move the agents around using arrow keys (left, right, up, down). For no-op action you can use space key. 
+
+In food sharing environment there are two agents. In a human-playable demo these agents take turns. In an RL setting they agents take actions concurrently and the environment implements their actions in a random order (randomising the order for each turn).
+
+The human-playable benchmark environments are in the following files:
+```
+food_unbounded.py
+danger_tiles.py
+predators.py
+food_homeostasis.py
+food_sustainability.py
+food_drink_homeostasis.py
+food_drink_homeostasis_gold.py
+food_drink_homeostasis_gold_silver.py
+food_sharing.py
+```
+
+
 ## Logging
 
 TODO
+
 
 ## Windows
 
@@ -186,21 +235,22 @@ compared during analysis.
 
 # Papers
 
-* A working paper related to this repo: Pihlakas, R & Pyykkö, J. "From homeostasis to resource sharing: Biologically and economically compatible multi-objective multi-agent AI safety benchmarks". Arxiv (2024). https://arxiv.org/abs/2410.00081
+* A working paper related to this repo: Pihlakas, R & Pyykkö, J. **"From homeostasis to resource sharing: Biologically and economically compatible multi-objective multi-agent AI safety benchmarks"**. Arxiv (2024-2025). https://arxiv.org/abs/2410.00081 
+<br>Data files of the experiments performed for this paper will be available here: https://drive.google.com/drive/folders/1KBRcPLbM2a8Li3HQ92lGTEfizOGtZ7OM?usp=sharing These data files contain logs of the steps agents took across training and test episodes, and multi-objective environment scores calculated during each step.
 
 
 # Blog posts
 
-* Why modelling multi-objective homeostasis is essential for AI alignment (and how it helps with AI safety as well) (2025) https://www.lesswrong.com/posts/vGeuBKQ7nzPnn5f7A/why-modelling-multi-objective-homeostasis-is-essential-for
+* **Why modelling multi-objective homeostasis is essential for AI alignment (and how it helps with AI safety as well)** (2025) https://www.lesswrong.com/posts/vGeuBKQ7nzPnn5f7A/why-modelling-multi-objective-homeostasis-is-essential-for
 
 
 # Presentations
 
-* At VAISU unconference, May 2024:
+* At **VAISU unconference**, May 2024:
     - Demo and feedback session - AI safety benchmarking in multi-objective multi-agent gridworlds - Biologically essential yet neglected themes illustrating the weaknesses and dangers of current industry standard approaches to reinforcement learning. 
     - Video: https://www.youtube.com/watch?v=ydxMlGlQeco
     - Slides: https://bit.ly/bmmbs
-* At Foresight Institute's Intelligent Cooperation Group, Nov 2024: 
+* At **Foresight Institute's Intelligent Cooperation Group**, Nov 2024: 
     - The subject of the presentation was describing why we should consider fundamental yet neglected principles from biology and economics when thinking about AI alignment, and how these considerations will help with AI safety as well (alignment and safety were treated in this research explicitly as separate aspects, which both benefit from consideration of aforementioned principles). These principles include homeostasis and diminishing returns in utility functions, and sustainability. Next I introduce multi-objective and multi-agent gridworlds-based benchmark environments we have created for measuring the performance of machine learning algorithms and AI agents in relation to their capacity for biological and economical alignment. The benchmarks are now available as a public repo. At the end I mention some of the related themes and dilemmas not yet covered by these benchmarks, and describe new benchmark environments we have planned for future implementation.
     - Recording: https://www.youtube.com/watch?v=DCUqqyyhcko
     - Slides: https://bit.ly/beamm 
@@ -214,7 +264,8 @@ compared during analysis.
 
 # Related work
 
-* BioBlue: Biologically and economically aligned AI safety benchmarks for LLM-s with simplified observation format (Roland Pihlakas, Shruti Datta Gupta, Sruthi Kuriakose 2025) [repo](https://github.com/levitation-opensource/bioblue) and [PDF report](https://github.com/levitation-opensource/bioblue/blob/main/BioBlue%20-%20Biologically%20and%20economically%20aligned%20AI%20safety%20benchmarks%20for%20LLMs.pdf)
+* **Notable runaway-optimiser-like LLM failure modes on Biologically and Economically aligned AI safety benchmarks for LLMs with simplified observation format** https://www.lesswrong.com/posts/PejNckwQj3A2MGhMA/notable-runaway-optimiser-like-llm-failure-modes-on
+* **BioBlue: Biologically and economically aligned AI safety benchmarks for LLM-s with simplified observation format** (Roland Pihlakas, Shruti Datta Gupta, Sruthi Kuriakose 2025) [repo](https://github.com/levitation-opensource/bioblue) and [PDF report](https://github.com/levitation-opensource/bioblue/blob/main/BioBlue%20-%20Biologically%20and%20economically%20aligned%20AI%20safety%20benchmarks%20for%20LLMs.pdf)
 
 
 # License
