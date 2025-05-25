@@ -178,7 +178,7 @@ The actions the agents can take have the following mapping:
   DOWN = 4
 ```
 
-Eating and drinking are not separate actions. Eating and drinking occurs always when an action ends with the agent being on top of a food or water tile, correspondingly. If the agent continues to stay on that tile then eating and drinking continues until the agent leaves. Likewise with collecting gold and silver. The agent is harmed by danger tile or predator, when the agent action ends up on a danger tile or predator tile.
+Eating and drinking are not individual actions. Eating and drinking occurs always when an action ends with the agent being on top of a food or water tile, correspondingly. If the agent continues to stay on that tile then eating and drinking continues until the agent leaves. Likewise with collecting gold and silver. The agent is harmed by danger tile or predator, when the agent action ends up on a danger tile or predator tile. Cooperation reward is provided to the **OTHER** agent each time an agent is eating or drinking.
 
 Additionally, when `observation_direction_mode` = 2 or `action_direction_mode` = 2 then the following actions become available:
 ```
