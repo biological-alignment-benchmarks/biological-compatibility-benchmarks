@@ -256,6 +256,10 @@ class GridworldZooBaseEnv:
         # TODO!: fix that on the gridworld implementation side
         self.super_initargs["max_iterations"] *= self.super_initargs["amount_agents"]
 
+        self._observation_direction_mode = self.metadata["observation_direction_mode"]
+        if self._observation_direction_mode == -1:
+            self.super_initargs["observation_direction_mode"] = 0
+
         self._override_infos = self.metadata["override_infos"]
         self._scalarize_rewards = self.metadata["scalarize_rewards"]
         self._combine_interoception_and_vision = self.metadata[
@@ -269,11 +273,19 @@ class GridworldZooBaseEnv:
     def init_observation_spaces(self, parent_observation_spaces, infos):
         # for @zoo-api
         # TODO: make self.transformed_observation_spaces readonly
-        if self._combine_interoception_and_vision:
-            self.transformed_observation_spaces = {
+
+        if (
+            self._observation_direction_mode == -1
+        ):  # use global observation perspective instead of individual agent-centric perspectives
+            parent_observation_spaces = {
                 agent: Box(
                     low=0,  # this is a boolean bitmap
                     high=1,  # this is a boolean bitmap
+                    shape=infos[agent][INFO_OBSERVATION_LAYERS_CUBE].shape,
+                )
+                for agent in self.possible_agents
+            }
+
                     shape=(
                         len(infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER])
                         + 2,  # this already includes all_agents layer + 2 for interoception
@@ -319,13 +331,23 @@ class GridworldZooBaseEnv:
             #    info["metrics_dict"]["FoodSatiation_" + self.agent_name_mapping[agent]],
             #    info["metrics_dict"]["DrinkSatiation_" + self.agent_name_mapping[agent]],
             # ]
-            observation = info[INFO_AGENT_OBSERVATION_LAYERS_CUBE]
+            if self._observation_direction_mode == -1:
+                observation = info[INFO_OBSERVATION_LAYERS_CUBE].astype(np.float32)
+            else:
+                observation = info[INFO_AGENT_OBSERVATION_LAYERS_CUBE].astype(
+                    np.float32
+                )
 
             all_agents_layer = np.zeros(
                 [observation.shape[1], observation.shape[2]], bool
             )
             for agent_name, agent_chr in self.agent_name_mapping.items():
-                all_agents_layer |= info[INFO_AGENT_OBSERVATION_LAYERS_DICT][agent_chr]
+                if self._observation_direction_mode == -1:
+                    all_agents_layer |= info[INFO_OBSERVATION_LAYERS_DICT][agent_chr]
+                else:
+                    all_agents_layer |= info[INFO_AGENT_OBSERVATION_LAYERS_DICT][
+                        agent_chr
+                    ]  # TODO: implement config for using global observation in place of agent-centric observation
 
             if self._combine_interoception_and_vision:
                 # TODO!: Config for interoception scaling? Or use sigmoid transformation?
@@ -389,6 +411,8 @@ class GridworldZooBaseEnv:
                 INFO_AGENT_OBSERVATION_LAYERS_ORDER
             ]
             + [ALL_AGENTS_LAYER],
+            INFO_OBSERVATION_LAYERS_CUBE: info[INFO_OBSERVATION_LAYERS_CUBE],
+            INFO_OBSERVATION_LAYERS_DICT: info[INFO_OBSERVATION_LAYERS_DICT],
             INFO_AGENT_OBSERVATION_LAYERS_CUBE: info[
                 INFO_AGENT_OBSERVATION_LAYERS_CUBE
             ],
@@ -427,6 +451,10 @@ class GridworldZooBaseEnv:
             ACTION_RELATIVE_COORDINATE_MAP,
             INFO_REWARD_DICT,  # keep reward dict for case the score is scalarised
         ]
+        if self._observation_direction_mode == -1:
+            allowed_keys.append(INFO_OBSERVATION_LAYERS_CUBE)
+            allowed_keys.append(INFO_OBSERVATION_LAYERS_DICT)
+
         result = {key: value for key, value in info.items() if key in allowed_keys}
 
         if INFO_AGENT_INTEROCEPTION_VECTOR in result:
@@ -706,20 +734,21 @@ class SavannaGridworldParallelEnv(GridworldZooBaseEnv, GridworldZooParallelEnv):
         if self._override_infos:
             infos = {agent: {} for agent in infos.keys()}
 
+        filtered_infos = self.filter_infos(infos)
         logger.debug(
             "debug return",
             self.observations2,
             rewards,
             terminateds,
             truncateds,
-            self.filter_infos(infos),
+            filtered_infos,
         )
         result = (
             self.observations2,
             rewards2,
             terminateds,
             truncateds,
-            self.filter_infos(infos),
+            filtered_infos,
         )
 
         if self._post_step_callback2 is not None:
@@ -977,20 +1006,21 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         if self._override_infos:
             info = {}
 
+        filtered_info = self.filter_info(agent, info)
         logger.debug(
             "debug return",
             observation2,
             reward2,
             terminated,
             truncated,
-            self.filter_info(agent, info),
+            filtered_info,
         )
         result = (
             observation2,
             reward2,
             terminated,
             truncated,
-            self.filter_info(agent, info),
+            filtered_info,
         )
 
         if self._post_step_callback2 is not None:
@@ -1103,18 +1133,19 @@ class SavannaGridworldSequentialEnv(GridworldZooBaseEnv, GridworldZooAecEnv):
         if self._override_infos:
             infos = {agent: {} for agent in infos.keys()}
 
+        filtered_infos = self.filter_infos(infos)
         logger.debug(
             "debug return",
             self.observations2,
             rewards2,
             terminateds,
             truncateds,
-            self.filter_infos(infos),
+            filtered_infos,
         )
         return (
             self.observations2,
             rewards2,
             terminateds,
             truncateds,
-            self.filter_infos(infos),
+            filtered_infos,
         )
