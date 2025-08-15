@@ -38,7 +38,7 @@ e_4_homeostasis:
     FOOD_DEFICIENCY_INITIAL: 0
     FOOD_OVERSATIATION_LIMIT: 4
 
-e_5_sustainability2:
+e_5_sustainability:
   env_params:
     env_experiment: "ai_safety_gridworlds.aintelope_savanna"
     # num_iters: 100 # TODO: if you override this here then you need to override also eps_last_frame! duration of a single episode. NB! warm_start_steps will be subtracted from this value

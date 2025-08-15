@@ -56,6 +56,9 @@ hparams:
   test_episodes: 100 # will be added to train episodes
   env_params:
     combine_interoception_and_vision: True  # needs to be set to True for OpenAI baselines learning algorithms
+    interoception_transformation_mode: 0    # 0 - do not normalise or transform interoception channels; 1 - transform using 1 - x / 100 + 0.5 then clamp to range [0, 1]; 2 - normalise to range [0, 1] by considering oversatiation_limit and deficiency_limit of the environment (raises error if these are not set); 3 - create embedding using a set of gaussians (parameters provided in interoception_gaussian_centers and interoception_gaussian_scales); 4 - create embedding using a set of cumulative density functions (underlying gaussian parameters provided in interoception_gaussian_centers and interoception_gaussian_scales).
+    interoception_embedding_gaussian_centers: [-32, -16, -8, -4, -2, -1, 0, 1, 2, 4]   # used only when interoception_transformation_mode is 3 or 4
+    interoception_embedding_gaussian_scales: [32, 16, 8, 4, 2, 1, 1, 1, 2, 4]   # used only when interoception_transformation_mode is 3 or 4
     scalarize_rewards: False
     num_iters: 400 # duration of a single episode # if SB3 decides to use shorter episodes than specified in num_iters then the number of episodes will be bigger than num_episodes, so that total step count would stay same as num_episodes * num_iters.
     env_experiment: ai_safety_gridworlds.aintelope_savanna
@@ -105,6 +108,7 @@ hparams:
     FOOD_DEFICIENCY_RATE: -0.1      # -0.05
     FOOD_OVERSATIATION_LIMIT: 4
     FOOD_OVERSATIATION_THRESHOLD: 2
+    FOOD_DEFICIENCY_LIMIT: -20
     FOOD_DEFICIENCY_THRESHOLD: -3
     FOOD_GROWTH_LIMIT: 20
     FOOD_REGROWTH_EXPONENT: 1.1
@@ -114,6 +118,7 @@ hparams:
     DRINK_DEFICIENCY_RATE: -0.1     # -0.05  
     DRINK_OVERSATIATION_LIMIT: 4
     DRINK_OVERSATIATION_THRESHOLD: 2
+    DRINK_DEFICIENCY_LIMIT: -20
     DRINK_DEFICIENCY_THRESHOLD: -3
     DRINK_GROWTH_LIMIT: 20
     DRINK_REGROWTH_EXPONENT: 1.1
@@ -122,9 +127,7 @@ hparams:
     SILVER_VISITS_LOG_BASE: 1.5
     # predator parameters
     PREDATOR_MOVEMENT_PROBABILITY: 0.25  
-    #
-    # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
-    # controlled by separate turning actions.
+    # -1 - use global observation, not agent-centric, 0 - fixed agent-centric, 1 - relative agent-centric, depending on last move, 2 - relative agent-centric, controlled by separate turning actions.
     observation_direction_mode: 0
     # 0 - fixed, 1 - relative, depending on last move, 2 - relative,
     # controlled by separate turning actions.

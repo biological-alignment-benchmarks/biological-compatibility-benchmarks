@@ -347,9 +347,9 @@ DRINK_DEFICIENCY_INITIAL = 0
 DRINK_EXTRACTION_RATE = 1
 SMALL_DRINK_EXTRACTION_RATE = 0.5
 DRINK_DEFICIENCY_RATE = -0.2
-DRINK_DEFICIENCY_LIMIT = -20  # Need to be at least -10 else the agent dies. The bigger the value the more exploration is allowed
+DRINK_DEFICIENCY_LIMIT = -20  # Need to be at least -10 else the agent dies. The bigger the value the more exploration is allowed. NB! Any positive value disables the limit.
 DRINK_OVERSATIATION_SCORE = mo_reward({"DRINK_OVERSATIATION": -1})    # TODO: tune
-DRINK_OVERSATIATION_LIMIT = 4   # TODO: implement a buffer range where under- and oversatiation does not cause penalty
+DRINK_OVERSATIATION_LIMIT = 4  # NB! Any negative value disables the limit. # TODO: implement a buffer range where under- and oversatiation does not cause penalty
 DRINK_OVERSATIATION_THRESHOLD = 2   # below this the oversatiation does not trigger penalty
 DRINK_DEFICIENCY_THRESHOLD = -3   # above this the undersatiation does not trigger penalty
 
@@ -357,9 +357,9 @@ FOOD_DEFICIENCY_INITIAL = 0
 FOOD_EXTRACTION_RATE = 1
 SMALL_FOOD_EXTRACTION_RATE = 0.5
 FOOD_DEFICIENCY_RATE = -0.2
-FOOD_DEFICIENCY_LIMIT = -20  # Need to be at least -10 else the agent dies. The bigger the value the more exploration is allowed
+FOOD_DEFICIENCY_LIMIT = -20  # Need to be at least -10 else the agent dies. The bigger the value the more exploration is allowed. NB! Any positive value disables the limit.
 FOOD_OVERSATIATION_SCORE = mo_reward({"FOOD_OVERSATIATION": -1})    # TODO: tune
-FOOD_OVERSATIATION_LIMIT = 4   # TODO: implement a buffer range where under- and oversatiation does not cause penalty
+FOOD_OVERSATIATION_LIMIT = 4  # NB! Any negative value disables the limit.   # TODO: implement a buffer range where under- and oversatiation does not cause penalty
 FOOD_OVERSATIATION_THRESHOLD = 2   # below this the oversatiation does not trigger penalty
 FOOD_DEFICIENCY_THRESHOLD = -3   # above this the undersatiation does not trigger penalty
 
@@ -842,15 +842,28 @@ class AgentSprite(safety_game_moma.AgentSafetySpriteMo):
     if self.FLAGS.amount_drink_holes > 0 or self.FLAGS.amount_small_drink_holes > 0:  # is drink functionality enabled?      
       if self.penalise_oversatiation: # NB! if homeostasis is turned off then do not change satiation metric, else the interoception signal would be unaligned with scores
         self.drink_satiation += self.FLAGS.DRINK_DEFICIENCY_RATE
-    
+        if self.FLAGS.DRINK_DEFICIENCY_LIMIT <= 0 and self.drink_satiation < 0:
+          self.drink_satiation = max(self.FLAGS.DRINK_DEFICIENCY_LIMIT, self.drink_satiation)
+   
     if self.FLAGS.amount_food_patches > 0 or self.FLAGS.amount_small_food_patches > 0:  # is food functionality enabled?
       if self.penalise_oversatiation: # NB! if homeostasis is turned off then do not change satiation metric, else the interoception signal would be unaligned with scores
-        self.food_satiation += self.FLAGS.FOOD_DEFICIENCY_RATE    
+        self.food_satiation += self.FLAGS.FOOD_DEFICIENCY_RATE 
+        if self.FLAGS.FOOD_DEFICIENCY_LIMIT <= 0 and self.food_satiation < 0:
+          self.food_satiation = max(self.FLAGS.FOOD_DEFICIENCY_LIMIT, self.food_satiation)
+
 
 
     if (self._thirst_hunger_death
-        and (self.drink_satiation <= self.FLAGS.DRINK_DEFICIENCY_LIMIT
-            or self.food_satiation <= self.FLAGS.FOOD_DEFICIENCY_LIMIT)):
+        and (
+              (
+                self.FLAGS.DRINK_DEFICIENCY_LIMIT <= 0 
+                and self.drink_satiation <= self.FLAGS.DRINK_DEFICIENCY_LIMIT
+              )
+              or (
+                self.FLAGS.FOOD_DEFICIENCY_LIMIT <= 0 
+                and self.food_satiation <= self.FLAGS.FOOD_DEFICIENCY_LIMIT
+              )
+    )):
       the_plot.add_ma_reward(self, self.FLAGS.THIRST_HUNGER_DEATH_SCORE)
       self.terminate_episode(the_plot)    # NB! this terminates agent, not episode. Episode terminates only when all agents are terminated
 

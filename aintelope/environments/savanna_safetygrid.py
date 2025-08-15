@@ -11,6 +11,7 @@ from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
+import scipy
 
 import gymnasium.spaces  # cannot import gymnasium.spaces.Tuple directly since it is already used by typing
 from aintelope.environments.ai_safety_gridworlds.aintelope_savanna import (  # TODO: import agent char map from env object instead?; AGENT_CHR3,
@@ -61,6 +62,8 @@ INFO_AGENT_INTEROCEPTION_ORDER = "info_agent_interoception_order"
 INFO_AGENT_INTEROCEPTION_VECTOR = "info_agent_interoception_vector"
 INTEROCEPTION_FOOD = "food_satiation"
 INTEROCEPTION_DRINK = "drink_satiation"
+INTEROCEPTION_FOOD_TRANSFORMED = "food_satiation_transformed"
+INTEROCEPTION_DRINK_TRANSFORMED = "drink_satiation_transformed"
 ACTION_RELATIVE_COORDINATE_MAP = (
     "action_relative_coordinate_map"  # TODO: move to Gridworld environment
 )
@@ -200,6 +203,7 @@ class GridworldZooBaseEnv:
             "FOOD_DEFICIENCY_RATE": "FOOD_DEFICIENCY_RATE",
             "FOOD_OVERSATIATION_LIMIT": "FOOD_OVERSATIATION_LIMIT",
             "FOOD_OVERSATIATION_THRESHOLD": "FOOD_OVERSATIATION_THRESHOLD",
+            "FOOD_DEFICIENCY_LIMIT": "FOOD_DEFICIENCY_LIMIT",
             "FOOD_DEFICIENCY_THRESHOLD": "FOOD_DEFICIENCY_THRESHOLD",
             #
             "FOOD_GROWTH_LIMIT": "FOOD_GROWTH_LIMIT",
@@ -214,6 +218,7 @@ class GridworldZooBaseEnv:
             "DRINK_DEFICIENCY_RATE": "DRINK_DEFICIENCY_RATE",
             "DRINK_OVERSATIATION_LIMIT": "DRINK_OVERSATIATION_LIMIT",
             "DRINK_OVERSATIATION_THRESHOLD": "DRINK_OVERSATIATION_THRESHOLD",
+            "DRINK_DEFICIENCY_LIMIT": "DRINK_DEFICIENCY_LIMIT",
             "DRINK_DEFICIENCY_THRESHOLD": "DRINK_DEFICIENCY_THRESHOLD",
             #
             "DRINK_GROWTH_LIMIT": "DRINK_GROWTH_LIMIT",
@@ -260,6 +265,25 @@ class GridworldZooBaseEnv:
         if self._observation_direction_mode == -1:
             self.super_initargs["observation_direction_mode"] = 0
 
+        self._interoception_transformation_mode = self.metadata[
+            "interoception_transformation_mode"
+        ]
+        self._interoception_embedding_gaussian_centers = self.metadata[
+            "interoception_embedding_gaussian_centers"
+        ]
+        self._interoception_embedding_gaussian_scales = self.metadata[
+            "interoception_embedding_gaussian_scales"
+        ]
+
+        self._food_oversatiation_limit = self.metadata.get(
+            "FOOD_OVERSATIATION_LIMIT", None
+        )
+        self._drink_oversatiation_limit = self.metadata.get(
+            "DRINK_OVERSATIATION_LIMIT", None
+        )
+        self._food_deficiency_limit = self.metadata.get("FOOD_DEFICIENCY_LIMIT", None)
+        self._drink_deficiency_limit = self.metadata.get("DRINK_DEFICIENCY_LIMIT", None)
+
         self._override_infos = self.metadata["override_infos"]
         self._scalarize_rewards = self.metadata["scalarize_rewards"]
         self._combine_interoception_and_vision = self.metadata[
@@ -286,9 +310,65 @@ class GridworldZooBaseEnv:
                 for agent in self.possible_agents
             }
 
+        interoception_transformation_mode = self._interoception_transformation_mode
+        if (
+            interoception_transformation_mode == 0
+        ):  # do not normalise or transform interoception channels
+            interoception_min = -np.inf
+            interoception_max = np.inf
+
+            if (
+                self._food_deficiency_limit is not None
+                and self._food_deficiency_limit <= 0
+                and self._drink_deficiency_limit is not None
+                and self._drink_deficiency_limit <= 0
+            ):
+                interoception_min = min(
+                    [self._food_deficiency_limit, self._drink_deficiency_limit, -1]
+                )
+
+            if (
+                self._food_oversatiation_limit is not None
+                and self._food_oversatiation_limit >= 0
+                and self._drink_oversatiation_limit is not None
+                and self._drink_oversatiation_limit >= 0
+            ):
+                interoception_max = max(
+                    [self._food_oversatiation_limit, self._drink_oversatiation_limit, 1]
+                )
+
+            interoception_space = (interoception_min, interoception_max)
+            interoception_vector_len = 2
+        elif (
+            interoception_transformation_mode == 1
+        ):  # 1 - transform using 1 - x / 100 + 0.5 then clamp to range [0, 1]
+            interoception_space = (0, 1)
+            interoception_vector_len = 2
+        elif (
+            interoception_transformation_mode == 2
+        ):  # normalise to range [0, 1] by considering oversatiation_limit and deficiency_limit of the environment (raises error if these are not set)
+            interoception_space = (0, 1)
+            interoception_vector_len = 2
+        elif (
+            interoception_transformation_mode == 3
+            or interoception_transformation_mode == 4
+        ):
+            interoception_space = (0, 1)
+            interoception_vector_len = 2 * len(
+                self._interoception_embedding_gaussian_centers
+            )
+
+        if self._combine_interoception_and_vision:
+            self.transformed_observation_spaces = {
+                agent: Box(
+                    # this is a boolean bitmap, but interoception layers might have a bigger range
+                    low=interoception_space[0],
+                    high=interoception_space[1],
                     shape=(
-                        len(infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER])
-                        + 2,  # this already includes all_agents layer + 2 for interoception
+                        len(
+                            infos[agent][INFO_AGENT_OBSERVATION_LAYERS_ORDER]
+                        )  # this already includes "all_agents" layer
+                        + interoception_vector_len,
                         parent_observation_spaces[agent].shape[1],
                         parent_observation_spaces[agent].shape[2],
                     ),
@@ -311,7 +391,9 @@ class GridworldZooBaseEnv:
                             ),
                         ),
                         Box(
-                            low=-np.inf, high=np.inf, shape=(2,)
+                            low=interoception_space[0],
+                            high=interoception_space[1],
+                            shape=(interoception_vector_len,),
                         ),  # interoception vector
                     ]
                 )
@@ -349,23 +431,154 @@ class GridworldZooBaseEnv:
                         agent_chr
                     ]  # TODO: implement config for using global observation in place of agent-centric observation
 
+            interoception_vector = info[INFO_AGENT_INTEROCEPTION_VECTOR]
+            order = info[INFO_AGENT_INTEROCEPTION_ORDER]
+            food_interoception = interoception_vector[order.index(INTEROCEPTION_FOOD)]
+            drink_interoception = interoception_vector[order.index(INTEROCEPTION_DRINK)]
+
+            # 0 - none,
+            # 1 - transform using 1 - x / 100 + 0.5 then clamp to range [0, 1]
+            # 2 - normalise to range [0, 1] by considering oversatiation_limit and deficiency_limit of the environment (raises error if these are not set)
+            # 3 - create embedding using a set of gaussians (parameters provided in interoception_gaussian_centers and interoception_gaussian_scales)
+            # 4 - create embedding using a set of cumulative density functions (underlying gaussian parameters provided in interoception_gaussian_centers and interoception_gaussian_scales)
+            interoception_transformation_mode = self._interoception_transformation_mode
+            interoception_embedding_gaussian_centers = (
+                self._interoception_embedding_gaussian_centers
+            )
+            interoception_embedding_gaussian_scales = (
+                self._interoception_embedding_gaussian_scales
+            )
+
+            if (
+                interoception_transformation_mode == 0
+            ):  # do not normalise or transform interoception channels
+                food_interoception_vector = [food_interoception]
+            elif (
+                interoception_transformation_mode == 1
+            ):  # 1 - transform using 1 - x / 100 + 0.5 then clamp to range [0, 1]
+                food_interoception_vector = [
+                    max(0, min(1, food_interoception / 100 + 0.5))
+                ]
+            elif (
+                interoception_transformation_mode == 2
+            ):  # normalise to range [0, 1] by considering oversatiation_limit and deficiency_limit of the environment (raises error if not set)
+                if (
+                    self._food_deficiency_limit is not None
+                    and self._food_deficiency_limit <= 0
+                    and self._food_oversatiation_limit is not None
+                    and self._food_oversatiation_limit >= 0
+                ):
+                    # normalise the interoception considering the under- and oversatiation limits
+                    food_interoception_vector = [
+                        (food_interoception - self._food_deficiency_limit)
+                        / (self._food_oversatiation_limit - self._food_deficiency_limit)
+                    ]
+                else:
+                    raise Exception(
+                        "FOOD_DEFICIENCY_LIMIT or FOOD_OVERSATIATION_LIMIT unset"
+                    )
+            elif (
+                interoception_transformation_mode == 3
+                or interoception_transformation_mode == 4
+            ):
+                mus_sigmas = zip(
+                    interoception_embedding_gaussian_centers,
+                    interoception_embedding_gaussian_scales,
+                )
+                distributions = [
+                    scipy.stats.Normal(mu=mu, sigma=sigma) for mu, sigma in mus_sigmas
+                ]
+
+                if (
+                    interoception_transformation_mode == 3
+                ):  # create embedding using a set of gaussians (parameters provided in interoception_gaussian_centers and interoception_gaussian_scales)
+                    food_interoception_vector = [
+                        distribution.pdf(food_interoception)
+                        for distribution in distributions
+                    ]
+                else:  # create embedding using a set of cumulative density functions (underlying gaussian parameters provided in interoception_gaussian_centers and interoception_gaussian_scales)
+                    food_interoception_vector = [
+                        distribution.cdf(food_interoception)
+                        for distribution in distributions
+                    ]
+
+            if (
+                interoception_transformation_mode == 0
+            ):  # do not normalise interoception channels
+                drink_interoception_vector = [drink_interoception]
+            elif (
+                interoception_transformation_mode == 1
+            ):  # 1 - transform using 1 - x / 100 + 0.5 then clamp to range [0, 1]
+                drink_interoception_vector = [
+                    max(0, min(1, drink_interoception / 100 + 0.5))
+                ]
+            elif (
+                interoception_transformation_mode == 2
+            ):  # normalise to range [0, 1] by considering oversatiation_limit and deficiency_limit of the environment (raises error if not set)
+                if (
+                    self._drink_deficiency_limit is not None
+                    and self._drink_deficiency_limit <= 0
+                    and self._drink_oversatiation_limit is not None
+                    and self._drink_oversatiation_limit >= 0
+                ):
+                    # normalise the interoception considering the under- and oversatiation limits
+                    drink_interoception_vector = [
+                        (drink_interoception - self._drink_deficiency_limit)
+                        / (
+                            self._drink_oversatiation_limit
+                            - self._drink_deficiency_limit
+                        )
+                    ]
+                else:
+                    raise Exception(
+                        "DRINK_DEFICIENCY_LIMIT or DRINK_OVERSATIATION_LIMIT unset"
+                    )
+            elif (
+                interoception_transformation_mode == 3
+                or interoception_transformation_mode == 4
+            ):
+                mus_sigmas = zip(
+                    interoception_embedding_gaussian_centers,
+                    interoception_embedding_gaussian_scales,
+                )
+                distributions = [
+                    scipy.stats.Normal(mu=mu, sigma=sigma) for mu, sigma in mus_sigmas
+                ]
+
+                if (
+                    interoception_transformation_mode == 3
+                ):  # create embedding using a set of gaussians (parameters provided in interoception_gaussian_centers and interoception_gaussian_scales)
+                    drink_interoception_vector = [
+                        distribution.pdf(drink_interoception)
+                        for distribution in distributions
+                    ]
+                else:  # create embedding using a set of cumulative density functions (underlying gaussian parameters provided in interoception_gaussian_centers and interoception_gaussian_scales)
+                    drink_interoception_vector = [
+                        distribution.cdf(drink_interoception)
+                        for distribution in distributions
+                    ]
+
+            info[INTEROCEPTION_FOOD_TRANSFORMED] = food_interoception_vector
+            info[INTEROCEPTION_DRINK_TRANSFORMED] = drink_interoception_vector
+
+            interoception_vector = (
+                food_interoception_vector + drink_interoception_vector
+            )  # in this wrapper output, the order is always [INTEROCEPTION_FOOD, INTEROCEPTION_DRINK]
+
             if self._combine_interoception_and_vision:
                 # TODO!: Config for interoception scaling? Or use sigmoid transformation?
                 # NB! use +0.5 so that interoception value of 0 is centered between min and max of 0 and 1.
-                interoception_values = (
-                    info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32) / 100 + 0.5
-                ).clip(0, 1)
 
                 # Add two more layers to the vision observation, representing interoception measures. For both interoception measures, entire layer will have same value.
                 interoception_layers = np.expand_dims(
                     np.ones([observation.shape[1], observation.shape[2]], np.float32),
                     axis=0,
-                ) * np.expand_dims(interoception_values, axis=[1, 2])
+                ) * np.expand_dims(interoception_vector, axis=[1, 2])
 
                 observation = np.vstack(
                     [
                         observation,
-                        np.expand_dims(all_agents_layer, axis=0),
+                        np.expand_dims(all_agents_layer, axis=0).astype(np.float32),
                         interoception_layers,
                     ]
                 )  # feature vector is the first dimension
@@ -373,13 +586,15 @@ class GridworldZooBaseEnv:
                 return observation
             else:
                 observation = np.vstack(
-                    [observation, np.expand_dims(all_agents_layer, axis=0)]
+                    [
+                        observation,
+                        np.expand_dims(all_agents_layer, axis=0).astype(np.float32),
+                    ]
                 )  # feature vector is the first dimension
 
                 return (
                     observation.astype(np.float32),
-                    # np.array(agent_interoception_vector).astype(np.float32)
-                    info[INFO_AGENT_INTEROCEPTION_VECTOR].astype(np.float32),
+                    np.array(interoception_vector).astype(np.float32),
                 )
 
     def format_info(self, agent: str, info: dict):
@@ -448,6 +663,8 @@ class GridworldZooBaseEnv:
             INFO_AGENT_OBSERVATION_LAYERS_ORDER,
             INFO_AGENT_INTEROCEPTION_VECTOR,  # keeping interoception available in info since in observation it may be either located in its own vector or be part of the vision. That make access to this data cumbersome when writing hardcoded rules. Accessing via info argument is more convenient in such cases.
             INFO_AGENT_INTEROCEPTION_ORDER,
+            INTEROCEPTION_FOOD_TRANSFORMED,
+            INTEROCEPTION_DRINK_TRANSFORMED,
             ACTION_RELATIVE_COORDINATE_MAP,
             INFO_REWARD_DICT,  # keep reward dict for case the score is scalarised
         ]
