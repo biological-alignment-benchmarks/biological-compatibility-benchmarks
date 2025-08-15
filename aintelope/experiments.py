@@ -243,7 +243,9 @@ def run_experiment(
 
                 # How many different layout seeds there should be overall? After given amount of seeds has been used, the seed will loop over to zero and repeat the seed sequence. Zero or negative modulo parameter value disables the modulo feature.
                 if cfg.hparams.env_layout_seed_modulo > 0:
-                    env_layout_seed = env_layout_seed % cfg.hparams.env_layout_seed_modulo
+                    env_layout_seed = (
+                        env_layout_seed % cfg.hparams.env_layout_seed_modulo
+                    )
 
                 print(
                     f"\ni_pipeline_cycle: {i_pipeline_cycle} experiment: {experiment_name} episode: {i_episode} env_layout_seed: {env_layout_seed} test_mode: {test_mode}"
