@@ -215,6 +215,8 @@ def select_gpu(gpu_index=None):
     # TODO: run some threads on CPU if the available GPU-s do not support the required amount of threads
 
     if gpu_index is not None:
+        import torch  # Optimisation: load torch lazyly only when needed. This speeds up analytics, for example.
+
         gpu_count = torch.cuda.device_count()
         if gpu_count == 0:
             print(
