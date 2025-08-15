@@ -12,6 +12,8 @@ import logging
 import os
 import sys
 from pathlib import Path
+from io import BytesIO
+
 from typing import List, NamedTuple, Optional, Tuple
 
 import matplotlib
@@ -215,6 +217,11 @@ def read_events(record_path, events_filename):
             str(path) + ".lock"
         ):  # lock for better robustness against other processes writing to it concurrently
             events.append(pd.read_csv(path))
+
+    for path in Path(record_path).rglob(events_filename + ".xz"):
+        with lzma.open(path, "rb") as lfh:
+            xz_data = lfh.read()
+        events.append(pd.read_csv(BytesIO(xz_data)))
 
     return events
 
