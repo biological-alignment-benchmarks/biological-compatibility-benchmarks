@@ -53,7 +53,7 @@ Environment = Union[gym.Env, PettingZooEnv]
 logger = logging.getLogger("aintelope.agents.sb3_agent")
 
 
-class PolicyWithConfig(object):
+class PolicyWithConfigFactory(object):
     def __init__(self, env_classname, agent_id, cfg, policy_constructor):
         self.env_classname = env_classname
         self.agent_id = agent_id

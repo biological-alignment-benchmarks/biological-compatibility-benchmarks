@@ -6,9 +6,11 @@
 
 import csv
 import logging
+import hashlib
 from typing import List, Optional, Tuple
 from collections import defaultdict
 from gymnasium.spaces import Discrete
+from gymnasium.utils import seeding
 
 from omegaconf import DictConfig
 
@@ -64,34 +66,45 @@ class SB3HandWrittenRulesExpert(object):
     def reset(self) -> None:
         self.init_handwritten_rules()
 
-    def tiebreaking_argmax(self, arr, deterministic):
+    def tiebreaking_argmax(
+        self,
+        arr,
+        _random=None,
+    ):
         """Avoids the agent from repeatedly taking move-left action when the handwritten rule tells the agent to move away from current cell in any direction. Then the handwritten rule will not provide any q value difference in its q values for the different directions, they would be equal. Naive np.argmax would just return the index of first moving action, which happens to be always move-left action."""
 
-        if deterministic:
-            return np.argmax(
-                arr
-            )  # TODO: still use below code, but use seed = ((pipeline_cycle * 10000 + episode) * 1000) + step
+        max_values_bitmap = np.isclose(arr, arr.max())
+        max_values_indexes = np.flatnonzero(max_values_bitmap)
+
+        if (
+            len(max_values_indexes) == 0
+        ):  # Happens when all values are infinities or nans. This would cause np.random.choice to throw.
+            # result = np.random.randint(0, len(arr))
+            result = int(_random.random() * len(arr))
         else:
-            max_values_bitmap = np.isclose(arr, arr.max())
-            max_values_indexes = np.flatnonzero(max_values_bitmap)
+            result = _random.choice(
+                max_values_indexes
+            )  # TODO: seed for this random generator
 
-            if (
-                len(max_values_indexes) == 0
-            ):  # Happens when all values are infinities or nans. This would cause np.random.choice to throw.
-                result = np.random.randint(0, len(arr))
-            else:
-                result = np.random.choice(
-                    max_values_indexes
-                )  # TODO: seed for this random generator
-
-            return result
+        return result
 
     def should_override(
         self,
+        deterministic: bool = False,  # This is set only during evaluation, not training and the meaning is that the agent is greedy - it takes the best action. It does NOT mean that the action is always same.
         step: int = 0,
         episode: int = 0,
         pipeline_cycle: int = 0,
+        test_mode: bool = False,
+        observation=None,
     ) -> int:
+        _random = np.random
+
+        if self.hparams.num_episodes == 0:  # there is no training
+            # detected pure handwritten rules agent test without training - if that config is detected then test mode will use the handwritten rules
+            return 1, _random  # handwritten rules mode
+        elif test_mode:
+            return 0, None  # SB3 policy mode
+
         # TODO: warn if last_frame=0/1 or last_env_layout_seed=0/1 or last_episode=0/1 in any of the below values: for disabling the epsilon counting for corresponding variable one should use -1
         epsilon = (
             self.hparams.model_params.eps_start - self.hparams.model_params.eps_end
@@ -136,7 +149,9 @@ class SB3HandWrittenRulesExpert(object):
                 0,
                 1 - pipeline_cycle / self.hparams.model_params.eps_last_pipeline_cycle,
             )
-        handwritten_rule_epsilon += self.hparams.model_params.handwritten_rule_bias_epsilon_end
+        handwritten_rule_epsilon += (
+            self.hparams.model_params.handwritten_rule_bias_epsilon_end
+        )
 
         apply_handwritten_rule_eps_before_random_eps = (
             self.hparams.model_params.apply_handwritten_rule_eps_before_random_eps
@@ -145,24 +160,24 @@ class SB3HandWrittenRulesExpert(object):
         if (
             not apply_handwritten_rule_eps_before_random_eps
             and epsilon > 0
-            and np.random.random() < epsilon
+            and _random.random() < epsilon
         ):
-            return 2
+            return 2, _random  # random exploration mode
 
         elif (
-            handwritten_rule_epsilon > 0 and np.random.random() < handwritten_rule_epsilon
+            handwritten_rule_epsilon > 0 and _random.random() < handwritten_rule_epsilon
         ):  # TODO: find a better way to combine epsilon and handwritten_rule_epsilon
-            return 1
+            return 1, _random  # handwritten rules mode
 
         elif (
             apply_handwritten_rule_eps_before_random_eps
             and epsilon > 0
-            and np.random.random() < epsilon
+            and _random.random() < epsilon
         ):
-            return 2
+            return 2, _random  # random exploration mode
 
         else:
-            return 0
+            return 0, None  # SB3 policy mode
 
     def get_action(
         self,
@@ -171,8 +186,10 @@ class SB3HandWrittenRulesExpert(object):
         step: int = 0,
         episode: int = 0,
         pipeline_cycle: int = 0,
+        test_mode: bool = False,
         override_type: int = 0,
-        deterministic: bool = False,  # TODO
+        deterministic: bool = False,  # This is set only during evaluation, not training and the meaning is that the agent is greedy - it takes the best action. It does NOT mean that the action is always same.
+        _random=None,
     ) -> Optional[int]:
         """Given an observation, ask your rules what to do.
 
@@ -232,14 +249,16 @@ class SB3HandWrittenRulesExpert(object):
         if override_type == 2:
             action = action_space.sample()
 
-        elif (
-            override_type == 1
-        ):  
+        elif override_type == 1:
             q_values = np.zeros([max_action - min_action + 1], np.float32)
-            for action, bias in handwritten_rule_q_values.items():
-                q_values[action - min_action] = bias
+            for action, q_value in handwritten_rule_q_values.items():
+                q_values[action - min_action] = q_value
             action = (
-                self.tiebreaking_argmax(q_values, deterministic) + min_action
+                self.tiebreaking_argmax(
+                    q_values,
+                    _random,
+                )
+                + min_action
             )  # take best action predicted by handwritten rules
 
         else:
