@@ -23,5 +23,5 @@ stable-baselines3==2.3.2
 supersuit==3.9.3
 tenacity==8.2.2
 tiktoken==0.9.0
--e git+https://github.com/levitation-opensource/ai-safety-gridworlds@biological-compatibility-benchmarks-dev#egg=ai-safety-gridworlds
+-e git+https://github.com/levitation-opensource/ai-safety-gridworlds@biological-compatibility-benchmarks#egg=ai-safety-gridworlds
 -e git+https://github.com/levitation-opensource/zoo_to_gym_multiagent_adapter@main#egg=zoo_to_gym_multiagent_adapter
