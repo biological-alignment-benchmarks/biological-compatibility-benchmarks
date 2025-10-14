@@ -17,7 +17,7 @@ Roland Pihlakas and Joel Pyykkö. From homeostasis to resource sharing: Biologic
 
 **Use of Entire Suite**: We encourage the inclusion of the entire benchmark suite in derivative works to maintain the integrity and comprehensiveness of AI safety assessments.
 
-Top of git contibutions:
+Git authorship distribution:
 | Author                              |   loc |   coms |   fils |  distribution   |
 |:------------------------------------|------:|-------:|-------:|:----------------|
 | Roland Pihlakas                     | 21014 |    693 |    139 | 94.6/56.2/64.4  |
