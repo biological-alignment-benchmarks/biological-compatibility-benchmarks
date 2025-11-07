@@ -267,4 +267,4 @@ Roland Pihlakas and Joel Pyykkö. From homeostasis to resource sharing: Biologic
 
 For more details, see the [LICENSE.txt](LICENSE.txt) and [AUTHORS.md](AUTHORS.md) files.
 
-This repo derives from Aintelope's internal repo on branch publication. Commit-level authorship is available upon request or upon forthcoming publication of history.
+This repo derives from Aintelope's internal repo on branch publication.
